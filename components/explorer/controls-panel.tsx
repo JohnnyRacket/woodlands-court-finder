@@ -1,6 +1,7 @@
 "use client";
 
 import { Trees } from "lucide-react";
+import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { formatDay, formatHour } from "@/lib/format";
@@ -27,6 +28,20 @@ interface ControlsPanelProps {
 }
 
 export function ControlsPanel({ dates, hours, date, hour, now, filters, onTimeChange, onFiltersChange, className }: ControlsPanelProps) {
+  const past = (h: number) => date === now?.date && h < now.hour;
+  // Parts of the day with hours left; the selected hour's part is shown unless the user picks another.
+  const parts = DAY_PARTS.filter((p) => hours.some((h) => h >= p.from && h <= p.to && !past(h)));
+  const partOf = (h: number | null) => DAY_PARTS.find((p) => h !== null && h >= p.from && h <= p.to)?.name;
+  const [part, setPart] = useState<string | undefined>();
+  const [partForHour, setPartForHour] = useState(hour);
+  if (hour !== partForHour) {
+    setPartForHour(hour);
+    setPart(undefined);
+  }
+  const shownPart = parts.find((p) => p.name === part)?.name ?? partOf(hour) ?? parts[0]?.name ?? "";
+  const shownRange = DAY_PARTS.find((p) => p.name === shownPart);
+  const partHours = shownRange ? hours.filter((h) => h >= shownRange.from && h <= shownRange.to) : [];
+
   return (
     <section className={cn("glass-panel flex flex-col gap-4 p-4", className)}>
       <header className="flex items-center gap-3">
@@ -63,37 +78,43 @@ export function ControlsPanel({ dates, hours, date, hour, now, filters, onTimeCh
           ))}
         </ToggleGroup>
 
-        <div className="flex flex-col gap-2" role="radiogroup" aria-label="Hour">
-          {DAY_PARTS.map((part) => {
-            const partHours = hours.filter((h) => h >= part.from && h <= part.to);
-            const past = (h: number) => date === now?.date && h < now.hour;
-            if (partHours.length === 0 || partHours.every(past)) return null;
+        {parts.length > 0 && (
+          <ToggleGroup
+            value={[shownPart]}
+            onValueChange={(value) => value[0] && setPart(value[0])}
+            spacing={1}
+            className="w-full rounded-2xl bg-muted p-1"
+          >
+            {parts.map((p) => (
+              <ToggleGroupItem
+                key={p.name}
+                value={p.name}
+                className="h-8 flex-1 rounded-xl text-xs data-[pressed]:bg-white data-[pressed]:text-primary data-[pressed]:shadow-sm"
+              >
+                {p.name}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        )}
+        <div className="grid grid-cols-6 gap-1.5" role="radiogroup" aria-label="Hour">
+          {partHours.map((h) => {
+            const selected = h === hour;
             return (
-              <div key={part.name} className="flex items-start gap-3">
-                <span className="w-[4.5rem] shrink-0 pt-2 text-xs font-medium text-muted-foreground">{part.name}</span>
-                <div className="grid flex-1 grid-cols-3 gap-1.5 sm:grid-cols-6">
-                  {partHours.map((h) => {
-                    const selected = h === hour;
-                    return (
-                      <button
-                        key={h}
-                        type="button"
-                        role="radio"
-                        aria-checked={selected}
-                        disabled={past(h)}
-                        onClick={() => date && onTimeChange(date, h)}
-                        className={cn(
-                          "h-8 rounded-xl text-xs font-medium whitespace-nowrap transition",
-                          selected ? "bg-primary text-primary-foreground shadow-sm" : "bg-white/70 text-foreground/80 hover:bg-accent hover:text-primary",
-                          "disabled:pointer-events-none disabled:opacity-35",
-                        )}
-                      >
-                        {date === now?.date && now.open && h === now.hour ? "Now" : formatHour(h)}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              <button
+                key={h}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                disabled={past(h)}
+                onClick={() => date && onTimeChange(date, h)}
+                className={cn(
+                  "h-8 rounded-xl text-xs font-medium whitespace-nowrap transition",
+                  selected ? "bg-primary text-primary-foreground shadow-sm" : "bg-white/70 text-foreground/80 hover:bg-accent hover:text-primary",
+                  "disabled:pointer-events-none disabled:opacity-35",
+                )}
+              >
+                {date === now?.date && now.open && h === now.hour ? "Now" : formatHour(h)}
+              </button>
             );
           })}
         </div>

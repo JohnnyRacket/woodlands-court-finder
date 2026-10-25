@@ -7,7 +7,7 @@
 - **Map of all 27 parks / 104 courts:** tennis-ball and pickleball markers show how many courts you can play on right now (grey when none); zoom in for court outlines colored by status.
 - **Labels that mean something:** *No reservation*, *Open play* (drop-in, anyone can join), *Program*, *Tournament*, *Likely event*, *Reserved*, *First come*. Drop-in play shows as "booked" in ActiveNet; this app knows the difference.
 - **Pick any hour today or tomorrow** (residents can book 1 day ahead), filter by sport, playable-only, or lit courts; after-sunset hours are flagged on unlit courts.
-- **Court day view** (`/courts/[id]`): one court's 7 a.m.–11 p.m. timeline with weather.
+- **Court day view:** open any court's full 7 a.m.–11 p.m. day beside the park panel, with weather; click an hour to move the whole map there.
 - **Data status** (`/status`): freshness of every source, and the data-quality findings from reconciling Township systems ([report](docs/reconciliation-report.md)).
 - **Ask Court Finder:** Claude answers questions like "Any lit tennis courts without a reservation tomorrow at 8 PM?" using tool calls over the app's own queries.
 
@@ -53,7 +53,7 @@ flowchart LR
   Q["lib/queries/*<br/>+ labelSlot()"]
   PC & SL & EV & WH & SR --> Q
   Q --> UI["Map UI<br/>/api/courts"]
-  Q --> PAGES["/courts/[id], /status"]
+  Q --> PAGES["/status<br/>/api/courts/[id]/day"]
   Q --> AI["AI tools<br/>/api/chat"]
 ```
 
@@ -116,7 +116,7 @@ The first boot runs every source once to fill the database (the programs crawl t
 ## Project layout
 
 ```
-app/                      pages and route handlers (/, /courts/[id], /status, /api/*)
+app/                      pages and route handlers (/, /status, /api/*)
 components/explorer/      map view: ArcGIS map, floating panels, assistant
 lib/sources/<name>/       one folder per data source: fetch, normalize, table, tests, fixtures
 lib/queries/              the only code that reads the database

@@ -54,6 +54,8 @@ interface CourtMapProps {
   courts: CourtStatus[];
   selection: Selection;
   onSelect: (selection: Selection) => void;
+  /** Width in px of the floating panel on the right (0 when closed), to keep the map centered in view. */
+  rightPanelWidth: number;
 }
 
 /** Ball markers for one park: one per sport, side by side. */
@@ -106,11 +108,11 @@ function parkMarkers(park: ParkSummary, selected: boolean, yoffset: number, size
   return graphics;
 }
 
-export function CourtMap({ parks, courts, selection, onSelect }: CourtMapProps) {
+export function CourtMap({ parks, courts, selection, onSelect, rightPanelWidth }: CourtMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<MapView | null>(null);
   const layersRef = useRef<{ parks: GraphicsLayer; pins: GraphicsLayer; courts: GraphicsLayer } | null>(null);
-  const detailOpenRef = useRef(false);
+  const rightPanelRef = useRef(0);
   const fitPaddingRef = useRef<(() => void) | null>(null);
   const onSelectRef = useRef(onSelect);
   useEffect(() => {
@@ -135,7 +137,7 @@ export function CourtMap({ parks, courts, selection, onSelect }: CourtMapProps) 
     // Keep the map's center clear of the floating panels.
     const fitPadding = () => {
       view.padding = window.matchMedia("(min-width: 768px)").matches
-        ? { top: 0, right: detailOpenRef.current ? 400 : 0, left: 400, bottom: 60 }
+        ? { top: 0, right: rightPanelRef.current, left: 400, bottom: 60 }
         : { top: 0, right: 0, left: 0, bottom: window.innerHeight * 0.45 };
     };
     fitPadding();
@@ -219,10 +221,13 @@ export function CourtMap({ parks, courts, selection, onSelect }: CourtMapProps) 
     }
   }, [parks, courts, selection]);
 
+  useEffect(() => {
+    rightPanelRef.current = rightPanelWidth;
+    fitPaddingRef.current?.();
+  }, [rightPanelWidth]);
+
   // Fly to the selected court (when it has an outline) or park.
   useEffect(() => {
-    detailOpenRef.current = selection.parkId !== null;
-    fitPaddingRef.current?.();
     const view = viewRef.current;
     if (!view) return;
     const court = courts.find((c) => c.id === selection.courtId && c.geometry);

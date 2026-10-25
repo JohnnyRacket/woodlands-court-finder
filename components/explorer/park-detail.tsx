@@ -1,7 +1,6 @@
 "use client";
 
 import { CalendarClock, ExternalLink, MoonStar, X } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useRef } from "react";
 import type { ScheduleEvent } from "@/lib/db/tables";
 import { formatHour, formatMinutes } from "@/lib/format";
@@ -9,6 +8,7 @@ import { LABEL_META } from "@/lib/label-meta";
 import type { CourtStatus } from "@/lib/queries/court-status";
 import { cn } from "@/lib/utils";
 import { BallBadge } from "./ball-icons";
+import { CourtDayPanel } from "./court-day-panel";
 import { SPORTS, type ParkSummary, type Sport } from "./park-summary";
 
 const RESERVE_URL = "https://anc.apm.activecommunities.com/wcscparksandrec/reservation/landing/quick?locale=en-US&groupId=";
@@ -22,6 +22,11 @@ interface ParkDetailProps {
   events: ScheduleEvent[];
   selectedCourtId: string | null;
   onSelectCourt: (courtId: string) => void;
+  /** The court whose full day is open beside the list, if any. */
+  dayCourtId: string | null;
+  onOpenDay: (courtId: string | null) => void;
+  now: { date: string; hour: number; open: boolean };
+  onPickHour: (hour: number) => void;
   onClose: () => void;
   className?: string;
 }
@@ -37,7 +42,20 @@ function booking(park: ParkSummary, sport: Sport): { groupId: number } | { note:
   return { note: "Pickleball here is first come, first served (not reservable online)." };
 }
 
-export function ParkDetail({ park, date, hour, events, selectedCourtId, onSelectCourt, onClose, className }: ParkDetailProps) {
+export function ParkDetail({
+  park,
+  date,
+  hour,
+  events,
+  selectedCourtId,
+  onSelectCourt,
+  dayCourtId,
+  onOpenDay,
+  now,
+  onPickHour,
+  onClose,
+  className,
+}: ParkDetailProps) {
   const selectedRef = useRef<HTMLLIElement>(null);
   useEffect(() => {
     selectedRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
@@ -45,81 +63,95 @@ export function ParkDetail({ park, date, hour, events, selectedCourtId, onSelect
   const sports = SPORTS.filter((sport) => park.sports[sport]);
 
   return (
-    <section className={cn("glass-panel flex min-h-0 flex-col", className)}>
-      <header className="flex items-start justify-between gap-3 px-5 pt-5 pb-3">
-        <div>
-          <h2 className="text-lg font-semibold tracking-tight text-primary">{park.name}</h2>
-          <p className="text-sm text-muted-foreground">
-            {park.joinable} of {park.courts.length} courts playable at {formatHour(hour)}
-          </p>
+    <section className={cn("glass-panel flex min-h-0", className)}>
+      <div className={cn("flex min-h-0 w-full flex-col md:w-[23rem] md:shrink-0", dayCourtId && "max-md:hidden")}>
+        <header className="flex items-start justify-between gap-3 px-5 pt-5 pb-3">
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight text-primary">{park.name}</h2>
+            <p className="text-sm text-muted-foreground">
+              {park.joinable} of {park.courts.length} courts playable at {formatHour(hour)}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground transition hover:bg-accent hover:text-primary"
+          >
+            <X className="size-4" />
+          </button>
+        </header>
+
+        <div className="flex min-h-0 flex-col overflow-y-auto pb-2">
+          {events.length > 0 && (
+            <ul className="mx-4 mb-2 flex flex-col gap-2">
+              {events.map((event) => (
+                <li key={event.id} className="rounded-2xl bg-white/80 px-4 py-3 text-sm shadow-xs">
+                  <p className="font-medium">{event.title}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatMinutes(event.startMin)} – {formatMinutes(event.endMin)}
+                    {event.publicCanJoin ? " · open to everyone" : " · registration required"}
+                  </p>
+                  {event.url && (
+                    <a href={event.url} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-chart-5 hover:underline">
+                      Details <ExternalLink className="size-3" />
+                    </a>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {sports.map((sport) => {
+            const summary = park.sports[sport]!;
+            const how = booking(park, sport);
+            return (
+              <section key={sport} className="px-3 pb-2">
+                <header className="flex items-center gap-2 px-2 pt-2 pb-1.5">
+                  <BallBadge sport={sport} count={summary.joinable} muted={summary.joinable === 0} size={24} />
+                  <h3 className="flex-1 text-sm font-semibold">{SPORT_TEXT[sport]}</h3>
+                  {"groupId" in how && (
+                    <a
+                      href={`${RESERVE_URL}${how.groupId}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex h-7 items-center gap-1 rounded-full bg-primary px-3 text-xs font-medium text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                    >
+                      Reserve <ExternalLink className="size-3" />
+                    </a>
+                  )}
+                </header>
+                {"note" in how && <p className="px-2 pb-1.5 text-xs text-muted-foreground">{how.note}</p>}
+                <ul className="flex flex-col gap-0.5">
+                  {summary.courts.map((court) => (
+                    <CourtRow
+                      key={court.id}
+                      ref={court.id === selectedCourtId ? selectedRef : undefined}
+                      court={court}
+                      sport={sport}
+                      selected={court.id === selectedCourtId}
+                      dayOpen={court.id === dayCourtId}
+                      onSelect={() => onSelectCourt(court.id)}
+                      onOpenDay={() => onOpenDay(court.id === dayCourtId ? null : court.id)}
+                    />
+                  ))}
+                </ul>
+              </section>
+            );
+          })}
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close"
-          className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground transition hover:bg-accent hover:text-primary"
-        >
-          <X className="size-4" />
-        </button>
-      </header>
-
-      <div className="flex min-h-0 flex-col overflow-y-auto pb-2">
-        {events.length > 0 && (
-          <ul className="mx-4 mb-2 flex flex-col gap-2">
-            {events.map((event) => (
-              <li key={event.id} className="rounded-2xl bg-white/80 px-4 py-3 text-sm shadow-xs">
-                <p className="font-medium">{event.title}</p>
-                <p className="text-xs text-muted-foreground">
-                  {formatMinutes(event.startMin)} – {formatMinutes(event.endMin)}
-                  {event.publicCanJoin ? " · open to everyone" : " · registration required"}
-                </p>
-                {event.url && (
-                  <a href={event.url} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-chart-5 hover:underline">
-                    Details <ExternalLink className="size-3" />
-                  </a>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {sports.map((sport) => {
-          const summary = park.sports[sport]!;
-          const how = booking(park, sport);
-          return (
-            <section key={sport} className="px-3 pb-2">
-              <header className="flex items-center gap-2 px-2 pt-2 pb-1.5">
-                <BallBadge sport={sport} count={summary.joinable} muted={summary.joinable === 0} size={24} />
-                <h3 className="flex-1 text-sm font-semibold">{SPORT_TEXT[sport]}</h3>
-                {"groupId" in how && (
-                  <a
-                    href={`${RESERVE_URL}${how.groupId}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex h-7 items-center gap-1 rounded-full bg-primary px-3 text-xs font-medium text-primary-foreground shadow-sm transition hover:bg-primary/90"
-                  >
-                    Reserve <ExternalLink className="size-3" />
-                  </a>
-                )}
-              </header>
-              {"note" in how && <p className="px-2 pb-1.5 text-xs text-muted-foreground">{how.note}</p>}
-              <ul className="flex flex-col gap-0.5">
-                {summary.courts.map((court) => (
-                  <CourtRow
-                    key={court.id}
-                    ref={court.id === selectedCourtId ? selectedRef : undefined}
-                    court={court}
-                    sport={sport}
-                    date={date}
-                    selected={court.id === selectedCourtId}
-                    onSelect={() => onSelectCourt(court.id)}
-                  />
-                ))}
-              </ul>
-            </section>
-          );
-        })}
       </div>
+      {dayCourtId && (
+        <CourtDayPanel
+          className="w-full border-border/60 md:w-[21rem] md:border-l"
+          courtId={dayCourtId}
+          date={date}
+          hour={hour}
+          now={now}
+          onPickHour={onPickHour}
+          onClose={() => onOpenDay(null)}
+        />
+      )}
     </section>
   );
 }
@@ -127,16 +159,18 @@ export function ParkDetail({ park, date, hour, events, selectedCourtId, onSelect
 function CourtRow({
   court,
   sport,
-  date,
   selected,
+  dayOpen,
   onSelect,
+  onOpenDay,
   ref,
 }: {
   court: CourtStatus;
   sport: Sport;
-  date: string;
   selected: boolean;
+  dayOpen: boolean;
   onSelect: () => void;
+  onOpenDay: () => void;
   ref?: React.Ref<HTMLLIElement>;
 }) {
   const meta = LABEL_META[court.label.kind];
@@ -166,14 +200,19 @@ function CourtRow({
           )}
         </span>
       </button>
-      <Link
-        href={`/courts/${court.id}?date=${date}`}
-        title="Full day for this court"
-        aria-label={`Full day for ${court.name}`}
-        className="mr-2 grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground transition hover:bg-accent hover:text-primary"
+      <button
+        type="button"
+        onClick={onOpenDay}
+        aria-pressed={dayOpen}
+        title={dayOpen ? "Hide this court's day" : "Show this court's whole day"}
+        aria-label={`Whole day for ${court.name}`}
+        className={cn(
+          "mr-2 grid size-8 shrink-0 place-items-center rounded-full transition",
+          dayOpen ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-primary",
+        )}
       >
         <CalendarClock className="size-4" />
-      </Link>
+      </button>
     </li>
   );
 }

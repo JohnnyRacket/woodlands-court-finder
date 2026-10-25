@@ -28,7 +28,15 @@ export function CourtExplorer() {
   const [filters, setFilters] = useState<Filters>({ sports: ["tennis", "pickleball"], joinableOnly: false, litOnly: false });
   const [selection, setSelection] = useState<Selection>({ parkId: null, courtId: null });
   const selectedParkId = selection.parkId;
-  const selectPark = (parkId: string | null) => setSelection({ parkId, courtId: null });
+  const [dayCourtId, setDayCourtId] = useState<string | null>(null);
+  const selectPark = (parkId: string | null) => {
+    setSelection({ parkId, courtId: null });
+    setDayCourtId(null);
+  };
+  const select = (next: Selection) => {
+    setSelection(next);
+    if (next.parkId !== selection.parkId) setDayCourtId(null);
+  };
   const [assistantOpen, setAssistantOpen] = useState(false);
 
   useEffect(() => {
@@ -51,7 +59,13 @@ export function CourtExplorer() {
 
   return (
     <main className="relative h-dvh w-full overflow-hidden bg-background">
-      <CourtMap parks={parks} courts={courts} selection={selection} onSelect={setSelection} />
+      <CourtMap
+        parks={parks}
+        courts={courts}
+        selection={selection}
+        onSelect={select}
+        rightPanelWidth={selectedPark && !assistantOpen ? (dayCourtId ? 736 : 400) : assistantOpen ? 400 : 0}
+      />
 
       {/* Left column: controls + park list (a bottom sheet on phones) */}
       <div className="absolute inset-x-3 bottom-3 flex max-h-[58dvh] flex-col gap-3 overflow-y-auto rounded-3xl [scrollbar-width:none] md:pointer-events-none md:inset-y-4 md:right-auto md:bottom-4 md:left-4 md:max-h-none md:w-[23rem] md:overflow-visible md:rounded-none">
@@ -104,13 +118,20 @@ export function CourtExplorer() {
 
       {selectedPark && data && !assistantOpen && (
         <ParkDetail
-          className="absolute inset-x-3 bottom-3 max-h-[58dvh] md:inset-x-auto md:top-20 md:right-4 md:bottom-28 md:max-h-none md:w-[23rem]"
+          className="absolute inset-x-3 bottom-3 max-h-[58dvh] md:inset-x-auto md:top-20 md:right-4 md:bottom-28 md:max-h-none"
           park={selectedPark}
           date={data.date}
           hour={data.hour}
           events={data.events.filter((event) => event.parkId === selectedPark.id)}
           selectedCourtId={selection.courtId}
           onSelectCourt={(courtId) => setSelection({ parkId: selectedPark.id, courtId })}
+          dayCourtId={dayCourtId}
+          onOpenDay={(courtId) => {
+            setDayCourtId(courtId);
+            if (courtId) setSelection({ parkId: selectedPark.id, courtId });
+          }}
+          now={data.now}
+          onPickHour={(hour) => setTime({ date: data.date, hour })}
           onClose={() => selectPark(null)}
         />
       )}

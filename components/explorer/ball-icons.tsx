@@ -19,18 +19,19 @@ function ballSvg(sport: Sport, muted: boolean): string {
     sport === "tennis"
       ? // two curved seams
         `<path d="M6 10.5c6 3 6 23 0 27M42 10.5c-6 3-6 23 0 27" fill="none" stroke="${c.detail}" stroke-width="2.6" stroke-linecap="round"/>`
-      : // pickleball holes
+      : // pickleball holes: scattered irregularly, clear of the number in the middle
         [
-          [24, 9],
-          [12, 15],
-          [36, 15],
-          [9, 28],
-          [39, 28],
-          [16, 39],
-          [32, 39],
-          [24, 42],
+          [13, 13, 3],
+          [24.5, 8.5, 2.5],
+          [35.5, 13.5, 2.7],
+          [10, 25, 2.4],
+          [38.5, 24.5, 3.1],
+          [31.5, 30.5, 2],
+          [16, 33.5, 2.8],
+          [37, 34.5, 2.3],
+          [27.5, 38.5, 3],
         ]
-          .map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.9" fill="${c.detail}"/>`)
+          .map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c.detail}"/>`)
           .join("");
   return `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><circle cx="24" cy="24" r="21.5" fill="${c.fill}" stroke="#ffffff" stroke-width="3"/><circle cx="24" cy="24" r="19.5" fill="none" stroke="${c.stroke}" stroke-width="1"/>${detail}</svg>`;
 }

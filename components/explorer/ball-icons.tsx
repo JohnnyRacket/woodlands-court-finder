@@ -4,9 +4,9 @@
 import type { Sport } from "./park-summary";
 
 const PALETTE = {
-  tennis: { light: "#e8f37e", fill: "#cfe047", shade: "#a5b628", detail: "#ffffff", text: "#24361f" },
-  pickleball: { light: "#ffd86b", fill: "#f5b82e", shade: "#d38e18", detail: "#b4740e", text: "#3b2a07" },
-  muted: { light: "#eef1ef", fill: "#d5dbd7", shade: "#b3bcb6", detail: "#a9b3ad", text: "#56625a" },
+  tennis: { fill: "#cfe047", shade: "#b5c736", detail: "#ffffff", text: "#24361f" },
+  pickleball: { fill: "#f5b82e", shade: "#e0a020", detail: "#c4831a", text: "#3b2a07" },
+  muted: { fill: "#d5dbd7", shade: "#c3cbc6", detail: "#b1bbb5", text: "#56625a" },
 };
 
 export function ballColors(sport: Sport, muted: boolean) {
@@ -34,13 +34,12 @@ function ballSvg(sport: Sport, muted: boolean): string {
     sport === "tennis"
       ? `<path d="M5 10c7 4 7 24 0 28M43 10c-7 4-7 24 0 28" fill="none" stroke="${muted ? "#f4f6f5" : c.detail}" stroke-width="2.6" stroke-linecap="round"/>`
       : HOLES.map(([x, y, rx, ry, a]) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" transform="rotate(${a} ${x} ${y})" fill="${c.detail}"/>`).join("");
+  // Flat, two tones: the base color and one darker crescent along the lower-right edge.
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">` +
-    `<defs><radialGradient id="shade" cx="38%" cy="32%" r="72%"><stop offset="0" stop-color="${c.light}"/><stop offset=".6" stop-color="${c.fill}"/><stop offset="1" stop-color="${c.shade}"/></radialGradient>` +
-    `<clipPath id="ball"><circle cx="24" cy="24" r="21"/></clipPath></defs>` +
-    `<circle cx="24" cy="24" r="22.5" fill="#ffffff"/><circle cx="24" cy="24" r="21" fill="url(#shade)"/>` +
-    `<g clip-path="url(#ball)">${detail}</g>` +
-    `<ellipse cx="16.5" cy="12.5" rx="6" ry="3" transform="rotate(-35 16.5 12.5)" fill="#ffffff" opacity="${muted ? 0.5 : 0.4}"/>` +
+    `<defs><clipPath id="ball"><circle cx="24" cy="24" r="21"/></clipPath></defs>` +
+    `<circle cx="24" cy="24" r="22.5" fill="#ffffff"/>` +
+    `<g clip-path="url(#ball)"><circle cx="24" cy="24" r="21" fill="${c.shade}"/><circle cx="21.5" cy="21.5" r="21" fill="${c.fill}"/>${detail}</g>` +
     `</svg>`
   );
 }

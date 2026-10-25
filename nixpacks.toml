@@ -1,0 +1,3 @@
+# better-sqlite3 compiles from source when no prebuilt binary matches the Node version.
+[phases.setup]
+aptPkgs = ["...", "python3", "build-essential"]

@@ -4,6 +4,7 @@ import { LoaderCircle, LocateFixed, Sparkles } from "lucide-react";
 import dynamic from "next/dynamic";
 import { catchError } from "next/error";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { flushSync } from "react-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { bookingDates } from "@/lib/booking-window";
 import { fetchJson } from "@/lib/fetch-json";
@@ -70,6 +71,21 @@ export function CourtExplorer() {
   const [assistantOpen, setAssistantOpen] = useState(false);
   // Phones open on the map with the time dial; this only affects phone layouts.
   const [sheetCollapsed, setSheetCollapsed] = useState(true);
+  // Once the bar and sheet have morphed into each other, the bar stops playing its own entrance.
+  const [sheetMorphed, setSheetMorphed] = useState(false);
+  // The bar grows into the sheet and shrinks back (the `phone-sheet` view transition), where the browser can.
+  const toggleSheet = (collapsed: boolean) => {
+    if (!document.startViewTransition || matchMedia("(prefers-reduced-motion: reduce)").matches) return setSheetCollapsed(collapsed);
+    const root = document.documentElement;
+    root.dataset.sheetMorph = "";
+    const transition = document.startViewTransition(() =>
+      flushSync(() => {
+        setSheetMorphed(true);
+        setSheetCollapsed(collapsed);
+      }),
+    );
+    transition.finished.finally(() => delete root.dataset.sheetMorph);
+  };
 
   const refresh = useCallback(() => {
     // An hour that has passed while the page sat open goes back to following now.
@@ -172,8 +188,10 @@ export function CourtExplorer() {
       <div
         className={cn(
           "absolute inset-x-3 bottom-7 flex max-h-[58dvh] flex-col gap-3 overflow-y-auto rounded-3xl transition-[opacity,visibility] duration-200 [scrollbar-width:none] md:pointer-events-none md:inset-y-4 md:right-auto md:bottom-8 md:left-4 md:max-h-none md:w-[23rem] md:overflow-visible md:rounded-none",
+          // The morph animates collapsing and expanding, so the sheet's own fade sits that out.
+          "[:root[data-sheet-morph]_&]:transition-none",
           // On phones the park or assistant sheet takes this spot, so the controls get out of the way.
-          (detailOpen || assistantOpen || sheetCollapsed) && "max-md:invisible max-md:opacity-0",
+          (detailOpen || assistantOpen || sheetCollapsed) ? "max-md:invisible max-md:opacity-0" : "max-md:[view-transition-name:phone-sheet]",
         )}
       >
         <ControlsPanel
@@ -187,7 +205,7 @@ export function CourtExplorer() {
           bookableSports={bookableSports}
           onTimeChange={(date, hour) => setTime({ date, hour })}
           onFiltersChange={(change) => setFilters((current) => ({ ...current, ...change }))}
-          onCollapse={() => setSheetCollapsed(true)}
+          onCollapse={() => toggleSheet(true)}
         />
         {data ? (
           <ParkList
@@ -217,7 +235,10 @@ export function CourtExplorer() {
       )}
       {sheetCollapsed && !detailOpen && !assistantOpen && data && (
         <TimeScrubber
-          className="absolute inset-x-3 bottom-7 animate-in duration-200 fade-in slide-in-from-bottom-4 md:hidden"
+          className={cn(
+            "absolute inset-x-3 bottom-7 [view-transition-name:phone-sheet] md:hidden",
+            !sheetMorphed && "animate-in duration-200 fade-in slide-in-from-bottom-4",
+          )}
           dates={data.dates}
           hours={data.hours}
           date={time?.date ?? data.date}
@@ -226,7 +247,7 @@ export function CourtExplorer() {
           onChange={(date, hour) => setTime({ date, hour })}
           summary={`${parks.filter((park) => park.joinable > 0).length} of ${parks.length} parks with a court`}
           loading={loading}
-          onExpand={() => setSheetCollapsed(false)}
+          onExpand={() => toggleSheet(false)}
         />
       )}
 

@@ -164,6 +164,48 @@
   }
 }
 
+/*
+ * Phones: the time bar grows into the options sheet and shrinks back. Both sit on the same bottom edge,
+ * so the box morphs upward and each snapshot stays pinned to that edge at its natural size, clipped by the box.
+ */
+::view-transition {
+  pointer-events: none;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+::view-transition-group(phone-sheet) {
+  overflow: clip;
+  border-radius: 1.5rem;
+  animation-duration: 380ms;
+  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}
+/* Snapshots lose the panels' backdrop blur, so the box carries the glass surface while it moves. */
+::view-transition-image-pair(phone-sheet) {
+  border-radius: 1.5rem;
+  background: rgb(255 255 255 / 0.85);
+  backdrop-filter: blur(24px);
+}
+::view-transition-old(phone-sheet),
+::view-transition-new(phone-sheet) {
+  inset-block: auto 0;
+  height: auto;
+  mix-blend-mode: normal;
+}
+/* The old layout clears before the new one fades in, so their text never overlaps. */
+::view-transition-old(phone-sheet) {
+  animation: 100ms ease-out both phone-sheet-fade reverse;
+}
+::view-transition-new(phone-sheet) {
+  animation: 200ms ease-out 80ms both phone-sheet-fade;
+}
+@keyframes phone-sheet-fade {
+  from {
+    opacity: 0;
+  }
+}
+
 /* Floating panels over the map */
 @utility glass-panel {
   @apply overflow-hidden rounded-3xl border border-white/60 bg-white/85 shadow-[0_8px_32px_-8px_rgb(31_60_36_/_0.25)] backdrop-blur-xl;

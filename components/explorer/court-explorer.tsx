@@ -130,7 +130,13 @@ export function CourtExplorer() {
       />
 
       {/* Left column: controls + park list (a bottom sheet on phones) */}
-      <div className="absolute inset-x-3 bottom-7 flex max-h-[58dvh] flex-col gap-3 overflow-y-auto rounded-3xl [scrollbar-width:none] md:pointer-events-none md:inset-y-4 md:right-auto md:bottom-8 md:left-4 md:max-h-none md:w-[23rem] md:overflow-visible md:rounded-none">
+      <div
+        className={cn(
+          "absolute inset-x-3 bottom-7 flex max-h-[58dvh] flex-col gap-3 overflow-y-auto rounded-3xl transition-[opacity,visibility] duration-200 [scrollbar-width:none] md:pointer-events-none md:inset-y-4 md:right-auto md:bottom-8 md:left-4 md:max-h-none md:w-[23rem] md:overflow-visible md:rounded-none",
+          // On phones the park or assistant sheet takes this spot, so the controls get out of the way.
+          (detailOpen || assistantOpen) && "max-md:invisible max-md:opacity-0",
+        )}
+      >
         <ControlsPanel
           className="pointer-events-auto shrink-0"
           dates={data?.dates ?? []}

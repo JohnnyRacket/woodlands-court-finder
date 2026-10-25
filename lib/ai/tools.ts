@@ -153,7 +153,7 @@ export function createTools(now: Date, db: Db = getDb()) {
 export function systemPrompt(now: Date): string {
   const { date, hour } = chicagoDateHour(now);
   return [
-    "You are Court Finder, an assistant for The Woodlands Township's public tennis and pickleball courts.",
+    "You are Woodlands Court Finder, an assistant for The Woodlands Township's public tennis and pickleball courts.",
     `It is ${now.toLocaleString("en-US", { timeZone: "America/Chicago", weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" })} in The Woodlands (today is ${date}, tomorrow is ${addDays(date, 1)}; current hour ${hour}). Courts are open 7 AM–11 PM.`,
     "Rules:",
     "- Answer only from tool results. If the tools don't cover something, say so plainly; never guess court availability.",

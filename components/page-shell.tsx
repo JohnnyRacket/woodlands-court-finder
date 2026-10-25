@@ -10,7 +10,7 @@ export function PageShell({ children }: { children: React.ReactNode }) {
           <span className="grid size-9 place-items-center rounded-2xl bg-primary text-brand-mint shadow-sm">
             <Trees className="size-4.5" />
           </span>
-          <span className="text-sm font-semibold text-primary">Court Finder</span>
+          <span className="text-sm font-semibold text-primary">Woodlands Court Finder</span>
         </Link>
         <Link
           href="/"

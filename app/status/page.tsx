@@ -9,7 +9,7 @@ import { formatAgo } from "@/lib/format";
 import { getStatus, type Finding, type SourceState, type SourceStatus } from "@/lib/queries/status";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Data status · Court Finder" };
+export const metadata: Metadata = { title: "Data status · Woodlands Court Finder" };
 
 const STATE: Record<SourceState, { label: string; icon: typeof CheckCircle2; pill: string }> = {
   up_to_date: { label: "Up to date", icon: CheckCircle2, pill: "bg-status-open/12 text-status-open" },
@@ -35,7 +35,7 @@ export default function StatusPage() {
       <div className="mb-5 px-1">
         <h1 className="text-2xl font-semibold tracking-tight text-primary">Data status</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Court Finder combines public data from The Woodlands Township and the National Weather Service. Here&apos;s how current it is.
+          Woodlands Court Finder combines public data from The Woodlands Township and the National Weather Service. Here&apos;s how current it is.
         </p>
       </div>
       <Suspense fallback={<Skeleton className="h-[36rem] rounded-3xl bg-white/60" />}>
@@ -75,7 +75,7 @@ async function StatusView() {
             <TriangleAlert className="size-4.5 text-status-program" /> Data discrepancies
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Places where Township systems disagree with each other. Court Finder works around them, but fixing them at the source would help every app that
+            Places where Township systems disagree with each other. Woodlands Court Finder works around them, but fixing them at the source would help every app that
             uses this data.
           </p>
           <div className="mt-4 flex flex-col gap-3">

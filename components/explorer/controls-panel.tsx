@@ -49,8 +49,8 @@ export function ControlsPanel({ dates, hours, date, hour, now, filters, onTimeCh
           <Trees className="size-5" />
         </div>
         <div className="leading-tight">
-          <h1 className="text-base font-semibold tracking-tight text-primary">Court Finder</h1>
-          <p className="text-xs text-muted-foreground">Tennis &amp; pickleball · The Woodlands</p>
+          <h1 className="text-base font-semibold tracking-tight text-primary">Woodlands Court Finder</h1>
+          <p className="text-xs text-muted-foreground">Tennis &amp; pickleball courts</p>
         </div>
       </header>
 

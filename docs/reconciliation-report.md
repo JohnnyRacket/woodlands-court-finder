@@ -1,8 +1,8 @@
 # Court data reconciliation: Township GIS ↔ ActiveNet ↔ website
 
-*Generated from Court Finder's automated sync, October 2026. Every finding below is re-checked on each run and listed live on the app's `/status` page.*
+*Generated from Woodlands Court Finder's automated sync, October 2026. Every finding below is re-checked on each run and listed live on the app's `/status` page.*
 
-Court Finder joins three Township systems that were never designed to talk to each other:
+Woodlands Court Finder joins three Township systems that were never designed to talk to each other:
 
 | System | What it knows | Key it uses |
 |---|---|---|

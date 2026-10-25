@@ -8,7 +8,7 @@ const figtree = Figtree({
 });
 
 export const metadata: Metadata = {
-  title: "Court Finder · The Woodlands",
+  title: "Woodlands Court Finder",
   description: "Live tennis and pickleball court availability across The Woodlands Township parks.",
 };
 

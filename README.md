@@ -1,15 +1,15 @@
-# Court Finder · The Woodlands
+# Woodlands Court Finder
 
 **Can I play now?** A live map of The Woodlands Township's public tennis and pickleball courts that combines GIS court outlines, ActiveNet reservations, published drop-in times, programs, and the weather, with an AI assistant that answers questions from the same data.
 
-![Court Finder map view](docs/screenshot.png)
+![Woodlands Court Finder map view](docs/screenshot.png)
 
 - **Map of all 27 parks / 104 courts:** tennis-ball and pickleball markers show how many courts you can play on right now (grey when none); zoom in for court outlines colored by status.
 - **Labels that mean something:** *No reservation*, *Open play* (drop-in, anyone can join), *Program*, *Tournament*, *Likely event*, *Reserved*, *First come*. Drop-in play shows as "booked" in ActiveNet; this app knows the difference.
 - **Pick any hour today or tomorrow** (residents can book 1 day ahead), filter by sport, playable-only, or lit courts; after-sunset hours are flagged on unlit courts.
 - **Court day view:** open any court's full 7 a.m.–11 p.m. day beside the park panel, with weather; click an hour to move the whole map there.
 - **Data status** (`/status`): freshness of every source, and the data-quality findings from reconciling Township systems ([report](docs/reconciliation-report.md)).
-- **Ask Court Finder:** Claude answers questions like "Any lit tennis courts without a reservation tomorrow at 8 PM?" using tool calls over the app's own queries.
+- **Ask Woodlands Court Finder:** Claude answers questions like "Any lit tennis courts without a reservation tomorrow at 8 PM?" using tool calls over the app's own queries.
 
 ## Architecture
 

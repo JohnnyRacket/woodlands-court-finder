@@ -46,13 +46,13 @@ export function AssistantPanel({ onClose, className }: { onClose: () => void; cl
   };
 
   return (
-    <section className={cn("glass-panel flex min-h-0 flex-col", className)} aria-label="Court Finder assistant">
+    <section className={cn("glass-panel flex min-h-0 flex-col", className)} aria-label="Woodlands Court Finder assistant">
       <header className="flex items-center gap-3 px-5 pt-5 pb-3">
         <span className="grid size-9 shrink-0 place-items-center rounded-2xl bg-primary text-brand-mint">
           <Sparkles className="size-4.5" />
         </span>
         <div className="flex-1 leading-tight">
-          <h2 className="font-semibold text-primary">Ask Court Finder</h2>
+          <h2 className="font-semibold text-primary">Ask Woodlands Court Finder</h2>
           <p className="text-xs text-muted-foreground">Answers from live court, schedule and weather data</p>
         </div>
         <button

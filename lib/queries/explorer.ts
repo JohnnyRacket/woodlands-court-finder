@@ -9,7 +9,7 @@ import { chicagoDateHour, FIRST_HOUR, LAST_HOUR } from "@/lib/time";
 import type { Condition } from "@/lib/conditions";
 import type { ParkEvent } from "@/lib/sources/township-events/table";
 import { getActiveAlerts, getDayConditions, getParkEvents, type Alert, type HourDetails } from "./conditions";
-import { getCourtStatuses, type CourtStatus } from "./court-status";
+import { getCourtStatuses, type HourStatus } from "./court-status";
 import { lastSuccessAt } from "./freshness";
 
 export interface ExplorerData {
@@ -32,7 +32,8 @@ export interface ExplorerData {
   sunset: string;
   /** When reservation data was last refreshed successfully. */
   reservationsUpdatedAt: string | null;
-  courts: CourtStatus[];
+  /** Each court's label this hour; what the courts are comes once from getCourts (/api/courts/catalog). */
+  courts: HourStatus[];
   /** Every drop-in, program and tournament running at this hour (a court label shows only one). */
   events: ScheduleEvent[];
 }
@@ -66,7 +67,7 @@ export function getExplorerData(date: string, hour: number, now: Date, db: Db = 
     parkEvents: getParkEvents(date, db),
     sunset: sunTimes(date).sunset.toISOString(),
     reservationsUpdatedAt: lastSuccessAt("activenet-slots", db),
-    courts: getCourtStatuses(date, hour, now, db),
+    courts: getCourtStatuses(date, hour, now, db).map(({ id, label, bookingClosed, dark }) => ({ id, label, bookingClosed, dark })),
     events: db
       .select()
       .from(scheduleEvents)

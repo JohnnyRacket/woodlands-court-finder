@@ -7,7 +7,8 @@ import { slots } from "@/lib/sources/activenet-slots/table";
 import { sunTimes } from "@/lib/sun";
 import { chicagoDate, chicagoMinuteOfDay } from "@/lib/time";
 
-export interface CourtStatus {
+/** What a court is: fixed from hour to hour, so the map loads it once (/api/courts/catalog). */
+export interface CourtInfo {
   id: string;
   name: string;
   kind: CourtKind;
@@ -20,6 +21,10 @@ export interface CourtStatus {
   parkLat: number;
   parkLng: number;
   reservable: boolean;
+}
+
+/** A court with its label for one hour. */
+export interface CourtStatus extends CourtInfo {
   label: SlotLabel;
   /** Reservable, but too late to book this hour online; the label is the last status seen before booking closed. */
   bookingClosed: boolean;
@@ -27,15 +32,12 @@ export interface CourtStatus {
   dark: boolean;
 }
 
-/** Every active court with its label for one Chicago-local date and hour; `now` decides what can be booked. */
-export function getCourtStatuses(date: string, hour: number, now: Date, db: Db = getDb()): CourtStatus[] {
-  return courtStatusesForDay(date, now, db)(hour);
-}
+/** What changes from hour to hour: the part of a CourtStatus the map fetches for each hour. */
+export type HourStatus = Pick<CourtStatus, "id" | "label" | "bookingClosed" | "dark">;
 
-/** Reads a date's courts, slots and events once; the returned function labels any hour of it. */
-export function courtStatusesForDay(date: string, now: Date, db: Db = getDb()): (hour: number) => CourtStatus[] {
-  const today = chicagoDate(now);
-  const courtRows = db
+/** Every active court, in park then natural court order ("Tennis 2" before "Tennis 10"). */
+export function getCourts(db: Db = getDb()): CourtInfo[] {
+  return db
     .select({
       id: courts.id,
       name: courts.name,
@@ -52,8 +54,19 @@ export function courtStatusesForDay(date: string, now: Date, db: Db = getDb()): 
     .innerJoin(parks, eq(parks.id, courts.parkId))
     .where(eq(courts.active, true))
     .all()
-    // Natural order: "Tennis 2" before "Tennis 10".
+    .map(({ activenetId, ...court }) => ({ ...court, reservable: activenetId !== null }))
     .sort((a, b) => a.parkName.localeCompare(b.parkName) || a.name.localeCompare(b.name, "en", { numeric: true }));
+}
+
+/** Every active court with its label for one Chicago-local date and hour; `now` decides what can be booked. */
+export function getCourtStatuses(date: string, hour: number, now: Date, db: Db = getDb()): CourtStatus[] {
+  return courtStatusesForDay(date, now, db)(hour);
+}
+
+/** Reads a date's courts, slots and events once; the returned function labels any hour of it. */
+export function courtStatusesForDay(date: string, now: Date, db: Db = getDb()): (hour: number) => CourtStatus[] {
+  const today = chicagoDate(now);
+  const courtRows = getCourts(db);
 
   // hour → court id → status
   const statusByHour = new Map<number, Map<string, "free" | "booked">>();
@@ -84,15 +97,14 @@ export function courtStatusesForDay(date: string, now: Date, db: Db = getDb()): 
     // Dark when most of the hour falls after sunset.
     const afterSunset = hour * 60 + 30 > sunsetMinute;
 
-    return courtRows.map(({ activenetId, ...court }) => {
-      const bookable = activenetId !== null && bookingDates(poolOf(court.kind), today).includes(date);
+    return courtRows.map((court) => {
+      const bookable = court.reservable && bookingDates(poolOf(court.kind), today).includes(date);
       return {
         ...court,
-        reservable: activenetId !== null,
         bookingClosed: bookable && closed,
         dark: afterSunset && court.lighted !== true,
         label: labelSlot({
-          status: activenetId === null ? null : !bookable ? "not_open" : (statusByCourt.get(court.id) ?? "unknown"),
+          status: !court.reservable ? null : !bookable ? "not_open" : (statusByCourt.get(court.id) ?? "unknown"),
           hour,
           courtKind: court.kind,
           events: eventsByPark.get(court.parkId) ?? [],

@@ -1,4 +1,4 @@
-import type { CourtStatus } from "@/lib/queries/court-status";
+import type { CourtInfo, CourtStatus, HourStatus } from "@/lib/queries/court-status";
 
 export type Sport = "tennis" | "pickleball";
 export const SPORTS: Sport[] = ["tennis", "pickleball"];
@@ -31,6 +31,14 @@ export interface ParkSummary {
 export const playsSport = (court: CourtStatus, sport: Sport) => court.kind === sport || court.kind === "tennis_pickleball";
 
 const canPlay = (court: CourtStatus) => court.label.publicCanJoin && !court.dark;
+
+/** The courts (loaded once) with their labels for the shown hour, in the hour's order; a court missing from either is left out. */
+export function withHourStatus(catalog: Map<string, CourtInfo>, hour: HourStatus[]): CourtStatus[] {
+  return hour.flatMap((status) => {
+    const court = catalog.get(status.id);
+    return court ? [{ ...court, ...status }] : [];
+  });
+}
 
 export function filterCourts(courts: CourtStatus[], filters: Filters): CourtStatus[] {
   return courts.filter(

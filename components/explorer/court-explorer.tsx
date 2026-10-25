@@ -3,13 +3,14 @@
 import { LoaderCircle, LocateFixed, Sparkles } from "lucide-react";
 import dynamic from "next/dynamic";
 import { catchError } from "next/error";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { bookingDates } from "@/lib/booking-window";
 import { fetchJson } from "@/lib/fetch-json";
 import { assistantEnabled } from "@/lib/flags";
 import { distanceMiles, type LatLng } from "@/lib/geo";
+import type { CourtInfo } from "@/lib/queries/court-status";
 import type { ExplorerData } from "@/lib/queries/explorer";
 import { usePresence } from "@/lib/use-presence";
 import { cn } from "@/lib/utils";
@@ -20,7 +21,7 @@ import { ControlsPanel } from "./controls-panel";
 import type { Selection } from "./court-map";
 import { ParkDetail } from "./park-detail";
 import { ParkList } from "./park-list";
-import { filterCourts, SPORTS, summarizeParks, type Filters } from "./park-summary";
+import { filterCourts, SPORTS, summarizeParks, withHourStatus, type Filters } from "./park-summary";
 import { StatusBar } from "./status-bar";
 import { TimeScrubber } from "./time-scrubber";
 import { isPastTime } from "./url-state";
@@ -89,11 +90,30 @@ export function CourtExplorer() {
     transition.finished.finally(() => delete root.dataset.sheetMorph);
   };
 
+  // What the courts are (names, outlines, lights) is loaded once; each hour only brings labels.
+  const [catalog, setCatalog] = useState<Map<string, CourtInfo> | null>(null);
+  const catalogRef = useRef(catalog);
+  const [catalogLoads, setCatalogLoads] = useState(0);
+  const [catalogFailed, setCatalogFailed] = useState(false);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchJson<{ courts: CourtInfo[] }>("/api/courts/catalog", controller.signal)
+      .then(({ courts }) => {
+        catalogRef.current = new Map(courts.map((court) => [court.id, court]));
+        setCatalog(catalogRef.current);
+        setCatalogFailed(false);
+      })
+      .catch(() => !controller.signal.aborted && setCatalogFailed(true));
+    return () => controller.abort();
+  }, [catalogLoads]);
+
   const refresh = useCallback(() => {
     // An hour that has passed while the page sat open goes back to following now.
     if (time && isPastTime(time, new Date())) updateView({ time: null });
+    if (!catalogRef.current) setCatalogLoads((n) => n + 1);
     setRefreshes((n) => n + 1);
   }, [time, updateView]);
+
 
   useEffect(() => {
     const refreshIfVisible = () => document.visibilityState === "visible" && refresh();
@@ -113,6 +133,8 @@ export function CourtExplorer() {
       .then((next) => {
         setData(next);
         setFailed(false);
+        // A court added since the catalog loaded (the courts source runs daily): load it again.
+        if (catalogRef.current && next.courts.some((court) => !catalogRef.current!.has(court.id))) setCatalogLoads((n) => n + 1);
       })
       .catch(() => !controller.signal.aborted && setFailed(true));
     return () => controller.abort();
@@ -126,7 +148,7 @@ export function CourtExplorer() {
     return { ...filters, sports: sports.length ? sports : bookableSports };
   }, [filters, bookableSports]);
 
-  const courts = useMemo(() => (data ? filterCourts(data.courts, shownFilters) : []), [data, shownFilters]);
+  const courts = useMemo(() => (data && catalog ? filterCourts(withHourStatus(catalog, data.courts), shownFilters) : []), [data, catalog, shownFilters]);
   // Sort by distance only after the user asks: location is requested on that click, never on load.
   const [nearest, setNearest] = useState<{ on: boolean; location: LatLng | null; locating: boolean; error: string | null }>({
     on: false,
@@ -210,7 +232,7 @@ export function CourtExplorer() {
           onFiltersChange={setFilters}
           onCollapse={() => toggleSheet(true)}
         />
-        {data ? (
+        {data && catalog ? (
           <ParkList
             className={cn("pointer-events-auto shrink-0 animate-in fade-in duration-300 transition-opacity md:min-h-40 md:flex-1 md:shrink", loading && "opacity-60", selectedPark && "max-md:hidden")}
             parks={parks}
@@ -336,12 +358,12 @@ export function CourtExplorer() {
         <StatusBar className="pointer-events-auto w-fit" updatedAt={data?.reservationsUpdatedAt ?? null} />
       </div>
 
-      {failed && (
+      {(failed || catalogFailed) && (
         <div
           role="alert"
           className="glass-panel absolute top-4 left-1/2 z-20 flex w-max max-w-[calc(100%-1.5rem)] -translate-x-1/2 animate-in items-center gap-3 rounded-full py-2 pr-2 pl-4 text-sm text-destructive duration-300 fade-in slide-in-from-top-2 max-md:top-15"
         >
-          {data ? "Couldn't refresh courts; showing the last loaded." : "Couldn't load courts."}
+          {data && catalog ? "Couldn't refresh courts; showing the last loaded." : "Couldn't load courts."}
           <button type="button" onClick={refresh} className="shrink-0 rounded-full bg-destructive/10 px-3 py-1 font-medium transition hover:bg-destructive/15">
             Try again
           </button>

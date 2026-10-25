@@ -65,7 +65,7 @@ flowchart LR
 
   Q["lib/queries/*<br/>+ labelSlot(), playingConditions()"]
   PC & SL & EV & PE & AL & WH & SR --> Q
-  Q --> UI["Map UI<br/>/api/courts"]
+  Q --> UI["Map UI<br/>/api/courts/catalog (once)<br/>/api/courts (per hour)"]
   Q --> PAGES["/status<br/>/api/courts/[id]/day"]
   Q --> AI["AI tools<br/>/api/chat"]
 ```

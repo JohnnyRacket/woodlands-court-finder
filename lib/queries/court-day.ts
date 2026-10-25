@@ -7,7 +7,7 @@ import { weatherHours } from "@/lib/sources/weather/table";
 import { sunTimes } from "@/lib/sun";
 import { FIRST_HOUR, LAST_HOUR } from "@/lib/time";
 import { getDayConditions } from "./conditions";
-import { courtStatusesForDay, type CourtStatus } from "./court-status";
+import { courtStatusesForDay, type CourtInfo, type CourtStatus } from "./court-status";
 
 export interface CourtHour {
   hour: number;
@@ -19,7 +19,7 @@ export interface CourtHour {
 }
 
 export interface CourtDay {
-  court: Omit<CourtStatus, "label" | "bookingClosed" | "dark">;
+  court: CourtInfo;
   date: string;
   sunset: string;
   hours: CourtHour[];

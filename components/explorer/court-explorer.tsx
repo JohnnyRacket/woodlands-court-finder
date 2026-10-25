@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronUp, Sparkles, Trees } from "lucide-react";
+import { ChevronUp, LoaderCircle, LocateFixed, Sparkles, Trees } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -201,6 +201,23 @@ export function CourtExplorer() {
         <div className="pointer-events-none absolute inset-x-3 top-16 flex justify-center md:top-4 md:right-[24rem] md:left-[25.5rem]">
           <AlertsBanner className="pointer-events-auto w-fit max-w-full animate-in fade-in duration-300" alerts={data.alerts} />
         </div>
+      )}
+
+      <button
+        type="button"
+        onClick={toggleNearest}
+        aria-pressed={nearest.on}
+        disabled={nearest.locating}
+        aria-label={nearest.on ? "Stop showing my location" : "Show my location and sort parks by distance"}
+        className={cn(
+          "glass-panel absolute top-3 left-3 grid size-10 place-items-center rounded-full transition active:scale-95 disabled:opacity-60 md:hidden",
+          nearest.on ? "bg-primary text-brand-mint" : "text-primary",
+        )}
+      >
+        {nearest.locating ? <LoaderCircle className="size-4 animate-spin" /> : <LocateFixed className="size-4" />}
+      </button>
+      {nearest.error && (
+        <p className="glass-panel absolute top-15 left-3 max-w-48 animate-in rounded-2xl px-3 py-2 text-xs text-muted-foreground fade-in md:hidden">{nearest.error}</p>
       )}
 
       <div className="absolute top-4 right-4 flex flex-col items-end gap-2 max-md:top-3 max-md:right-3">

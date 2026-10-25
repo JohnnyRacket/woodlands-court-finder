@@ -66,7 +66,8 @@ function parkMarkers(park: ParkSummary, selected: boolean, yoffset: number, size
   const attributes = { parkId: park.id };
   const sports = (["tennis", "pickleball"] as Sport[]).filter((sport) => park.sports[sport]);
   const graphics: Graphic[] = [];
-  const spacing = size * 0.62;
+  // The balls overlap so they read as one park: the second ball's rim meets the tennis ball's right seam.
+  const spacing = size * 0.38;
 
   if (selected && halo) {
     graphics.push(

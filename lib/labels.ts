@@ -32,7 +32,7 @@ export interface LabelInput {
 /** An hourly slot counts as covered when an event fills at least half of it. */
 const MIN_OVERLAP = 30;
 
-function covers(event: ScheduleEvent, hour: number): boolean {
+export function covers(event: ScheduleEvent, hour: number): boolean {
   const start = Math.max(event.startMin, hour * 60);
   const end = Math.min(event.endMin, hour * 60 + 60);
   return end - start >= MIN_OVERLAP;

@@ -44,5 +44,17 @@ export function dateRange(from: string, count: number): string[] {
   return Array.from({ length: count }, (_, i) => addDays(from, i));
 }
 
+/** Courts are open 7 a.m.–11 p.m.; slots start on the hour from 7 through 22. */
+export const FIRST_HOUR = 7;
+export const LAST_HOUR = 22;
+
+/** The hour to show by default: now if courts are open, otherwise the next opening. */
+export function currentPlayHour(now: Date): { date: string; hour: number } {
+  const { date, hour } = chicagoDateHour(now);
+  if (hour < FIRST_HOUR) return { date, hour: FIRST_HOUR };
+  if (hour > LAST_HOUR) return { date: addDays(date, 1), hour: FIRST_HOUR };
+  return { date, hour };
+}
+
 /** How far ahead recurring schedules are expanded into concrete events. */
 export const EVENT_WINDOW_DAYS = 14;

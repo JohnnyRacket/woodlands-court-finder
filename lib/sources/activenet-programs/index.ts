@@ -42,7 +42,7 @@ const searchBody = (keyword: string) => ({
 // takes a few minutes at the polite request pace; it runs once a day.
 export const activenetProgramsSource: SourceModule = {
   name: SOURCE,
-  schedule: "30 5 * * *",
+  schedule: { live: "30 5 * * *", gentle: "30 5 * * 1" }, // daily / weekly
 
   async run({ db, now, dryRun, log }) {
     const knownParks = db.select({ id: parks.id, name: parks.name }).from(parks).all();

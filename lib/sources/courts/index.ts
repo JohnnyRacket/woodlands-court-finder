@@ -10,7 +10,7 @@ import { buildReference } from "./normalize";
 // Reference data: parks and courts, joined from Township GIS + ActiveNet.
 export const courtsSource: SourceModule = {
   name: "courts",
-  schedule: "0 4 * * *",
+  schedule: { live: "0 4 * * *", gentle: "0 4 * * 1" }, // daily / weekly
 
   async run({ db, now, dryRun, log }) {
     const gis = await fetchGisCourts();

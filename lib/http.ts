@@ -1,7 +1,7 @@
 // Polite HTTP for every upstream: identifying User-Agent, timeout, retry with backoff,
 // and a minimum gap between requests to the same host.
 
-const MIN_GAP_MS = 2000;
+const MIN_GAP_MS = 3000;
 const RETRIES = 3;
 const TIMEOUT_MS = 20_000;
 

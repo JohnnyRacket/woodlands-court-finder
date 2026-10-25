@@ -34,6 +34,21 @@ describe("politeFetch", () => {
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 
+  it("spaces concurrent requests to the same host", async () => {
+    const calledAt: number[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        calledAt.push(Date.now());
+        return reply(200);
+      }),
+    );
+    await settle(Promise.all([1, 2, 3].map((n) => politeFetch(`https://d.example/${n}`))));
+    expect(calledAt).toHaveLength(3);
+    expect(calledAt[1] - calledAt[0]).toBeGreaterThanOrEqual(3000);
+    expect(calledAt[2] - calledAt[1]).toBeGreaterThanOrEqual(3000);
+  });
+
   it("gives up after three network failures, naming the URL", async () => {
     const fetch = vi.fn().mockRejectedValue(new TypeError("fetch failed"));
     vi.stubGlobal("fetch", fetch);

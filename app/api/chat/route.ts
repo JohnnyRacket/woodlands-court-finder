@@ -1,6 +1,7 @@
 import { createUIMessageStreamResponse, safeValidateUIMessages, toUIMessageStream } from "ai";
 import type { NextRequest } from "next/server";
 import { historyTooLong, streamChat } from "@/lib/ai/chat";
+import { clientIp } from "@/lib/client-ip";
 import { assistantEnabled } from "@/lib/flags";
 
 // Simple per-IP limit; fine for a single container.
@@ -28,8 +29,7 @@ export async function POST(request: NextRequest) {
     console.error("[chat] NEXT_PUBLIC_ASSISTANT_ENABLED is on but ANTHROPIC_API_KEY isn't set");
     return Response.json({ error: "The assistant isn't available right now." }, { status: 503 });
   }
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
-  if (rateLimited(ip)) {
+  if (rateLimited(clientIp(request.headers))) {
     return Response.json({ error: "Too many questions; try again in a few minutes." }, { status: 429 });
   }
   // Checked before parsing; historyTooLong below is the real limit.

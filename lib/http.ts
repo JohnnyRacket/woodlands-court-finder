@@ -15,9 +15,11 @@ export function userAgent(): string {
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function waitForTurn(host: string) {
-  const wait = (lastRequestAt.get(host) ?? 0) + MIN_GAP_MS - Date.now();
+  // Claim the next turn before sleeping, so callers waiting at the same time queue up instead of firing together.
+  const turn = Math.max(Date.now(), (lastRequestAt.get(host) ?? 0) + MIN_GAP_MS);
+  lastRequestAt.set(host, turn);
+  const wait = turn - Date.now();
   if (wait > 0) await sleep(wait);
-  lastRequestAt.set(host, Date.now());
 }
 
 export class HttpError extends Error {

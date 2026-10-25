@@ -199,7 +199,7 @@ export function CourtMap({ parks, courts, selection, onSelect, rightPanelWidth }
           return new Graphic({
             geometry: new Polygon({ rings: JSON.parse(court.geometry!).coordinates, spatialReference: { wkid: 4326 } }),
             symbol: new SimpleFillSymbol({
-              color: withAlpha(LABEL_META[court.label.kind].color, court.dark ? 0.35 : selected ? 0.95 : 0.8),
+              color: withAlpha(LABEL_META[court.label.kind].color, LABEL_META[court.label.kind].hollow ? 0.2 : court.dark ? 0.35 : selected ? 0.95 : 0.85),
               outline: { color: selected ? "#1f1f1f" : "#ffffff", width: selected ? 3 : 1.5 },
             }),
             attributes: { parkId: court.parkId, courtId: court.id },

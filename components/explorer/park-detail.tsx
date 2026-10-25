@@ -9,6 +9,7 @@ import type { CourtStatus } from "@/lib/queries/court-status";
 import { cn } from "@/lib/utils";
 import { BallBadge } from "./ball-icons";
 import { CourtDayPanel } from "./court-day-panel";
+import { StatusDot } from "./status-dot";
 import { SPORTS, type ParkSummary, type Sport } from "./park-summary";
 
 const RESERVE_URL = "https://anc.apm.activecommunities.com/wcscparksandrec/reservation/landing/quick?locale=en-US&groupId=";
@@ -184,13 +185,17 @@ function CourtRow({
   return (
     <li ref={ref} className={cn("flex items-center rounded-2xl transition", selected ? "bg-primary/10 ring-1 ring-primary/40" : "hover:bg-white/70")}>
       <button type="button" onClick={onSelect} className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2 text-left">
-        <span className="size-3 shrink-0 rounded-full" style={{ backgroundColor: meta.color }} />
+        <StatusDot className="size-3" color={meta.color} hollow={meta.hollow} />
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-medium">{court.name}</span>
           {details.length > 0 && <span className="block text-xs text-muted-foreground">{details.join(" · ")}</span>}
         </span>
         <span className="flex shrink-0 flex-col items-end gap-0.5">
-          <span className="rounded-full px-2.5 py-1 text-xs font-medium text-white" style={{ backgroundColor: meta.color }} title={meta.hint}>
+          <span
+            className="rounded-full px-2.5 py-1 text-xs font-medium"
+            style={meta.hollow ? { boxShadow: `inset 0 0 0 1.5px ${meta.color}`, color: meta.foreground } : { backgroundColor: meta.color, color: meta.foreground }}
+            title={meta.hint}
+          >
             {meta.text}
           </span>
           {court.dark && (

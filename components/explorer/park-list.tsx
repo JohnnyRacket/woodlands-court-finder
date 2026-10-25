@@ -4,6 +4,7 @@ import { ChevronRight } from "lucide-react";
 import { LABEL_META } from "@/lib/label-meta";
 import { cn } from "@/lib/utils";
 import { SPORTS, type ParkSummary, type Sport } from "./park-summary";
+import { StatusDot } from "./status-dot";
 
 const SPORT_LABEL: Record<Sport, string> = { tennis: "Tennis", pickleball: "Pickleball" };
 
@@ -57,11 +58,12 @@ export function ParkList({ parks, selectedParkId, onSelectPark, className }: Par
                         </span>
                         <span className="flex flex-1 flex-wrap gap-1" aria-label={`${sport}: ${summary.joinable} of ${summary.courts.length} playable`}>
                           {summary.courts.map((court) => (
-                            <span
+                            <StatusDot
                               key={court.id}
                               title={`${court.name}: ${LABEL_META[court.label.kind].text}`}
-                              className={cn("size-2 rounded-full", court.dark && "opacity-40")}
-                              style={{ backgroundColor: LABEL_META[court.label.kind].color }}
+                              className={cn("size-2", court.dark && "opacity-40")}
+                              color={LABEL_META[court.label.kind].color}
+                              hollow={LABEL_META[court.label.kind].hollow}
                             />
                           ))}
                         </span>

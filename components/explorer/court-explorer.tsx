@@ -191,7 +191,8 @@ export function CourtExplorer() {
           // The morph animates collapsing and expanding, so the sheet's own fade sits that out.
           "[:root[data-sheet-morph]_&]:transition-none",
           // On phones the park or assistant sheet takes this spot, so the controls get out of the way.
-          (detailOpen || assistantOpen || sheetCollapsed) ? "max-md:invisible max-md:opacity-0" : "max-md:[view-transition-name:phone-sheet]",
+          // The morph's name goes on only while it runs: a named element stops the glass inside it from blurring the map.
+          (detailOpen || assistantOpen || sheetCollapsed) ? "max-md:invisible max-md:opacity-0" : "max-md:[:root[data-sheet-morph]_&]:[view-transition-name:phone-sheet]",
         )}
       >
         <ControlsPanel
@@ -236,7 +237,7 @@ export function CourtExplorer() {
       {sheetCollapsed && !detailOpen && !assistantOpen && data && (
         <TimeScrubber
           className={cn(
-            "absolute inset-x-3 bottom-7 [view-transition-name:phone-sheet] md:hidden",
+            "absolute inset-x-3 bottom-7 md:hidden [:root[data-sheet-morph]_&]:[view-transition-name:phone-sheet]",
             !sheetMorphed && "animate-in duration-200 fade-in slide-in-from-bottom-4",
           )}
           dates={data.dates}

@@ -75,7 +75,6 @@ export function TimeScrubber({ dates, hours, date, hour, now, onChange, summary,
     scroller.current?.scrollTo({ left: Math.min(slots.length - 1, Math.max(0, index)) * SLOT_WIDTH, behavior: "smooth" });
 
   const dayName = (day: number, d: string) => (day === 0 ? "Today" : day === 1 ? "Tomorrow" : formatDay(d).split(", ")[0]);
-  const shortDay = (day: number, d: string) => (day === 0 ? "Today" : formatDay(d).split(", ")[0]);
   const isNow = (slot: { date: string; hour: number }) => slot.date === now.date && now.open && slot.hour === now.hour;
   const current = slots[centered];
   const settled = current?.date === date && current?.hour === hour;
@@ -140,7 +139,11 @@ export function TimeScrubber({ dates, hours, date, hour, now, onChange, summary,
                     slot.firstOfDay ? "font-semibold text-primary" : active ? "font-semibold text-foreground" : "font-medium text-muted-foreground",
                   )}
                 >
-                  {slot.firstOfDay ? shortDay(slot.day, slot.date) : isNow(slot) ? "Now" : `${slot.hour % 12 || 12}${slot.hour < 12 ? "a" : "p"}`}
+                  {slot.firstOfDay && slot.day > 0
+                    ? formatDay(slot.date).split(", ")[0]
+                    : isNow(slot)
+                      ? "Now"
+                      : `${slot.hour % 12 || 12}${slot.hour < 12 ? "a" : "p"}`}
                 </span>
               </button>
             );

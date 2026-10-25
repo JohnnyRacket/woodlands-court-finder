@@ -1,10 +1,10 @@
 import { inArray, isNotNull } from "drizzle-orm";
 import { ActiveNetClient, FACILITY_GROUPS, fetchAvailability } from "@/lib/activenet/client";
 import { courts } from "@/lib/db/tables";
-import { allBookingDates, bookingDates, type Pool } from "@/lib/booking-window";
+import { allBookingDates, bookingClosed, bookingDates, type Pool } from "@/lib/booking-window";
 import { chicagoDate } from "@/lib/time";
 import type { SourceModule } from "../types";
-import { diffSlots, toSlotRows, type SlotRow } from "./normalize";
+import { diffSlots, keepLastOpenStatus, toSlotRows, type SlotRow } from "./normalize";
 import { slotChanges, slots } from "./table";
 
 // Hourly reservation status for every date residents can book (see lib/booking-window.ts).
@@ -43,21 +43,20 @@ export const activenetSlotsSource: SourceModule = {
     }
     for (const note of notes) log(note);
 
+    let stored = rows;
     if (!dryRun) {
       db.transaction((tx) => {
+        const previous = tx.select().from(slots).where(inArray(slots.date, dates)).all();
+        stored = keepLastOpenStatus(rows, previous, (row) => bookingClosed(row.date, row.hour, now));
+
         // Log what changed since the last run before replacing it: this is the booking history.
-        const previous = tx
-          .select({ courtId: slots.courtId, date: slots.date, hour: slots.hour, status: slots.status })
-          .from(slots)
-          .where(inArray(slots.date, dates))
-          .all();
-        const changes = diffSlots(previous, rows);
+        const changes = diffSlots(previous, stored);
         for (let i = 0; i < changes.length; i += 500) tx.insert(slotChanges).values(changes.slice(i, i + 500)).run();
 
         tx.delete(slots).where(inArray(slots.date, dates)).run();
-        for (let i = 0; i < rows.length; i += 500) tx.insert(slots).values(rows.slice(i, i + 500)).run();
+        for (let i = 0; i < stored.length; i += 500) tx.insert(slots).values(stored.slice(i, i + 500)).run();
       });
     }
-    return { rows: rows.length, notes };
+    return { rows: stored.length, notes };
   },
 };

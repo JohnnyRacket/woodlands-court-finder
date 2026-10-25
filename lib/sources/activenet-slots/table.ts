@@ -19,9 +19,9 @@ export const slots = sqliteTable(
 
 // Every status change seen between syncs: when each hour was booked or freed, and how far
 // ahead. slots holds only the latest state; this is the history behind it.
-// Caveat: ActiveNet reports an hour as taken once it can't be booked any more (past hours,
-// and the next hour from about half past), so free → booked changes observed within an hour
-// of the slot's start are mostly that cutoff, not reservations.
+// ActiveNet reports an hour as taken once booking closes (an hour before it starts), so the
+// sync keeps the last status seen before then; changes inside that hour are never logged.
+// Rows logged before Oct 2026 predate this and include that cutoff as free → booked changes.
 export const slotChanges = sqliteTable(
   "slot_changes",
   {

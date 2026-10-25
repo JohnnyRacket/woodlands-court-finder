@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { availabilitySchema, type Availability } from "@/lib/activenet/client";
 import fixture from "./__fixtures__/availability-pickleball.json";
-import { diffSlots, toSlotRows } from "./normalize";
+import { diffSlots, keepLastOpenStatus, toSlotRows } from "./normalize";
 
 const availability = availabilitySchema.parse(fixture.body).availability;
 const fetchedAt = "2026-10-25T03:24:00.000Z";
@@ -51,6 +51,19 @@ describe("toSlotRows fails loudly on shape changes", () => {
 
   it("rejects a slot count that doesn't match the hours", () => {
     expect(() => toSlotRows(one({ time_slots: ["07:00:00"] }), "2026-10-25", courtsMap, fetchedAt)).toThrow(/2 slots for 1 hours/);
+  });
+});
+
+describe("keepLastOpenStatus", () => {
+  const row = (hour: number, status: "free" | "booked", fetchedAt: string) => ({ courtId: "c1", date: "2026-10-25", hour, status, fetchedAt });
+
+  it("keeps what was seen before booking closed instead of ActiveNet's 'taken'", () => {
+    const previous = [row(13, "booked", "t1"), row(14, "free", "t1"), row(16, "free", "t1")];
+    const fetched = [row(13, "booked", "t2"), row(14, "booked", "t2"), row(15, "booked", "t2"), row(16, "booked", "t2")];
+    const closed = (r: { hour: number }) => r.hour < 16;
+    // 13 and 14 keep the earlier reading, 15 was never seen open so it's dropped, 16 is still bookable.
+    expect(keepLastOpenStatus(fetched, previous, closed)).toEqual([row(13, "booked", "t1"), row(14, "free", "t1"), row(16, "booked", "t2")]);
+    expect(diffSlots(previous, keepLastOpenStatus(fetched, previous, closed)).map((c) => c.hour)).toEqual([16]);
   });
 });
 

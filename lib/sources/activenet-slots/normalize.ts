@@ -53,6 +53,19 @@ export interface SlotChange {
 
 const slotKey = (row: { courtId: string; date: string; hour: number }) => `${row.courtId}|${row.date}|${row.hour}`;
 
+/**
+ * Once booking closes for an hour, ActiveNet reports it taken whether or not anyone reserved it.
+ * For those hours keep the last status seen while booking was open, or drop the row if there is none.
+ */
+export function keepLastOpenStatus(rows: SlotRow[], previous: SlotRow[], closed: (row: SlotRow) => boolean): SlotRow[] {
+  const before = new Map(previous.map((row) => [slotKey(row), row]));
+  return rows.flatMap((row) => {
+    if (!closed(row)) return [row];
+    const last = before.get(slotKey(row));
+    return last ? [last] : [];
+  });
+}
+
 /** Court-hours whose status differs from what was stored, i.e. bookings and cancellations seen this run. */
 export function diffSlots(previous: { courtId: string; date: string; hour: number; status: "free" | "booked" }[], rows: SlotRow[]): SlotChange[] {
   const before = new Map(previous.map((row) => [slotKey(row), row.status]));

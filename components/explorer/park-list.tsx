@@ -49,7 +49,12 @@ export function ParkList({ parks, selectedParkId, onSelectPark, className }: Par
                     if (!summary) return null;
                     return (
                       <span key={sport} className="flex items-center gap-2">
-                        <span className="w-[4.25rem] shrink-0 text-xs text-muted-foreground">{SPORT_LABEL[sport]}</span>
+                        <span className="flex w-[6.25rem] shrink-0 items-baseline gap-1.5 text-xs">
+                          <span className="text-muted-foreground">{SPORT_LABEL[sport]}</span>
+                          <span className={cn("tabular-nums", summary.joinable ? "font-semibold text-foreground" : "text-muted-foreground")}>
+                            {summary.joinable}/{summary.courts.length}
+                          </span>
+                        </span>
                         <span className="flex flex-1 flex-wrap gap-1" aria-label={`${sport}: ${summary.joinable} of ${summary.courts.length} playable`}>
                           {summary.courts.map((court) => (
                             <span
@@ -59,9 +64,6 @@ export function ParkList({ parks, selectedParkId, onSelectPark, className }: Par
                               style={{ backgroundColor: LABEL_META[court.label.kind].color }}
                             />
                           ))}
-                        </span>
-                        <span className={cn("shrink-0 text-xs tabular-nums", summary.joinable ? "font-medium text-foreground" : "text-muted-foreground")}>
-                          {summary.joinable}/{summary.courts.length}
                         </span>
                       </span>
                     );

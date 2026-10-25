@@ -79,7 +79,7 @@ export function CourtDayPanel({ courtId, date, hour, now, onPickHour, onClose, c
 
       {error && <p className="mx-4 rounded-2xl bg-destructive/10 px-4 py-2.5 text-sm text-destructive">Couldn&apos;t load this court ({error}).</p>}
 
-      <ol className="flex min-h-0 flex-col gap-0.5 overflow-y-auto px-2 pb-3">
+      <ol className="panel-scroll flex min-h-0 flex-col gap-0.5 px-2">
         {current
           ? current.hours.map(({ hour: h, label, dark, weather }) => {
               const meta = LABEL_META[label.kind];

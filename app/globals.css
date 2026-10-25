@@ -159,5 +159,13 @@
 
 /* Floating panels over the map */
 @utility glass-panel {
-  @apply rounded-3xl border border-white/60 bg-white/85 shadow-[0_8px_32px_-8px_rgb(31_60_36_/_0.25)] backdrop-blur-xl;
+  @apply overflow-hidden rounded-3xl border border-white/60 bg-white/85 shadow-[0_8px_32px_-8px_rgb(31_60_36_/_0.25)] backdrop-blur-xl;
+}
+
+/* Scrolling inside a glass panel: a thin, quiet scrollbar that stops short of the rounded corners. */
+@utility panel-scroll {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(31 31 31 / 0.18) transparent;
+  margin-block-end: 0.875rem;
 }

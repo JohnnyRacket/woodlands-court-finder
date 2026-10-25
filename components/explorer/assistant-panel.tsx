@@ -65,7 +65,7 @@ export function AssistantPanel({ onClose, className }: { onClose: () => void; cl
         </button>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pb-3">
+      <div className="panel-scroll flex min-h-0 flex-1 flex-col gap-3 px-4 pb-1 mb-0!">
         {messages.length === 0 && (
           <div className="flex flex-col gap-2 pt-1">
             {SUGGESTIONS.map((suggestion) => (

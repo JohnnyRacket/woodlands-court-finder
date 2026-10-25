@@ -25,7 +25,7 @@ export function ParkList({ parks, selectedParkId, onSelectPark, className }: Par
           {joinableParks} of {parks.length} with a court to play
         </p>
       </header>
-      <ul className="flex min-h-0 flex-col gap-1.5 px-3 pb-3 md:overflow-y-auto">
+      <ul className="flex min-h-0 flex-col gap-1.5 px-3 pb-3 md:panel-scroll md:pb-0">
         {parks.map((park) => (
           <li key={park.id}>
             <button

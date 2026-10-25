@@ -132,7 +132,7 @@ export function ControlsPanel({ dates, hours, date, hour, now, filters, onTimeCh
             <ToggleGroupItem
               key={sport}
               value={sport}
-              className="group/sport h-9 flex-1 gap-1.5 rounded-xl text-sm text-muted-foreground capitalize data-[pressed]:bg-primary data-[pressed]:text-primary-foreground data-[pressed]:shadow-sm"
+              className="group/sport h-9 flex-1 gap-1.5 rounded-xl text-sm text-muted-foreground capitalize data-[pressed]:bg-brand-mint/45 data-[pressed]:font-medium data-[pressed]:text-primary data-[pressed]:ring-1 data-[pressed]:ring-primary/20"
             >
               <Check className="hidden size-3.5 group-data-[pressed]/sport:block" />
               {sport}

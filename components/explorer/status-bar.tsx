@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, Info } from "lucide-react";
+import { Activity, Clock } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { formatAgo } from "@/lib/format";
@@ -27,9 +27,8 @@ export function StatusBar({ updatedAt, className }: { updatedAt: string | null; 
         ))}
       </ul>
       <p className="flex items-center gap-1.5 text-muted-foreground">
-        <Info className="size-3.5 shrink-0" />
-        {updatedAt && now ? `Reservations updated ${formatAgo(updatedAt, now)}` : "Reservations not synced yet"}
-        <span className="max-lg:hidden">· reservations aren&apos;t occupancy; walk-ups may be playing</span>
+        <Clock className="size-3.5 shrink-0" />
+        {updatedAt && now ? `Updated ${formatAgo(updatedAt, now)}` : "Not synced yet"}
       </p>
       <Link href="/status" className="ml-auto inline-flex items-center gap-1 font-medium text-primary hover:underline">
         <Activity className="size-3.5" /> Data status

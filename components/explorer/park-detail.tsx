@@ -82,7 +82,7 @@ export function ParkDetail({
           </button>
         </header>
 
-        <div className="flex min-h-0 flex-col overflow-y-auto pb-2">
+        <div className="panel-scroll flex min-h-0 flex-col">
           {events.length > 0 && (
             <ul className="mx-4 mb-2 flex flex-col gap-2">
               {events.map((event) => (

@@ -257,7 +257,7 @@ export function CourtMap({ parks, courts, selection, onSelect, rightPanelWidth }
   return (
     <div className="absolute inset-0">
       <div ref={containerRef} className="size-full" />
-      <div className="glass-panel absolute right-4 bottom-12 flex flex-col overflow-hidden rounded-2xl p-1 max-md:hidden">
+      <div className="glass-panel absolute right-4 bottom-8 flex flex-col overflow-hidden rounded-2xl p-1 max-md:hidden">
         <MapButton label="Zoom in" onClick={() => zoomBy(1)}>
           <Plus className="size-4" />
         </MapButton>

@@ -68,7 +68,7 @@ export function CourtExplorer() {
       />
 
       {/* Left column: controls + park list (a bottom sheet on phones) */}
-      <div className="absolute inset-x-3 bottom-3 flex max-h-[58dvh] flex-col gap-3 overflow-y-auto rounded-3xl [scrollbar-width:none] md:pointer-events-none md:inset-y-4 md:right-auto md:bottom-4 md:left-4 md:max-h-none md:w-[23rem] md:overflow-visible md:rounded-none">
+      <div className="absolute inset-x-3 bottom-7 flex max-h-[58dvh] flex-col gap-3 overflow-y-auto rounded-3xl [scrollbar-width:none] md:pointer-events-none md:inset-y-4 md:right-auto md:bottom-8 md:left-4 md:max-h-none md:w-[23rem] md:overflow-visible md:rounded-none">
         <ControlsPanel
           className="pointer-events-auto shrink-0"
           dates={data?.dates ?? []}
@@ -111,14 +111,14 @@ export function CourtExplorer() {
 
       {assistantOpen && (
         <AssistantPanel
-          className="absolute inset-x-3 bottom-3 z-10 h-[62dvh] md:inset-x-auto md:top-20 md:right-4 md:bottom-28 md:h-auto md:w-[23rem]"
+          className="absolute inset-x-3 bottom-7 z-10 h-[62dvh] md:inset-x-auto md:top-20 md:right-4 md:bottom-28 md:h-auto md:w-[23rem]"
           onClose={() => setAssistantOpen(false)}
         />
       )}
 
       {selectedPark && data && !assistantOpen && (
         <ParkDetail
-          className="absolute inset-x-3 bottom-3 max-h-[58dvh] md:inset-x-auto md:top-20 md:right-4 md:bottom-28 md:max-h-none"
+          className="absolute inset-x-3 bottom-7 max-h-[58dvh] md:inset-x-auto md:top-20 md:right-4 md:bottom-28 md:max-h-none"
           park={selectedPark}
           date={data.date}
           hour={data.hour}
@@ -137,7 +137,7 @@ export function CourtExplorer() {
       )}
 
       <StatusBar
-        className="absolute right-20 bottom-4 left-[25.5rem] max-md:hidden"
+        className="absolute right-20 bottom-8 left-[25.5rem] max-md:hidden"
         updatedAt={data?.reservationsUpdatedAt ?? null}
       />
 

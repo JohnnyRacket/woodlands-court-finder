@@ -36,6 +36,13 @@
       "when": 1792952749334,
       "tag": "0004_conditions_alerts_events_history",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1792967743478,
+      "tag": "0005_drop_cutoff_slot_readings",
+      "breakpoints": true
     }
   ]
 }

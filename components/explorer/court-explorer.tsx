@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { ControlsPanel } from "./controls-panel";
 import { ParkDetail } from "./park-detail";
 import { ParkList } from "./park-list";
+import type { Selection } from "./court-map";
 import { filterCourts, summarizeParks, type Filters } from "./park-summary";
 import { StatusBar } from "./status-bar";
 import { WeatherPill } from "./weather-pill";
@@ -23,7 +24,9 @@ export function CourtExplorer() {
   const [data, setData] = useState<ExplorerData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>({ sports: ["tennis", "pickleball"], joinableOnly: false, litOnly: false });
-  const [selectedParkId, setSelectedParkId] = useState<string | null>(null);
+  const [selection, setSelection] = useState<Selection>({ parkId: null, courtId: null });
+  const selectedParkId = selection.parkId;
+  const selectPark = (parkId: string | null) => setSelection({ parkId, courtId: null });
 
   useEffect(() => {
     const controller = new AbortController();
@@ -39,13 +42,13 @@ export function CourtExplorer() {
   }, [time]);
 
   const courts = useMemo(() => (data ? filterCourts(data.courts, filters) : []), [data, filters]);
-  const parks = useMemo(() => summarizeParks(courts), [courts]);
+  const parks = useMemo(() => summarizeParks(courts, filters.sports), [courts, filters.sports]);
   const selectedPark = parks.find((park) => park.id === selectedParkId) ?? null;
   const loading = !data || (time !== null && (data.date !== time.date || data.hour !== time.hour));
 
   return (
     <main className="relative h-dvh w-full overflow-hidden bg-background">
-      <CourtMap parks={parks} courts={courts} selectedParkId={selectedParkId} onSelectPark={setSelectedParkId} />
+      <CourtMap parks={parks} courts={courts} selection={selection} onSelect={setSelection} />
 
       {/* Left column: controls + park list (a bottom sheet on phones) */}
       <div className="pointer-events-none absolute inset-x-3 bottom-3 flex max-h-[58dvh] flex-col gap-3 md:inset-y-4 md:right-auto md:bottom-4 md:left-4 md:max-h-none md:w-[23rem]">
@@ -65,7 +68,7 @@ export function CourtExplorer() {
             className={cn("pointer-events-auto min-h-40 flex-1 transition-opacity", loading && "opacity-60", selectedPark && "max-md:hidden")}
             parks={parks}
             selectedParkId={selectedParkId}
-            onSelectPark={setSelectedParkId}
+            onSelectPark={selectPark}
           />
         ) : (
           <div className="glass-panel pointer-events-auto flex flex-1 flex-col gap-2 p-4">
@@ -88,9 +91,12 @@ export function CourtExplorer() {
         <ParkDetail
           className="absolute inset-x-3 bottom-3 max-h-[58dvh] md:inset-x-auto md:top-20 md:right-4 md:bottom-28 md:max-h-none md:w-[23rem]"
           park={selectedPark}
+          date={data.date}
           hour={data.hour}
           events={data.events.filter((event) => event.parkId === selectedPark.id)}
-          onClose={() => setSelectedParkId(null)}
+          selectedCourtId={selection.courtId}
+          onSelectCourt={(courtId) => setSelection({ parkId: selectedPark.id, courtId })}
+          onClose={() => selectPark(null)}
         />
       )}
 

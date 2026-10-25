@@ -44,8 +44,9 @@ export function getCourtStatuses(date: string, hour: number, db: Db = getDb()): 
     .from(courts)
     .innerJoin(parks, eq(parks.id, courts.parkId))
     .where(eq(courts.active, true))
-    .orderBy(parks.name, courts.name)
-    .all();
+    .all()
+    // Natural order: "Tennis 2" before "Tennis 10".
+    .sort((a, b) => a.parkName.localeCompare(b.parkName) || a.name.localeCompare(b.name, "en", { numeric: true }));
 
   const statusByCourt = new Map(
     db

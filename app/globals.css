@@ -149,6 +149,12 @@
   html {
     @apply font-sans;
   }
+  /* Tailwind v4 dropped pointer cursors on buttons; anything clickable should look it. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  a[href] {
+    cursor: pointer;
+  }
 }
 
 /* Floating panels over the map */

@@ -3,7 +3,8 @@
 import { ChevronRight } from "lucide-react";
 import { LABEL_META } from "@/lib/label-meta";
 import { cn } from "@/lib/utils";
-import type { ParkSummary } from "./park-summary";
+import { BallBadge } from "./ball-icons";
+import { SPORTS, type ParkSummary } from "./park-summary";
 
 interface ParkListProps {
   parks: ParkSummary[];
@@ -34,12 +35,6 @@ export function ParkList({ parks, selectedParkId, onSelectPark, className }: Par
                 park.id === selectedParkId ? "bg-primary/10 ring-1 ring-primary/30" : "hover:bg-white/80",
               )}
             >
-              <span
-                className="grid size-9 shrink-0 place-items-center rounded-full text-sm font-semibold text-white shadow-sm"
-                style={{ backgroundColor: park.color }}
-              >
-                {park.joinable}
-              </span>
               <span className="min-w-0 flex-1">
                 <span className="flex items-center gap-2">
                   <span className="truncate text-sm font-medium">{park.name.replace(/ Park$/, "")}</span>
@@ -47,14 +42,26 @@ export function ParkList({ parks, selectedParkId, onSelectPark, className }: Par
                     <span className="rounded-full bg-status-open-play/10 px-2 py-0.5 text-[11px] font-medium text-status-open-play">Open play</span>
                   )}
                 </span>
-                <span className="mt-1 flex flex-wrap gap-1" aria-hidden>
-                  {park.courts.map((court) => (
-                    <span
-                      key={court.id}
-                      className={cn("size-2 rounded-full", court.dark && "opacity-40")}
-                      style={{ backgroundColor: LABEL_META[court.label.kind].color }}
-                    />
-                  ))}
+                <span className="mt-1.5 flex flex-col gap-1">
+                  {SPORTS.map((sport) => {
+                    const summary = park.sports[sport];
+                    if (!summary) return null;
+                    return (
+                      <span key={sport} className="flex items-center gap-2">
+                        <BallBadge sport={sport} count={summary.joinable} muted={summary.joinable === 0} size={22} />
+                        <span className="flex flex-wrap gap-1" aria-label={`${sport}: ${summary.joinable} of ${summary.courts.length} playable`}>
+                          {summary.courts.map((court) => (
+                            <span
+                              key={court.id}
+                              title={`${court.name}: ${LABEL_META[court.label.kind].text}`}
+                              className={cn("size-2 rounded-full", court.dark && "opacity-40")}
+                              style={{ backgroundColor: LABEL_META[court.label.kind].color }}
+                            />
+                          ))}
+                        </span>
+                      </span>
+                    );
+                  })}
                 </span>
               </span>
               <ChevronRight className="size-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5" />

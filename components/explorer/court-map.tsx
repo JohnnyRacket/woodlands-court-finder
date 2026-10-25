@@ -9,17 +9,24 @@ import Point from "@arcgis/core/geometry/Point";
 import Polygon from "@arcgis/core/geometry/Polygon";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import OpenStreetMapLayer from "@arcgis/core/layers/OpenStreetMapLayer";
+import PictureMarkerSymbol from "@arcgis/core/symbols/PictureMarkerSymbol";
 import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
 import TextSymbol from "@arcgis/core/symbols/TextSymbol";
 import MapView from "@arcgis/core/views/MapView";
-import { Minus, Plus, Maximize } from "lucide-react";
+import { Maximize, Minus, Plus } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { LABEL_META } from "@/lib/label-meta";
 import type { CourtStatus } from "@/lib/queries/court-status";
-import type { ParkSummary } from "./park-summary";
+import { ballColors, ballDataUri } from "./ball-icons";
+import type { ParkSummary, Sport } from "./park-summary";
 
 const WOODLANDS_CENTER: [number, number] = [-95.49, 30.19];
+const HOME_ZOOM = 12;
+const PARK_ZOOM = 17;
+const COURT_ZOOM = 18.5;
+/** Below this scale (zoomed in), park markers float above the park as pins. */
+const PIN_SCALE = 9_000;
 
 // With an ArcGIS Location Platform key, use Esri's light-gray vector basemap;
 // without one, muted OpenStreetMap tiles (no key needed).
@@ -36,46 +43,95 @@ function createBasemap() {
     baseLayers: [new OpenStreetMapLayer({ effect: "saturate(45%) brightness(105%) contrast(92%)" })],
   });
 }
-const HOME_ZOOM = 12;
-const PARK_ZOOM = 17;
+
+export interface Selection {
+  parkId: string | null;
+  courtId: string | null;
+}
 
 interface CourtMapProps {
   parks: ParkSummary[];
   courts: CourtStatus[];
-  selectedParkId: string | null;
-  onSelectPark: (parkId: string | null) => void;
+  selection: Selection;
+  onSelect: (selection: Selection) => void;
 }
 
-export function CourtMap({ parks, courts, selectedParkId, onSelectPark }: CourtMapProps) {
+/** Ball markers for one park: one per sport, side by side. */
+function parkMarkers(park: ParkSummary, selected: boolean, yoffset: number, size: number, halo: boolean): Graphic[] {
+  const geometry = new Point({ longitude: park.lng, latitude: park.lat });
+  const attributes = { parkId: park.id };
+  const sports = (["tennis", "pickleball"] as Sport[]).filter((sport) => park.sports[sport]);
+  const graphics: Graphic[] = [];
+  const spacing = size * 0.62;
+
+  if (selected && halo) {
+    graphics.push(
+      new Graphic({
+        geometry,
+        attributes,
+        symbol: new SimpleMarkerSymbol({
+          size: size + 10 + (sports.length - 1) * spacing * 2,
+          yoffset,
+          color: [41, 92, 45, 0.18],
+          outline: { color: "#295c2d", width: 2 },
+        }),
+      }),
+    );
+  }
+  sports.forEach((sport, i) => {
+    const summary = park.sports[sport]!;
+    const muted = summary.joinable === 0;
+    const xoffset = sports.length === 1 ? 0 : (i === 0 ? -1 : 1) * spacing;
+    graphics.push(
+      new Graphic({
+        geometry,
+        attributes,
+        symbol: new PictureMarkerSymbol({ url: ballDataUri(sport, muted), width: size, height: size, xoffset, yoffset }),
+      }),
+      new Graphic({
+        geometry,
+        attributes,
+        symbol: new TextSymbol({
+          text: String(summary.joinable),
+          color: ballColors(sport, muted).text,
+          xoffset,
+          yoffset,
+          verticalAlignment: "middle",
+          horizontalAlignment: "center",
+          font: { size: size * 0.4, weight: "bold" },
+        }),
+      }),
+    );
+  });
+  return graphics;
+}
+
+export function CourtMap({ parks, courts, selection, onSelect }: CourtMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<MapView | null>(null);
   const layersRef = useRef<{ parks: GraphicsLayer; pins: GraphicsLayer; courts: GraphicsLayer } | null>(null);
   const detailOpenRef = useRef(false);
   const fitPaddingRef = useRef<(() => void) | null>(null);
-  const onSelectRef = useRef(onSelectPark);
+  const onSelectRef = useRef(onSelect);
   useEffect(() => {
-    onSelectRef.current = onSelectPark;
-  }, [onSelectPark]);
+    onSelectRef.current = onSelect;
+  }, [onSelect]);
 
   useEffect(() => {
     const courtLayer = new GraphicsLayer({ minScale: 20_000 });
-    // Zoomed out: a count marker centered on each park. Zoomed in: a smaller pin that
-    // floats above the park so the court outlines underneath stay visible.
-    const parkLayer = new GraphicsLayer({ maxScale: 9_000 });
-    const pinLayer = new GraphicsLayer({ minScale: 9_000 });
-    const map = new ArcGISMap({
-      basemap: createBasemap(),
-      layers: [courtLayer, parkLayer, pinLayer],
-    });
+    const parkLayer = new GraphicsLayer({ maxScale: PIN_SCALE });
+    const pinLayer = new GraphicsLayer({ minScale: PIN_SCALE });
+    const map = new ArcGISMap({ basemap: createBasemap(), layers: [courtLayer, parkLayer, pinLayer] });
     const view = new MapView({
       container: containerRef.current!,
       map,
       center: WOODLANDS_CENTER,
       zoom: HOME_ZOOM,
-      constraints: { minZoom: 10, maxZoom: 19, rotationEnabled: false },
+      constraints: { minZoom: 10, maxZoom: 20, rotationEnabled: false },
       ui: { components: [] },
       popupEnabled: false,
     });
+
     // Keep the map's center clear of the floating panels.
     const fitPadding = () => {
       view.padding = window.matchMedia("(min-width: 768px)").matches
@@ -84,16 +140,38 @@ export function CourtMap({ parks, courts, selectedParkId, onSelectPark }: CourtM
     };
     fitPadding();
     window.addEventListener("resize", fitPadding);
-    const click = view.on("click", async (event) => {
-      const { results } = await view.hitTest(event, { include: [parkLayer, pinLayer, courtLayer] });
+
+    const include = [parkLayer, pinLayer, courtLayer];
+    const hitAttributes = async (event: Parameters<MapView["hitTest"]>[0]) => {
+      const { results } = await view.hitTest(event, { include });
       const hit = results.find((result) => result.type === "graphic");
-      onSelectRef.current(hit?.type === "graphic" ? (hit.graphic.attributes?.parkId ?? null) : null);
+      return hit?.type === "graphic" ? (hit.graphic.attributes as { parkId?: string; courtId?: string } | null) : null;
+    };
+
+    const click = view.on("click", async (event) => {
+      const hit = await hitAttributes(event);
+      onSelectRef.current({ parkId: hit?.parkId ?? null, courtId: hit?.courtId ?? null });
     });
+
+    // Pointer cursor over anything clickable; one hit test in flight at a time.
+    let probing = false;
+    const hover = view.on("pointer-move", async (event) => {
+      if (probing) return;
+      probing = true;
+      try {
+        const hit = await hitAttributes(event);
+        if (containerRef.current) containerRef.current.style.cursor = hit?.parkId ? "pointer" : "";
+      } finally {
+        probing = false;
+      }
+    });
+
     viewRef.current = view;
     layersRef.current = { parks: parkLayer, pins: pinLayer, courts: courtLayer };
     fitPaddingRef.current = fitPadding;
     return () => {
       click.remove();
+      hover.remove();
       window.removeEventListener("resize", fitPadding);
       view.destroy();
       viewRef.current = null;
@@ -111,57 +189,60 @@ export function CourtMap({ parks, courts, selectedParkId, onSelectPark }: CourtM
     layers.courts.addMany(
       courts
         .filter((court) => court.geometry)
-        .map(
-          (court) =>
-            new Graphic({
-              geometry: new Polygon({ rings: JSON.parse(court.geometry!).coordinates, spatialReference: { wkid: 4326 } }),
-              symbol: new SimpleFillSymbol({
-                color: withAlpha(LABEL_META[court.label.kind].color, court.dark ? 0.35 : 0.8),
-                outline: { color: court.parkId === selectedParkId ? "#1f1f1f" : "#ffffff", width: court.parkId === selectedParkId ? 2 : 1.5 },
-              }),
-              attributes: { parkId: court.parkId, courtId: court.id },
+        .map((court) => {
+          const selected = court.id === selection.courtId;
+          return new Graphic({
+            geometry: new Polygon({ rings: JSON.parse(court.geometry!).coordinates, spatialReference: { wkid: 4326 } }),
+            symbol: new SimpleFillSymbol({
+              color: withAlpha(LABEL_META[court.label.kind].color, court.dark ? 0.35 : selected ? 0.95 : 0.8),
+              outline: { color: selected ? "#1f1f1f" : "#ffffff", width: selected ? 3 : 1.5 },
             }),
-        ),
+            attributes: { parkId: court.parkId, courtId: court.id },
+          });
+        }),
     );
 
     layers.parks.removeAll();
     layers.pins.removeAll();
     for (const park of parks) {
-      const selected = park.id === selectedParkId;
-      const geometry = new Point({ longitude: park.lng, latitude: park.lat });
-      const outline = { color: selected ? "#1f1f1f" : "#ffffff", width: selected ? 3 : 2.5 };
-      const count = (size: number, yoffset: number) =>
-        new TextSymbol({ text: String(park.joinable), color: "#ffffff", yoffset, font: { size, weight: "bold" } });
-      layers.parks.addMany([
-        new Graphic({ geometry, symbol: new SimpleMarkerSymbol({ size: selected ? 34 : 28, color: park.color, outline }), attributes: { parkId: park.id } }),
-        new Graphic({ geometry, symbol: count(selected ? 12 : 10.5, -4), attributes: { parkId: park.id } }),
-      ]);
-      layers.pins.addMany([
-        new Graphic({ geometry, symbol: new SimpleMarkerSymbol({ size: 8, color: park.color, outline: { color: "#ffffff", width: 2 } }), attributes: { parkId: park.id } }),
-        new Graphic({ geometry, symbol: new SimpleMarkerSymbol({ size: 26, yoffset: 30, color: park.color, outline }), attributes: { parkId: park.id } }),
-        new Graphic({ geometry, symbol: count(10, 26), attributes: { parkId: park.id } }),
-      ]);
+      const selected = park.id === selection.parkId;
+      layers.parks.addMany(parkMarkers(park, selected, 0, selected ? 34 : 30, true));
+      layers.pins.add(
+        new Graphic({
+          geometry: new Point({ longitude: park.lng, latitude: park.lat }),
+          attributes: { parkId: park.id },
+          symbol: new SimpleMarkerSymbol({ size: 7, color: "#295c2d", outline: { color: "#ffffff", width: 2 } }),
+        }),
+      );
+      // Zoomed in, the pin floats well above the park so it never covers the court outlines.
+      layers.pins.addMany(parkMarkers(park, selected, 46, selected ? 30 : 26, false));
     }
-  }, [parks, courts, selectedParkId]);
+  }, [parks, courts, selection]);
 
-  // Fly to the selected park.
+  // Fly to the selected court (when it has an outline) or park.
   useEffect(() => {
-    detailOpenRef.current = selectedParkId !== null;
+    detailOpenRef.current = selection.parkId !== null;
     fitPaddingRef.current?.();
     const view = viewRef.current;
-    const park = parks.find((p) => p.id === selectedParkId);
-    if (!view || !park) return;
-    view.when(() => view.goTo({ center: [park.lng, park.lat], zoom: PARK_ZOOM }, { duration: 800 })).catch(() => {});
+    if (!view) return;
+    const court = courts.find((c) => c.id === selection.courtId && c.geometry);
+    const park = parks.find((p) => p.id === selection.parkId);
+    const target = court
+      ? { target: new Polygon({ rings: JSON.parse(court.geometry!).coordinates, spatialReference: { wkid: 4326 } }).extent!.center, zoom: COURT_ZOOM }
+      : park
+        ? { center: [park.lng, park.lat], zoom: Math.max(view.zoom, PARK_ZOOM) }
+        : null;
+    if (target) view.when(() => view.goTo(target, { duration: 700 })).catch(() => {});
     // Only when the selection changes, not on every data refresh.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedParkId]);
+  }, [selection.parkId, selection.courtId]);
 
   const zoomBy = (delta: number) => {
     const view = viewRef.current;
     view?.goTo({ zoom: view.zoom + delta }, { duration: 250 }).catch(() => {});
   };
   const home = () => {
-    onSelectPark(null);
+    onSelect({ parkId: null, courtId: null });
     viewRef.current?.goTo({ center: WOODLANDS_CENTER, zoom: HOME_ZOOM }, { duration: 600 }).catch(() => {});
   };
 
@@ -190,7 +271,7 @@ function MapButton({ label, onClick, children }: { label: string; onClick: () =>
       aria-label={label}
       title={label}
       onClick={onClick}
-      className="grid size-9 place-items-center rounded-xl text-foreground/80 transition hover:bg-accent hover:text-primary"
+      className="grid size-9 cursor-pointer place-items-center rounded-xl text-foreground/80 transition hover:bg-accent hover:text-primary"
     >
       {children}
     </button>

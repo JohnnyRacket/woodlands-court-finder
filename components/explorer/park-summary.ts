@@ -1,7 +1,7 @@
-import { LABEL_META } from "@/lib/label-meta";
 import type { CourtStatus } from "@/lib/queries/court-status";
 
 export type Sport = "tennis" | "pickleball";
+export const SPORTS: Sport[] = ["tennis", "pickleball"];
 
 export interface Filters {
   sports: Sport[];
@@ -9,20 +9,28 @@ export interface Filters {
   litOnly: boolean;
 }
 
+export interface SportSummary {
+  /** Courts you can play this sport on. Tennis courts with pickleball lines count for both. */
+  courts: CourtStatus[];
+  /** Of those, how many you can walk onto now (no reservation, first come, open play; not dark). */
+  joinable: number;
+}
+
 export interface ParkSummary {
   id: string;
   name: string;
   lat: number;
   lng: number;
+  /** Every court at the park that passed the filters, each listed once. */
   courts: CourtStatus[];
-  /** Courts someone can walk onto (no reservation, first come, or open play). */
+  sports: Partial<Record<Sport, SportSummary>>;
   joinable: number;
   openPlay: boolean;
-  /** Marker color: the most useful status at the park. */
-  color: string;
 }
 
-const playsSport = (court: CourtStatus, sport: Sport) => court.kind === sport || court.kind === "tennis_pickleball";
+export const playsSport = (court: CourtStatus, sport: Sport) => court.kind === sport || court.kind === "tennis_pickleball";
+
+const canPlay = (court: CourtStatus) => court.label.publicCanJoin && !court.dark;
 
 export function filterCourts(courts: CourtStatus[], filters: Filters): CourtStatus[] {
   return courts.filter(
@@ -33,21 +41,25 @@ export function filterCourts(courts: CourtStatus[], filters: Filters): CourtStat
   );
 }
 
-export function summarizeParks(courts: CourtStatus[]): ParkSummary[] {
+export function summarizeParks(courts: CourtStatus[], sports: Sport[]): ParkSummary[] {
   const byPark = Map.groupBy(courts, (court) => court.parkId);
   return [...byPark.values()]
     .map((list) => {
-      const joinable = list.filter((court) => court.label.publicCanJoin && !court.dark).length;
-      const openPlay = list.some((court) => court.label.kind === "open_play");
-      const allNoData = list.every((court) => court.label.kind === "no_data");
-      const color = allNoData
-        ? LABEL_META.no_data.color
-        : openPlay
-          ? LABEL_META.open_play.color
-          : joinable > 0
-            ? LABEL_META.no_reservation.color
-            : LABEL_META.private.color;
-      return { id: list[0].parkId, name: list[0].parkName, lat: list[0].parkLat, lng: list[0].parkLng, courts: list, joinable, openPlay, color };
+      const bySport: Partial<Record<Sport, SportSummary>> = {};
+      for (const sport of sports) {
+        const sportCourts = list.filter((court) => playsSport(court, sport));
+        if (sportCourts.length) bySport[sport] = { courts: sportCourts, joinable: sportCourts.filter(canPlay).length };
+      }
+      return {
+        id: list[0].parkId,
+        name: list[0].parkName,
+        lat: list[0].parkLat,
+        lng: list[0].parkLng,
+        courts: list,
+        sports: bySport,
+        joinable: list.filter(canPlay).length,
+        openPlay: list.some((court) => court.label.kind === "open_play"),
+      };
     })
     .sort((a, b) => Number(b.joinable > 0) - Number(a.joinable > 0) || a.name.localeCompare(b.name));
 }

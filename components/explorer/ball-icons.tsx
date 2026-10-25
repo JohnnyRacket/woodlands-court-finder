@@ -4,36 +4,45 @@
 import type { Sport } from "./park-summary";
 
 const PALETTE = {
-  tennis: { fill: "#cfe047", stroke: "#a9b92c", detail: "#ffffff", text: "#24361f" },
-  pickleball: { fill: "#f5b82e", stroke: "#d1951a", detail: "#b97c10", text: "#3b2a07" },
-  muted: { fill: "#d5dbd7", stroke: "#b5beb8", detail: "#eef1ef", text: "#56625a" },
+  tennis: { light: "#e8f37e", fill: "#cfe047", shade: "#a5b628", detail: "#ffffff", text: "#24361f" },
+  pickleball: { light: "#ffd86b", fill: "#f5b82e", shade: "#d38e18", detail: "#b4740e", text: "#3b2a07" },
+  muted: { light: "#eef1ef", fill: "#d5dbd7", shade: "#b3bcb6", detail: "#a9b3ad", text: "#56625a" },
 };
 
 export function ballColors(sport: Sport, muted: boolean) {
   return muted ? PALETTE.muted : PALETTE[sport];
 }
 
+// Pickleball holes, placed evenly on a sphere and projected onto the icon: holes facing
+// the viewer are round, holes near the rim flatten into ovals and run off the edge.
+// [cx, cy, rx, ry, rotation°], generated once (Fibonacci sphere, 20 holes, rotated).
+const HOLES = [
+  [44.1, 23.5, 4.58, 1.34, 88],
+  [34.3, 12.9, 4.58, 3.17, 43],
+  [36.8, 36, 4.58, 2.52, 133],
+  [23.4, 21.5, 4.58, 4.55, -14],
+  [28.1, 3.7, 4.58, 0.71, 11],
+  [22, 38.6, 4.58, 3.27, 188],
+  [14.2, 11.5, 4.58, 2.99, -38],
+  [9.1, 30.1, 4.58, 2.94, 248],
+  [3.2, 21.8, 4.58, 0.4, -84],
+];
+
 function ballSvg(sport: Sport, muted: boolean): string {
   const c = ballColors(sport, muted);
   const detail =
     sport === "tennis"
-      ? // two curved seams
-        `<path d="M6 10.5c6 3 6 23 0 27M42 10.5c-6 3-6 23 0 27" fill="none" stroke="${c.detail}" stroke-width="2.6" stroke-linecap="round"/>`
-      : // pickleball holes: one size, scattered evenly over the whole ball (≥ 10.5 units apart)
-        [
-          [33.3, 11.8],
-          [11.8, 14.8],
-          [23.3, 15.7],
-          [36.8, 21.9],
-          [10.8, 26.1],
-          [23.2, 28.7],
-          [36.5, 32.7],
-          [16.4, 37.3],
-          [27, 38.7],
-        ]
-          .map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3.2" fill="${c.detail}"/>`)
-          .join("");
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><circle cx="24" cy="24" r="21.5" fill="${c.fill}" stroke="#ffffff" stroke-width="3"/><circle cx="24" cy="24" r="19.5" fill="none" stroke="${c.stroke}" stroke-width="1"/>${detail}</svg>`;
+      ? `<path d="M5 10c7 4 7 24 0 28M43 10c-7 4-7 24 0 28" fill="none" stroke="${muted ? "#f4f6f5" : c.detail}" stroke-width="2.6" stroke-linecap="round"/>`
+      : HOLES.map(([x, y, rx, ry, a]) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" transform="rotate(${a} ${x} ${y})" fill="${c.detail}"/>`).join("");
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">` +
+    `<defs><radialGradient id="shade" cx="38%" cy="32%" r="72%"><stop offset="0" stop-color="${c.light}"/><stop offset=".6" stop-color="${c.fill}"/><stop offset="1" stop-color="${c.shade}"/></radialGradient>` +
+    `<clipPath id="ball"><circle cx="24" cy="24" r="21"/></clipPath></defs>` +
+    `<circle cx="24" cy="24" r="22.5" fill="#ffffff"/><circle cx="24" cy="24" r="21" fill="url(#shade)"/>` +
+    `<g clip-path="url(#ball)">${detail}</g>` +
+    `<ellipse cx="16.5" cy="12.5" rx="6" ry="3" transform="rotate(-35 16.5 12.5)" fill="#ffffff" opacity="${muted ? 0.5 : 0.4}"/>` +
+    `</svg>`
+  );
 }
 
 const cache = new Map<string, string>();

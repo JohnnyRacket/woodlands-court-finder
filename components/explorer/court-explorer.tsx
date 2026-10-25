@@ -4,6 +4,7 @@ import { Sparkles } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { distanceMiles, type LatLng } from "@/lib/geo";
 import type { ExplorerData } from "@/lib/queries/explorer";
 import { cn } from "@/lib/utils";
 import { AssistantPanel } from "./assistant-panel";
@@ -54,7 +55,39 @@ export function CourtExplorer() {
   }, [time]);
 
   const courts = useMemo(() => (data ? filterCourts(data.courts, filters) : []), [data, filters]);
-  const parks = useMemo(() => summarizeParks(courts, filters.sports), [courts, filters.sports]);
+  // Sort by distance only after the user asks: location is requested on that click, never on load.
+  const [nearest, setNearest] = useState<{ on: boolean; location: LatLng | null; locating: boolean; error: string | null }>({
+    on: false,
+    location: null,
+    locating: false,
+    error: null,
+  });
+  const toggleNearest = () => {
+    if (nearest.on) return setNearest({ ...nearest, on: false });
+    if (nearest.location) return setNearest({ ...nearest, on: true, error: null });
+    if (!("geolocation" in navigator)) return setNearest({ ...nearest, error: "Location isn't available in this browser." });
+    setNearest({ ...nearest, locating: true, error: null });
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => setNearest({ on: true, location: { lat: coords.latitude, lng: coords.longitude }, locating: false, error: null }),
+      (err) =>
+        setNearest((prev) => ({
+          ...prev,
+          locating: false,
+          error: err.code === err.PERMISSION_DENIED ? "Location access was declined." : "Couldn't get your location.",
+        })),
+      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 5 * 60_000 },
+    );
+  };
+
+  const summarized = useMemo(() => summarizeParks(courts, filters.sports), [courts, filters.sports]);
+  const distances = useMemo(
+    () => (nearest.location ? new Map(summarized.map((park) => [park.id, distanceMiles(nearest.location!, park)])) : null),
+    [summarized, nearest.location],
+  );
+  const parks = useMemo(
+    () => (nearest.on && distances ? [...summarized].sort((a, b) => distances.get(a.id)! - distances.get(b.id)!) : summarized),
+    [summarized, nearest.on, distances],
+  );
   const selectedPark = parks.find((park) => park.id === selectedParkId) ?? null;
   const loading = !data || (time !== null && (data.date !== time.date || data.hour !== time.hour));
 
@@ -87,6 +120,8 @@ export function CourtExplorer() {
             parks={parks}
             selectedParkId={selectedParkId}
             onSelectPark={selectPark}
+            nearest={{ ...nearest, distances: nearest.on ? distances : null }}
+            onToggleNearest={toggleNearest}
           />
         ) : (
           <div className="glass-panel pointer-events-auto flex flex-1 flex-col gap-2 p-4">

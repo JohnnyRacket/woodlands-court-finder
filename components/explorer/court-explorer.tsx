@@ -99,6 +99,7 @@ export function CourtExplorer() {
         selection={selection}
         onSelect={select}
         rightPanelWidth={selectedPark && !assistantOpen ? (dayCourtId ? 736 : 400) : assistantOpen ? 400 : 0}
+        userLocation={nearest.on ? nearest.location : null}
       />
 
       {/* Left column: controls + park list (a bottom sheet on phones) */}

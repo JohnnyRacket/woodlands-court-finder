@@ -56,6 +56,8 @@ interface CourtMapProps {
   onSelect: (selection: Selection) => void;
   /** Width in px of the floating panel on the right (0 when closed), to keep the map centered in view. */
   rightPanelWidth: number;
+  /** The user's location, shown (and centered on) while sorting by distance. */
+  userLocation: { lat: number; lng: number } | null;
 }
 
 /** Ball markers for one park: one per sport, side by side. */
@@ -111,10 +113,10 @@ function parkMarkers(park: ParkSummary, selected: boolean, yoffset: number, size
   return graphics;
 }
 
-export function CourtMap({ parks, courts, selection, onSelect, rightPanelWidth }: CourtMapProps) {
+export function CourtMap({ parks, courts, selection, onSelect, rightPanelWidth, userLocation }: CourtMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<MapView | null>(null);
-  const layersRef = useRef<{ parks: GraphicsLayer; pins: GraphicsLayer; courts: GraphicsLayer } | null>(null);
+  const layersRef = useRef<{ parks: GraphicsLayer; pins: GraphicsLayer; courts: GraphicsLayer; me: GraphicsLayer } | null>(null);
   const rightPanelRef = useRef(0);
   const fitPaddingRef = useRef<(() => void) | null>(null);
   const onSelectRef = useRef(onSelect);
@@ -126,7 +128,8 @@ export function CourtMap({ parks, courts, selection, onSelect, rightPanelWidth }
     const courtLayer = new GraphicsLayer({ minScale: 20_000 });
     const parkLayer = new GraphicsLayer({ maxScale: PIN_SCALE });
     const pinLayer = new GraphicsLayer({ minScale: PIN_SCALE });
-    const map = new ArcGISMap({ basemap: createBasemap(), layers: [courtLayer, parkLayer, pinLayer] });
+    const meLayer = new GraphicsLayer();
+    const map = new ArcGISMap({ basemap: createBasemap(), layers: [courtLayer, parkLayer, pinLayer, meLayer] });
     const view = new MapView({
       container: containerRef.current!,
       map,
@@ -172,7 +175,7 @@ export function CourtMap({ parks, courts, selection, onSelect, rightPanelWidth }
     });
 
     viewRef.current = view;
-    layersRef.current = { parks: parkLayer, pins: pinLayer, courts: courtLayer };
+    layersRef.current = { parks: parkLayer, pins: pinLayer, courts: courtLayer, me: meLayer };
     fitPaddingRef.current = fitPadding;
     return () => {
       click.remove();
@@ -223,6 +226,21 @@ export function CourtMap({ parks, courts, selection, onSelect, rightPanelWidth }
       layers.pins.addMany(parkMarkers(park, selected, 46, selected ? 30 : 26, false));
     }
   }, [parks, courts, selection]);
+
+  // "You are here" while sorting by distance; centers the map on it once.
+  useEffect(() => {
+    const layers = layersRef.current;
+    const view = viewRef.current;
+    if (!layers || !view) return;
+    layers.me.removeAll();
+    if (!userLocation) return;
+    const geometry = new Point({ longitude: userLocation.lng, latitude: userLocation.lat });
+    layers.me.addMany([
+      new Graphic({ geometry, symbol: new SimpleMarkerSymbol({ size: 40, color: [29, 84, 166, 0.16], outline: { color: [29, 84, 166, 0.35], width: 1 } }) }),
+      new Graphic({ geometry, symbol: new PictureMarkerSymbol({ url: PERSON_ICON, width: 30, height: 30 }) }),
+    ]);
+    view.when(() => view.goTo({ center: [userLocation.lng, userLocation.lat], zoom: Math.max(view.zoom, 13) }, { duration: 700 })).catch(() => {});
+  }, [userLocation]);
 
   useEffect(() => {
     rightPanelRef.current = rightPanelWidth;
@@ -285,6 +303,14 @@ function MapButton({ label, onClick, children }: { label: string; onClick: () =>
     </button>
   );
 }
+
+// Flat "you are here" marker: a blue disc with a white person, matching the ball icons.
+const PERSON_ICON = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">` +
+    `<circle cx="24" cy="24" r="22.5" fill="#ffffff"/><circle cx="24" cy="24" r="20" fill="#1d54a6"/>` +
+    `<circle cx="24" cy="17.5" r="5.5" fill="#ffffff"/><path d="M13.5 35c0-6.2 4.7-10.5 10.5-10.5S34.5 28.8 34.5 35z" fill="#ffffff"/>` +
+    `</svg>`,
+)}`;
 
 function withAlpha(hex: string, alpha: number): number[] {
   const n = Number.parseInt(hex.slice(1), 16);

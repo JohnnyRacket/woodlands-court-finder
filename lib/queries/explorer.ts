@@ -4,7 +4,11 @@ import { scheduleEvents, type ScheduleEvent } from "@/lib/db/tables";
 import { covers } from "@/lib/labels";
 import { weatherHours } from "@/lib/sources/weather/table";
 import { sunTimes } from "@/lib/sun";
-import { addDays, chicagoDateHour, FIRST_HOUR, LAST_HOUR } from "@/lib/time";
+import { allBookingDates } from "@/lib/booking-window";
+import { chicagoDateHour, FIRST_HOUR, LAST_HOUR } from "@/lib/time";
+import type { Condition } from "@/lib/conditions";
+import type { ParkEvent } from "@/lib/sources/township-events/table";
+import { getActiveAlerts, getDayConditions, getParkEvents, type Alert, type HourDetails } from "./conditions";
 import { getCourtStatuses, type CourtStatus } from "./court-status";
 import { getFreshness } from "./freshness";
 
@@ -13,10 +17,18 @@ export interface ExplorerData {
   hour: number;
   /** The current Chicago date and hour; `open` is false outside court hours. */
   now: { date: string; hour: number; open: boolean };
-  /** Dates with reservation data: residents can book today and tomorrow. */
+  /** Dates residents can book: the longest window (see lib/booking-window.ts). */
   dates: string[];
   hours: number[];
-  weather: { tempF: number; precipPct: number; windMph: number; shortForecast: string } | null;
+  weather:
+    | ({ tempF: number; precipPct: number; windMph: number; shortForecast: string } & Omit<HourDetails, "conditions">)
+    | null;
+  /** Wet courts, storms, heat, wind for this hour (lib/conditions.ts). */
+  conditions: Condition[];
+  /** Township court closures and NWS alerts in effect now. */
+  alerts: Alert[];
+  /** Township events at court parks this date: crowds and parking, not court bookings. */
+  parkEvents: ParkEvent[];
   sunset: string;
   /** When reservation data was last refreshed successfully. */
   reservationsUpdatedAt: string | null;
@@ -29,7 +41,8 @@ export interface ExplorerData {
 export function getExplorerData(date: string, hour: number, now: Date, db: Db = getDb()): ExplorerData {
   const current = chicagoDateHour(now);
   const today = current.date;
-  const weather =
+  const { conditions, ...detail } = getDayConditions(date, db).get(hour)!;
+  const forecast =
     db
       .select({
         tempF: weatherHours.tempF,
@@ -45,12 +58,15 @@ export function getExplorerData(date: string, hour: number, now: Date, db: Db = 
     date,
     hour,
     now: { ...current, open: current.hour >= FIRST_HOUR && current.hour <= LAST_HOUR },
-    dates: [today, addDays(today, 1)],
+    dates: allBookingDates(today),
     hours: Array.from({ length: LAST_HOUR - FIRST_HOUR + 1 }, (_, i) => FIRST_HOUR + i),
-    weather,
+    weather: forecast && { ...forecast, ...detail },
+    conditions,
+    alerts: getActiveAlerts(now, db),
+    parkEvents: getParkEvents(date, db),
     sunset: sunTimes(date).sunset.toISOString(),
     reservationsUpdatedAt: getFreshness(db).find((f) => f.source === "activenet-slots")?.lastSuccessAt ?? null,
-    courts: getCourtStatuses(date, hour, db),
+    courts: getCourtStatuses(date, hour, today, db),
     events: db
       .select()
       .from(scheduleEvents)

@@ -35,7 +35,7 @@ export default function StatusPage() {
       <div className="mb-5 px-1">
         <h1 className="text-2xl font-semibold tracking-tight text-primary">Data status</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Woodlands Court Finder combines public data from The Woodlands Township and the National Weather Service. Here&apos;s how current it is.
+          Woodlands Court Finder combines public data from The Woodlands Township, the National Weather Service and Open-Meteo. Here&apos;s how current it is.
         </p>
       </div>
       <Suspense fallback={<Skeleton className="h-[36rem] rounded-3xl bg-white/60" />}>

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { availabilitySchema, type Availability } from "@/lib/activenet/client";
 import fixture from "./__fixtures__/availability-pickleball.json";
-import { toSlotRows } from "./normalize";
+import { diffSlots, toSlotRows } from "./normalize";
 
 const availability = availabilitySchema.parse(fixture.body).availability;
 const fetchedAt = "2026-10-25T03:24:00.000Z";
@@ -51,5 +51,18 @@ describe("toSlotRows fails loudly on shape changes", () => {
 
   it("rejects a slot count that doesn't match the hours", () => {
     expect(() => toSlotRows(one({ time_slots: ["07:00:00"] }), "2026-10-25", courtsMap, fetchedAt)).toThrow(/2 slots for 1 hours/);
+  });
+});
+
+describe("diffSlots", () => {
+  const row = (hour: number, status: "free" | "booked", fetchedAt = "t2") => ({ courtId: "c1", date: "2026-10-25", hour, status, fetchedAt });
+
+  it("logs bookings, cancellations and first sightings, and nothing unchanged", () => {
+    const previous = [row(8, "free"), row(9, "booked"), row(10, "free")];
+    expect(diffSlots(previous, [row(8, "booked"), row(9, "free"), row(10, "free"), row(11, "free")])).toEqual([
+      { courtId: "c1", date: "2026-10-25", hour: 8, status: "booked", previousStatus: "free", observedAt: "t2" },
+      { courtId: "c1", date: "2026-10-25", hour: 9, status: "free", previousStatus: "booked", observedAt: "t2" },
+      { courtId: "c1", date: "2026-10-25", hour: 11, status: "free", previousStatus: null, observedAt: "t2" },
+    ]);
   });
 });

@@ -12,7 +12,7 @@ export const GROUP_META: Record<StatusGroup, { text: string; hint: string; color
   open_play: { text: "Open play", hint: "Drop-in play: anyone can join", color: "#1d54a6", foreground: "#ffffff" },
   program: { text: "Program / event", hint: "Lesson, league, clinic, tournament or Township event", color: "#e3b552", foreground: "#4a3305" },
   reserved: { text: "Reserved", hint: "Privately reserved", color: "#c9d0cb", foreground: "#3f4a43" },
-  no_data: { text: "No data", hint: "Reservation data isn't available for this hour", color: "#9aa59e", foreground: "#56625a", hollow: true },
+  no_data: { text: "No data", hint: "Reservation data isn't available for this hour, or booking isn't open yet", color: "#9aa59e", foreground: "#56625a", hollow: true },
 };
 
 export const LEGEND: StatusGroup[] = ["open", "open_play", "program", "reserved", "no_data"];
@@ -25,6 +25,7 @@ const KINDS: Record<SlotLabel["kind"], { text: string; hint: string; group: Stat
   tournament: { text: "Tournament", hint: "Township tournament", group: "program" },
   likely_event: { text: "Likely event", hint: "Every court here is booked; probably a Township event (unconfirmed)", group: "program" },
   private: { text: "Reserved", hint: "Private reservation", group: "reserved" },
+  not_open: { text: "Booking not open yet", hint: "Residents can't reserve this day yet; it opens at midnight", group: "no_data" },
   no_data: { text: "No data", hint: "Reservation data isn't available for this hour", group: "no_data" },
 };
 

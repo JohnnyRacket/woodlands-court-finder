@@ -1,10 +1,12 @@
 import { and, eq } from "drizzle-orm";
 import { getDb, type Db } from "@/lib/db/client";
 import { scheduleEvents, type ScheduleEvent } from "@/lib/db/tables";
+import type { Condition } from "@/lib/conditions";
 import type { SlotLabel } from "@/lib/labels";
 import { weatherHours } from "@/lib/sources/weather/table";
 import { sunTimes } from "@/lib/sun";
 import { FIRST_HOUR, LAST_HOUR } from "@/lib/time";
+import { getDayConditions } from "./conditions";
 import { getCourtStatuses, type CourtStatus } from "./court-status";
 
 export interface CourtHour {
@@ -12,6 +14,7 @@ export interface CourtHour {
   label: SlotLabel;
   dark: boolean;
   weather: { tempF: number; precipPct: number; shortForecast: string } | null;
+  conditions: Condition[];
 }
 
 export interface CourtDay {
@@ -24,7 +27,7 @@ export interface CourtDay {
 }
 
 /** One court's 7 a.m.–11 p.m. timeline. Labels come from the same query as the map. */
-export function getCourtDay(courtId: string, date: string, db: Db = getDb()): CourtDay | null {
+export function getCourtDay(courtId: string, date: string, today: string, db: Db = getDb()): CourtDay | null {
   const hours: CourtHour[] = [];
   let court: CourtStatus | undefined;
 
@@ -37,11 +40,13 @@ export function getCourtDay(courtId: string, date: string, db: Db = getDb()): Co
       .map(({ hour, ...rest }) => [hour, rest]),
   );
 
+  const conditions = getDayConditions(date, db);
+
   for (let hour = FIRST_HOUR; hour <= LAST_HOUR; hour++) {
-    const status = getCourtStatuses(date, hour, db).find((c) => c.id === courtId);
+    const status = getCourtStatuses(date, hour, today, db).find((c) => c.id === courtId);
     if (!status) return null;
     court = status;
-    hours.push({ hour, label: status.label, dark: status.dark, weather: weather.get(hour) ?? null });
+    hours.push({ hour, label: status.label, dark: status.dark, weather: weather.get(hour) ?? null, conditions: conditions.get(hour)!.conditions });
   }
 
   const { id, name, kind, parkId, parkName, lighted, geometry, parkLat, parkLng, reservable } = court!;

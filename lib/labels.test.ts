@@ -42,6 +42,8 @@ describe("labelSlot", () => {
     ["not reservable online, but a program is on", { status: null, hour: 19, events: [program] }, "program"],
     ["reservable but not synced", { status: "unknown" }, "no_data"],
     ["not synced, but drop-in is scheduled", { status: "unknown", events: [dropIn] }, "open_play"],
+    ["reservable, but booking isn't open yet", { status: "not_open" }, "not_open"],
+    ["booking not open, but drop-in is scheduled", { status: "not_open", events: [dropIn] }, "open_play"],
   ])("%s → %s", (_, input, expected) => {
     expect(label(input)).toBe(expected);
   });

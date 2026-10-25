@@ -1,13 +1,14 @@
 # Woodlands Court Finder
 
-**Can I play now?** A live map of The Woodlands Township's public tennis and pickleball courts that combines GIS court outlines, ActiveNet reservations, published drop-in times, programs, and the weather, with an AI assistant that answers questions from the same data.
+**Can I play now?** A live map of The Woodlands Township's public tennis and pickleball courts that combines GIS court outlines, ActiveNet reservations, published drop-in times, programs, Township closures and events, and the weather, with an AI assistant that answers questions from the same data.
 
 ![Woodlands Court Finder map view](docs/screenshot.png)
 
 - **Map of all 27 parks / 104 courts:** tennis-ball and pickleball markers show how many courts you can play on right now (grey when none); zoom in for court outlines colored by status.
 - **Labels that mean something:** *No reservation*, *Open play* (drop-in, anyone can join), *Program*, *Tournament*, *Likely event*, *Reserved*, *First come*. Drop-in play shows as "booked" in ActiveNet; this app knows the difference.
-- **Pick any hour today or tomorrow** (residents can book 1 day ahead), filter by sport, playable-only, or lit courts; after-sunset hours are flagged on unlit courts.
+- **Pick any hour residents can book:** tennis today through 2 days ahead, pickleball today and tomorrow (later pickleball days show "Booking not open yet"), filter by sport, playable-only, or lit courts; after-sunset hours are flagged on unlit courts.
 - **Court day view:** open any court's full 7 a.m.–11 p.m. day beside the park panel, with weather; click an hour to move the whole map there.
+- **Alerts and conditions:** Township court closures and NWS warnings across the top of the map; per-hour warnings for wet courts (recent rain), thunderstorms, heat stress (WBGT) and gusts; Township events at a park (crowds, parking) in its panel. Conditions are warnings beside a court's label and never change it (`lib/conditions.ts`).
 - **Data status** (`/status`): freshness of every source, and the data-quality findings from reconciling Township systems ([report](docs/reconciliation-report.md)).
 - **Ask Woodlands Court Finder:** Claude answers questions like "Any lit tennis courts without a reservation tomorrow at 8 PM?" using tool calls over the app's own queries.
 
@@ -18,8 +19,9 @@ flowchart LR
   subgraph Upstream["Public Township & federal data"]
     GIS["Township ArcGIS<br/>SPORTS_COURTS"]
     AN["ActiveNet<br/>reservations + programs"]
-    WEB["thewoodlandsparks.com<br/>drop-in + tournaments"]
-    NWS["National Weather Service"]
+    WEB["thewoodlandsparks.com<br/>drop-in, tournaments,<br/>alerts, events"]
+    NWS["National Weather Service<br/>forecast, gridpoint, alerts"]
+    OM["Open-Meteo<br/>recent rain"]
   end
 
   subgraph Sources["lib/sources/* (one module each)"]
@@ -27,14 +29,21 @@ flowchart LR
     S["activenet-slots"]
     P["activenet-programs"]
     T["township-page"]
+    TA["township-alerts"]
+    TE["township-events"]
     W["weather"]
+    WD["weather-details"]
+    NA["nws-alerts"]
+    R["rainfall"]
   end
 
   subgraph DB["SQLite (one file on a volume)"]
     PC[("parks, courts")]
-    SL[("slots")]
+    SL[("slots, slot_changes")]
     EV[("schedule_events")]
-    WH[("weather_hours")]
+    PE[("park_events")]
+    AL[("township_alerts, weather_alerts")]
+    WH[("weather_hours, weather_details, rain_hours")]
     SR[("sync_runs")]
   end
 
@@ -42,16 +51,19 @@ flowchart LR
   AN --> C
   AN --> S
   AN --> P
-  WEB --> T
-  NWS --> W
+  WEB --> T & TA & TE
+  NWS --> W & WD & NA
+  OM --> R
   C --> PC
   S --> SL
   P --> EV
   T --> EV
-  W --> WH
+  TE --> PE
+  TA & NA --> AL
+  W & WD & R --> WH
 
-  Q["lib/queries/*<br/>+ labelSlot()"]
-  PC & SL & EV & WH & SR --> Q
+  Q["lib/queries/*<br/>+ labelSlot(), playingConditions()"]
+  PC & SL & EV & PE & AL & WH & SR --> Q
   Q --> UI["Map UI<br/>/api/courts"]
   Q --> PAGES["/status<br/>/api/courts/[id]/day"]
   Q --> AI["AI tools<br/>/api/chat"]
@@ -71,10 +83,25 @@ flowchart LR
 | Source | Data | Live schedule | Gentle schedule (dev) |
 |---|---|---|---|
 | `courts` | Township GIS `SPORTS_COURTS` + ActiveNet court list → parks, courts | daily | weekly |
-| `activenet-slots` | Hourly reservation status, today + tomorrow (4 requests) | every 15 min, 7 a.m.–11 p.m. | every 3 h |
+| `activenet-slots` | Hourly reservation status for each sport's booking window (tennis 3 days, pickleball 2; 5 requests) | every 15 min, 7 a.m.–11 p.m., plus 12:01 a.m. | every 3 h, plus 12:01 a.m. |
 | `weather` | NWS hourly forecast | hourly | every 6 h |
+| `weather-details` | NWS gridpoint: gusts, chance of thunder, heat index, WBGT, rain amounts | hourly | every 6 h |
+| `rainfall` | Open-Meteo hourly rain that has fallen (a model estimate; nearby airports don't report hourly rain). Free for non-commercial use | hourly | every 6 h |
+| `nws-alerts` | NWS watches, warnings and advisories for The Woodlands | every 15 min, 6 a.m.–11 p.m. | every 3 h |
+| `township-alerts` | The announcement banner on thewoodlandsparks.com (closures); court-related ones are shown | every 30 min, 6 a.m.–11 p.m. | every 6 h |
 | `township-page` | Pickleball drop-in times and tournaments (HTML) | daily | weekly |
+| `township-events` | Events Directory: Township events at parks with courts, with start times (pages by ASP.NET postback; 2–3 pages + one request per matching event) | daily | weekly |
 | `activenet-programs` | ~170 lessons, leagues, clinics (≈180 requests) | daily | weekly |
+
+### History
+
+Nothing that has happened is deleted, so the database builds up a record for future analysis (for example predicting how busy a court will be):
+
+- `slot_changes`: every reservation status change seen between syncs, with when it was seen, so you can tell how far ahead hours get booked and how often they're released. `slots` keeps the last state of every past hour. ActiveNet reports an hour as taken once it can no longer be booked, so changes seen within about an hour of a slot's start are mostly that cutoff, not reservations.
+- `weather_hours`, `weather_details`: the last forecast made for each hour; `rain_hours`: estimated rain that fell.
+- `weather_alerts`, `township_alerts`: alerts with first/last seen times and `active`, so you can see how long a closure lasted.
+- `schedule_events`, `park_events`: past drop-ins, programs, tournaments and Township events.
+- `sync_runs`: every sync, with row counts and errors.
 
 All requests send an identifying User-Agent, are spaced ≥ 3 s per host, retry with backoff, and never touch anything behind a login. The `gentle` profile is the default outside production and skips boot-time fetches when data is under a day old.
 
@@ -82,7 +109,7 @@ All requests send an identifying User-Agent, are spaced ≥ 3 s per host, retry 
 
 ```bash
 npm install
-cp .env.example .env.local     # set APP_CONTACT_URL; ANTHROPIC_API_KEY for the assistant
+cp .env.example .env.local     # set APP_CONTACT_URL; NEXT_PUBLIC_ASSISTANT_ENABLED + ANTHROPIC_API_KEY for the assistant
 npm run sync                   # one-time: fills ./data/courts.db (takes a few minutes)
 npm run dev                    # http://localhost:3000
 ```
@@ -103,7 +130,8 @@ npm run lint
    ```
    SYNC_ENABLED=true
    APP_CONTACT_URL=https://github.com/<you>/woodlands-court-finder
-   ANTHROPIC_API_KEY=...                 # optional: enables the assistant
+   NEXT_PUBLIC_ASSISTANT_ENABLED=true    # optional build arg: shows the AI assistant (off by default)
+   ANTHROPIC_API_KEY=...                 # required when the assistant is enabled
    NEXT_PUBLIC_ARCGIS_API_KEY=...        # optional build arg: Esri light-gray basemap
    ```
    `NODE_ENV=production` selects the live sync schedules; set `SYNC_PROFILE=gentle` to stay slow.

@@ -1,3 +1,4 @@
+import { poolOf } from "@/lib/booking-window";
 import { parkKey } from "@/lib/park-key";
 import { slugify } from "@/lib/slug";
 
@@ -65,8 +66,6 @@ function centroid(polygons: number[][][][]): { lat: number; lng: number } {
   const lat = points.reduce((sum, p) => sum + p[1], 0) / points.length;
   return { lat: Number(lat.toFixed(6)), lng: Number(lng.toFixed(6)) };
 }
-
-const poolOf = (kind: CourtKind) => (kind === "pickleball" ? "pickleball" : "tennis");
 
 export function buildReference(gis: GisCourt[], activenet: ActiveNetCourt[]) {
   const notes: string[] = [];

@@ -1,13 +1,19 @@
 "use client";
 
-import { ExternalLink, MoonStar, X } from "lucide-react";
+import { CalendarDays, ExternalLink, MoonStar, X } from "lucide-react";
 import { useEffect, useRef } from "react";
+import type { Condition } from "@/lib/conditions";
 import type { ScheduleEvent } from "@/lib/db/tables";
 import { formatHour, formatMinutes } from "@/lib/format";
 import { LABEL_META } from "@/lib/label-meta";
+import type { Alert } from "@/lib/queries/conditions";
 import type { CourtStatus } from "@/lib/queries/court-status";
+import type { ParkEvent } from "@/lib/sources/township-events/table";
+import { usePresence } from "@/lib/use-presence";
 import { cn } from "@/lib/utils";
+import { AlertItem } from "./alerts-banner";
 import { BallBadge } from "./ball-icons";
+import { ConditionIcon } from "./conditions";
 import { CourtDayPanel } from "./court-day-panel";
 import { StatusDot } from "./status-dot";
 import { SPORTS, type ParkSummary, type Sport } from "./park-summary";
@@ -21,6 +27,12 @@ interface ParkDetailProps {
   hour: number;
   /** Events at this park during the hour. */
   events: ScheduleEvent[];
+  /** Township events at this park on the date (crowds, parking). */
+  parkEvents: ParkEvent[];
+  /** Township notices naming this park. */
+  alerts: Alert[];
+  /** Wet courts, storms, heat, wind for the hour. */
+  conditions: Condition[];
   selectedCourtId: string | null;
   onSelectCourt: (courtId: string) => void;
   /** The court whose full day is open beside the list, if any. */
@@ -48,6 +60,9 @@ export function ParkDetail({
   date,
   hour,
   events,
+  parkEvents,
+  alerts,
+  conditions,
   selectedCourtId,
   onSelectCourt,
   dayCourtId,
@@ -62,10 +77,11 @@ export function ParkDetail({
     selectedRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [selectedCourtId]);
   const sports = SPORTS.filter((sport) => park.sports[sport]);
+  const day = usePresence(dayCourtId);
 
   return (
     <section className={cn("glass-panel flex min-h-0", className)}>
-      <div className={cn("flex min-h-0 w-full flex-col md:w-[23rem] md:shrink-0", dayCourtId && "max-md:hidden")}>
+      <div key={park.id} className={cn("flex min-h-0 w-full animate-in flex-col fade-in duration-200 md:w-[23rem] md:shrink-0", dayCourtId && "max-md:hidden")}>
         <header className="flex items-start justify-between gap-3 px-5 pt-5 pb-3">
           <div>
             <h2 className="text-lg font-semibold tracking-tight text-primary">{park.name}</h2>
@@ -84,6 +100,25 @@ export function ParkDetail({
         </header>
 
         <div className="panel-scroll flex min-h-0 flex-col">
+          {alerts.length > 0 && (
+            <div className="mx-4 mb-2 flex flex-col gap-2 rounded-2xl bg-status-program/15 px-4 py-3">
+              {alerts.map((alert) => (
+                <AlertItem key={alert.id} alert={alert} />
+              ))}
+            </div>
+          )}
+
+          {conditions.length > 0 && (
+            <ul className="mx-4 mb-2 flex flex-col gap-1 px-1">
+              {conditions.map((condition) => (
+                <li key={condition.kind} className="flex items-center gap-1.5 text-xs font-medium">
+                  <ConditionIcon condition={condition} className="size-3.5 shrink-0" />
+                  {condition.text}
+                </li>
+              ))}
+            </ul>
+          )}
+
           {events.length > 0 && (
             <ul className="mx-4 mb-2 flex flex-col gap-2">
               {events.map((event) => (
@@ -98,6 +133,27 @@ export function ParkDetail({
                       Details <ExternalLink className="size-3" />
                     </a>
                   )}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {parkEvents.length > 0 && (
+            <ul className="mx-4 mb-2 flex flex-col gap-2">
+              {parkEvents.map((event) => (
+                <li key={event.id} className="flex gap-3 rounded-2xl bg-white/60 px-4 py-3 text-sm">
+                  <CalendarDays className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                  <div className="min-w-0">
+                    <p className="font-medium">{event.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {event.startMin === null ? "Time not listed" : formatMinutes(event.startMin)}
+                      {event.endMin !== null && ` – ${formatMinutes(event.endMin)}`}
+                      {" · Township event at the park: expect more people and fuller parking"}
+                    </p>
+                    <a href={event.url} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-chart-5 hover:underline">
+                      Details <ExternalLink className="size-3" />
+                    </a>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -140,16 +196,24 @@ export function ParkDetail({
           })}
         </div>
       </div>
-      {dayCourtId && (
-        <CourtDayPanel
-          className="w-full border-border/60 md:w-[21rem] md:border-l"
-          courtId={dayCourtId}
-          date={date}
-          hour={hour}
-          now={now}
-          onPickHour={onPickHour}
-          onClose={onCloseDay}
-        />
+      {day.value && (
+        // Opens by widening the panel to the left; the day keeps its width inside so nothing reflows.
+        <div
+          className={cn(
+            "flex min-h-0 w-full overflow-hidden border-border/60 md:w-[21rem] md:shrink-0 md:border-l md:transition-[width] md:duration-200 md:ease-out md:starting:w-0 motion-reduce:transition-none",
+            day.state === "open" ? "max-md:animate-in max-md:fade-in max-md:duration-200" : "pointer-events-none max-md:hidden md:w-0",
+          )}
+        >
+          <CourtDayPanel
+            className={cn("w-full transition-opacity duration-200 md:w-[21rem] md:shrink-0 md:starting:opacity-0", day.state === "closed" && "opacity-0")}
+            courtId={day.value}
+            date={date}
+            hour={hour}
+            now={now}
+            onPickHour={onPickHour}
+            onClose={onCloseDay}
+          />
+        </div>
       )}
     </section>
   );

@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { formatDay, formatHour } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import type { Filters, Sport } from "./park-summary";
+import { SPORTS, type Filters, type Sport } from "./park-summary";
 
 const DAY_PARTS = [
   { name: "Morning", from: 7, to: 11 },
@@ -22,13 +22,16 @@ interface ControlsPanelProps {
   /** The current Chicago time; earlier hours today are in the past. */
   now: { date: string; hour: number; open: boolean } | null;
   filters: Filters;
+  /** Sports residents can book on this date; the others are shown disabled. */
+  bookableSports: Sport[];
   onTimeChange: (date: string, hour: number) => void;
-  onFiltersChange: (filters: Filters) => void;
+  onFiltersChange: (change: Partial<Filters>) => void;
   className?: string;
 }
 
-export function ControlsPanel({ dates, hours, date, hour, now, filters, onTimeChange, onFiltersChange, className }: ControlsPanelProps) {
+export function ControlsPanel({ dates, hours, date, hour, now, filters, bookableSports, onTimeChange, onFiltersChange, className }: ControlsPanelProps) {
   const past = (h: number) => date === now?.date && h < now.hour;
+  const closedSports = SPORTS.filter((sport) => !bookableSports.includes(sport));
   // Parts of the day with hours left; the selected hour's part is shown unless the user picks another.
   const parts = DAY_PARTS.filter((p) => hours.some((h) => h >= p.from && h <= p.to && !past(h)));
   const partOf = (h: number | null) => DAY_PARTS.find((p) => h !== null && h >= p.from && h <= p.to)?.name;
@@ -70,10 +73,10 @@ export function ControlsPanel({ dates, hours, date, hour, now, filters, onTimeCh
             <ToggleGroupItem
               key={d}
               value={d}
-              className="h-9 flex-1 rounded-xl text-sm data-[pressed]:bg-white data-[pressed]:text-primary data-[pressed]:shadow-sm"
+              className="h-11 min-w-0 flex-1 flex-col gap-0 rounded-xl text-sm leading-tight data-[pressed]:bg-white data-[pressed]:text-primary data-[pressed]:shadow-sm"
             >
-              {i === 0 ? "Today" : "Tomorrow"}
-              <span className="ml-1 text-xs font-normal text-muted-foreground">{formatDay(d).split(", ")[1]}</span>
+              {i === 0 ? "Today" : i === 1 ? "Tomorrow" : formatDay(d).split(", ")[0]}
+              <span className="text-[11px] font-normal text-muted-foreground">{formatDay(d).split(", ")[1]}</span>
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
@@ -124,14 +127,15 @@ export function ControlsPanel({ dates, hours, date, hour, now, filters, onTimeCh
         <ToggleGroup
           multiple
           value={filters.sports}
-          onValueChange={(value) => value.length && onFiltersChange({ ...filters, sports: value as Sport[] })}
+          onValueChange={(value) => value.length && onFiltersChange({ sports: value as Sport[] })}
           spacing={1}
           className="w-full rounded-2xl bg-muted p-1"
         >
-          {(["tennis", "pickleball"] as const).map((sport) => (
+          {SPORTS.map((sport) => (
             <ToggleGroupItem
               key={sport}
               value={sport}
+              disabled={!bookableSports.includes(sport)}
               className="group/sport h-9 flex-1 gap-1.5 rounded-xl text-sm text-muted-foreground capitalize data-[pressed]:bg-brand-mint/45 data-[pressed]:font-medium data-[pressed]:text-primary data-[pressed]:ring-1 data-[pressed]:ring-primary/20"
             >
               <Check className="hidden size-3.5 group-data-[pressed]/sport:block" />
@@ -139,13 +143,18 @@ export function ControlsPanel({ dates, hours, date, hour, now, filters, onTimeCh
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+        {date && closedSports.length > 0 && (
+          <p className="-mt-1.5 text-xs text-muted-foreground first-letter:uppercase">
+            {closedSports.join(" and ")} booking for {formatDay(date).split(", ")[0]} opens at midnight.
+          </p>
+        )}
         <label className="flex items-center justify-between gap-3 text-sm">
           <span title="Hides reserved courts, programs and events; keeps open courts and open play">Only show unreserved courts</span>
-          <Switch checked={filters.joinableOnly} onCheckedChange={(joinableOnly) => onFiltersChange({ ...filters, joinableOnly })} />
+          <Switch checked={filters.joinableOnly} onCheckedChange={(joinableOnly) => onFiltersChange({ joinableOnly })} />
         </label>
         <label className="flex items-center justify-between gap-3 text-sm">
           <span>Only show courts with lights</span>
-          <Switch checked={filters.litOnly} onCheckedChange={(litOnly) => onFiltersChange({ ...filters, litOnly })} />
+          <Switch checked={filters.litOnly} onCheckedChange={(litOnly) => onFiltersChange({ litOnly })} />
         </label>
       </div>
     </section>

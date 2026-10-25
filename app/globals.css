@@ -155,6 +155,13 @@
   a[href] {
     cursor: pointer;
   }
+  /* Panels and content just appear when the system asks for less motion. */
+  @media (prefers-reduced-motion: reduce) {
+    [class*="animate-in"],
+    [class*="animate-out"] {
+      animation: none !important;
+    }
+  }
 }
 
 /* Floating panels over the map */

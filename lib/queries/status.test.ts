@@ -40,6 +40,13 @@ describe("sourceState", () => {
     expect(sourceState({ ok: true }, "2026-10-25T03:46:00Z", cron, true, night)).toBe("up_to_date");
   });
 
+  it("uses the latest run across several schedules", () => {
+    const night = new Date("2026-10-25T08:10:00Z"); // 3:10 a.m.; last due 12:01 a.m.
+    const crons = [cron, "1 0 * * *"];
+    expect(sourceState({ ok: true }, "2026-10-25T03:46:00Z", crons, true, night)).toBe("delayed");
+    expect(sourceState({ ok: true }, "2026-10-25T05:02:00Z", crons, true, night)).toBe("up_to_date");
+  });
+
   it("reports failures, missing data, and a paused scheduler", () => {
     expect(sourceState({ ok: false }, "2026-10-25T18:50:00Z", cron, true, now)).toBe("failed");
     expect(sourceState(null, null, cron, true, now)).toBe("never");

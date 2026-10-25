@@ -22,8 +22,8 @@ export interface SourceModule {
   title: string;
   /** Where the data comes from, e.g. "Township ActiveNet". */
   origin: string;
-  /** Cron expressions per profile, evaluated in America/Chicago. */
-  schedule: Record<SyncProfile, string>;
+  /** Cron expression(s) per profile, evaluated in America/Chicago. */
+  schedule: Record<SyncProfile, string | string[]>;
   /** notes: data-quality findings worth showing on /status (not errors). */
   run(ctx: SyncContext): Promise<{ rows: number; notes?: string[] }>;
 }

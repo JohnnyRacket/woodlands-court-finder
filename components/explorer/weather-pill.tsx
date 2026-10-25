@@ -28,7 +28,7 @@ export function WeatherPill({ weather, sunset, className }: Pick<ExplorerData, "
           </span>
           <span className="flex items-center gap-1 text-muted-foreground max-sm:hidden">
             <Wind className="size-3.5" />
-            {weather.windMph} mph
+            {weather.gustMph !== null && weather.gustMph >= weather.windMph + 5 ? `${weather.windMph} mph, gusts ${weather.gustMph}` : `${weather.windMph} mph`}
           </span>
         </>
       ) : (

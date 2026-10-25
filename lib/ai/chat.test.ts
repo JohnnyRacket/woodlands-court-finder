@@ -26,9 +26,10 @@ describe("assistant tools", () => {
     expect(result).toHaveProperty("reservationsUpdatedAt");
   });
 
-  it("only accepts today and tomorrow", () => {
+  it("only accepts dates residents can book", () => {
     const schema = tools.findCourts.inputSchema as unknown as { safeParse: (v: unknown) => { success: boolean } };
-    expect(schema.safeParse({ sport: "tennis", date: "2026-10-27", startHour: 8 }).success).toBe(true);
+    expect(schema.safeParse({ sport: "tennis", date: "2026-10-28", startHour: 8 }).success).toBe(true);
+    expect(schema.safeParse({ sport: "tennis", date: "2026-10-29", startHour: 8 }).success).toBe(false);
     expect(schema.safeParse({ sport: "tennis", date: "2026-10-30", startHour: 8 }).success).toBe(false);
   });
 
@@ -43,10 +44,25 @@ describe("assistant tools", () => {
     expect(await run(tools.getParkSchedule, { parkId: "nowhere", date: "2026-10-26" })).toEqual({ error: expect.stringMatching(/Unknown park/) });
   });
 
-  it("reads the forecast", async () => {
+  it("reads the forecast, with gusts, thunder and warnings", async () => {
     expect(await run(tools.getWeather, { date: "2026-10-26", startHour: 8 })).toMatchObject({
-      hours: [{ hour: "8 AM", tempF: 60, chanceOfRain: "10%", forecast: "Sunny" }],
+      hours: [{ hour: "8 AM", tempF: 60, chanceOfRain: "10%", forecast: "Sunny", gustMph: 12, chanceOfThunder: "0%", warnings: [expect.stringMatching(/Courts may be wet/)] }],
     });
+  });
+
+  it("reports closures, weather alerts and Township events", async () => {
+    const result = (await run(tools.getAlerts, { date: "2026-10-26" })) as { alerts: { from: string; title: string }[]; parkEvents: { title: string; time: string }[] };
+    expect(result.alerts.map((a) => [a.from, a.title])).toEqual([
+      ["Township", "Falconwing tennis courts closed"],
+      ["National Weather Service", "Heat Advisory"],
+    ]);
+    expect(result.parkEvents).toEqual([expect.objectContaining({ title: "Flashlight Candy Hunt", time: "7:30 PM" })]);
+  });
+
+  it("puts a park's notices and events in its schedule", async () => {
+    const day = (await run(tools.getParkSchedule, { parkId: "falconwing", date: "2026-10-26" })) as { alerts: string[]; townshipEvents: { title: string }[] };
+    expect(day.alerts).toEqual(["Falconwing tennis courts closed: Resurfacing this week."]);
+    expect(day.townshipEvents.map((e) => e.title)).toEqual(["Flashlight Candy Hunt"]);
   });
 });
 
@@ -94,6 +110,7 @@ describe("streamChat", () => {
   it("gives the model the rules and today's dates", () => {
     const prompt = systemPrompt(now);
     expect(prompt).toContain("today is 2026-10-26, tomorrow is 2026-10-27");
+    expect(prompt).toContain("Residents can book tennis 2 days ahead, pickleball 1 day ahead");
     expect(prompt).toMatch(/never "empty"/);
     expect(prompt).toMatch(/Answer only from tool results/);
   });

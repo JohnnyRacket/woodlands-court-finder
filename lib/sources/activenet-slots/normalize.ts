@@ -40,3 +40,25 @@ export function toSlotRows(
   }
   return { rows, unknownCourts };
 }
+
+export interface SlotChange {
+  courtId: string;
+  date: string;
+  hour: number;
+  status: "free" | "booked";
+  /** null the first time the hour is seen */
+  previousStatus: "free" | "booked" | null;
+  observedAt: string;
+}
+
+const slotKey = (row: { courtId: string; date: string; hour: number }) => `${row.courtId}|${row.date}|${row.hour}`;
+
+/** Court-hours whose status differs from what was stored, i.e. bookings and cancellations seen this run. */
+export function diffSlots(previous: { courtId: string; date: string; hour: number; status: "free" | "booked" }[], rows: SlotRow[]): SlotChange[] {
+  const before = new Map(previous.map((row) => [slotKey(row), row.status]));
+  return rows.flatMap((row) => {
+    const previousStatus = before.get(slotKey(row)) ?? null;
+    if (previousStatus === row.status) return [];
+    return [{ courtId: row.courtId, date: row.date, hour: row.hour, status: row.status, previousStatus, observedAt: row.fetchedAt }];
+  });
+}

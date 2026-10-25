@@ -7,6 +7,7 @@ import { formatClock, formatHour, formatMinutes } from "@/lib/format";
 import { LABEL_META } from "@/lib/label-meta";
 import type { CourtDay } from "@/lib/queries/court-day";
 import { cn } from "@/lib/utils";
+import { ConditionIcon } from "./conditions";
 
 interface CourtDayPanelProps {
   courtId: string;
@@ -51,7 +52,7 @@ export function CourtDayPanel({ courtId, date, hour, now, onPickHour, onClose, c
           <ArrowLeft className="size-4" />
         </button>
         {current ? (
-          <div className="min-w-0">
+          <div className="min-w-0 animate-in fade-in duration-200">
             <h3 className="truncate font-semibold text-primary">{current.court.name}</h3>
             <p className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs text-muted-foreground">
               {current.court.lighted === true && (
@@ -79,9 +80,9 @@ export function CourtDayPanel({ courtId, date, hour, now, onPickHour, onClose, c
 
       {error && <p className="mx-4 rounded-2xl bg-destructive/10 px-4 py-2.5 text-sm text-destructive">Couldn&apos;t load this court ({error}).</p>}
 
-      <ol className="panel-scroll flex min-h-0 flex-col gap-0.5 px-2">
+      <ol key={current ? "day" : "loading"} className={cn("panel-scroll flex min-h-0 flex-col gap-0.5 px-2", current && "animate-in fade-in duration-200")}>
         {current
-          ? current.hours.map(({ hour: h, label, dark, weather }) => {
+          ? current.hours.map(({ hour: h, label, dark, weather, conditions }) => {
               const meta = LABEL_META[label.kind];
               const past = date === now.date && h < now.hour;
               return (
@@ -110,6 +111,13 @@ export function CourtDayPanel({ courtId, date, hour, now, onPickHour, onClose, c
                       )}
                     </span>
                     {dark && <MoonStar className="size-3 shrink-0 text-muted-foreground" aria-label="After sunset and not known to be lit" />}
+                    {conditions.length > 0 && (
+                      <span className="flex shrink-0 items-center gap-0.5" title={conditions.map((c) => c.text).join("\n")}>
+                        {conditions.map((condition) => (
+                          <ConditionIcon key={condition.kind} condition={condition} className="size-3" />
+                        ))}
+                      </span>
+                    )}
                     {weather && (
                       <span className="flex shrink-0 items-center gap-1.5 text-[11px] text-muted-foreground tabular-nums" title={weather.shortForecast}>
                         <span className="font-medium text-foreground">{weather.tempF}°</span>

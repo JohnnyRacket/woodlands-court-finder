@@ -12,8 +12,11 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # Optional: an ArcGIS Location Platform key switches the map to Esri's basemap (baked in at build time).
 ARG NEXT_PUBLIC_ARCGIS_API_KEY
+# Optional: "true" turns on the AI assistant (baked in at build time).
+ARG NEXT_PUBLIC_ASSISTANT_ENABLED
 ENV NEXT_TELEMETRY_DISABLED=1 \
     NEXT_PUBLIC_ARCGIS_API_KEY=$NEXT_PUBLIC_ARCGIS_API_KEY \
+    NEXT_PUBLIC_ASSISTANT_ENABLED=$NEXT_PUBLIC_ASSISTANT_ENABLED \
     NODE_OPTIONS=--max-old-space-size=1280 \
     SKIP_BUILD_TYPECHECK=1
 RUN npm run build

@@ -1,6 +1,7 @@
 import { createUIMessageStreamResponse, safeValidateUIMessages, toUIMessageStream } from "ai";
 import type { NextRequest } from "next/server";
 import { streamChat } from "@/lib/ai/chat";
+import { assistantEnabled } from "@/lib/flags";
 
 // Simple per-IP limit; fine for a single container.
 const WINDOW_MS = 10 * 60 * 1000;
@@ -16,6 +17,7 @@ function rateLimited(ip: string): boolean {
 }
 
 export async function POST(request: NextRequest) {
+  if (!assistantEnabled) return Response.json({ error: "Not found" }, { status: 404 });
   if (!process.env.ANTHROPIC_API_KEY) {
     return Response.json({ error: "The assistant isn't configured: set ANTHROPIC_API_KEY." }, { status: 503 });
   }

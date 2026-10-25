@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js" lang="en-US">
+<!--<![endif]-->
+<head>
+	<!-- Published by OpenCities, 1.38.0.1 -->
+
+    
+        
+    
+    
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="theme-color" content="#FFFFFF"/>
+    <title>Flashlight Candy Hunt Parks & Recreation The Woodlands</title>
+	<meta name="generator" content="OpenCities - https://granicus.com/product/opencities" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Using mobile-web-app-capable for now to enable full-screen experience on supported platforms -->
+    <!-- Note: This tag works mainly on Android Chrome. It does NOT enable full-screen mode on iOS Safari. -->
+    <!-- For iOS, the correct tag is: <meta name="apple-mobile-web-app-capable" content="yes"> -->
+    <!-- TODO: Monitor for updated meta tag standards from Apple or other browser vendors -->
+    <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="description" content="Join us for a spooktacular candy hunt at Terramont Park! Dress in your Halloween best, grab your flashlight and bring a trick-or-treat bag or bucket for an evening of sweet treats and festive fun." />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://www.thewoodlandsparks.com/Events-Directory/2026/October/102826-Flashlight-Candy-Hunt" />
+    <meta property="og:title" content="Flashlight Candy Hunt" />
+    <meta property="og:description" content="Join us for a spooktacular candy hunt at Terramont Park! Dress in your Halloween best, grab your flashlight and bring a trick-or-treat bag or bucket for an evening of sweet treats and festive fun." />
+    <meta property="og:image" content="https://www.thewoodlandsparks.com/files/sharedassets/parks/v/1/images/events-and-festivals-gallery/flashlight-candy-hunt.png?w=1200" />
+    <meta property="twitter:card" content="summary" />
+    <meta property="twitter:title" content="Flashlight Candy Hunt" />
+    <meta property="twitter:description" content="Join us for a spooktacular candy hunt at Terramont Park! Dress in your Halloween best, grab your flashlight and bring a trick-or-treat bag or bucket for an evening of sweet treats and festive fun." />
+    <meta property="twitter:image" content="https://www.thewoodlandsparks.com/files/sharedassets/parks/v/1/images/events-and-festivals-gallery/flashlight-candy-hunt.png?w=1080" />
+    <link rel="canonical" href="https://www.thewoodlandsparks.com/Events-Directory/2026/October/102826-Flashlight-Candy-Hunt" />
+
+    
+    <link rel="icon" type="image/png" href="/files/ocfavicon/Parks/favicon-96x96.png" sizes="96x96" />
+<link rel="icon" type="image/svg+xml" href="/files/ocfavicon/Parks/favicon.svg" />
+<link rel="shortcut icon" href="/files/ocfavicon/Parks/favicon.ico" />
+<link rel="apple-touch-icon" sizes="180x180" href="/files/ocfavicon/Parks/apple-touch-icon.png" />
+<link rel="manifest" href="/files/ocfavicon/Parks/site.webmanifest" />
+    <script>
+        (function () {
+            if (window.__UNLOAD_LAZY_PATCH__) return;
+            window.__UNLOAD_LAZY_PATCH__ = true;
+
+            var supportsPageHide = ("onpagehide" in window);
+            var mappedType = supportsPageHide ? "pagehide" : "beforeunload";
+            var nativeAdd = window.addEventListener;
+            var nativeRemove = window.removeEventListener;
+            var unloadMap = null;
+            var patched = false;
+
+            function ensurePatched() {
+                if (patched) return;
+                unloadMap = new WeakMap();
+
+                window.addEventListener = function (type, listener, options) {
+                    if (type === "unload") {
+                        var wrapped = function (evt) {
+                            if (supportsPageHide && evt.persisted) return;
+                            listener.call(this, evt);
+                        };
+                        unloadMap.set(listener, wrapped);
+                        return nativeAdd.call(this, mappedType, wrapped, options);
+                    }
+                    return nativeAdd.call(this, type, listener, options);
+                };
+
+                window.removeEventListener = function (type, listener, options) {
+                    if (type === "unload") {
+                        var wrapped = unloadMap.get(listener);
+                        if (wrapped) {
+                            nativeRemove.call(this, mappedType, wrapped, options);
+                            unloadMap.delete(listener);
+                        }
+                        return;
+                    }
+                    return nativeRemove.call(this, type, listener, options);
+                };
+
+                var orig = null;
+                Object.defineProperty(window, "onunload", {
+                    configurable: true, enumerable: true,
+                    get: function () { return orig; },
+                    set: function (h) {
+                        orig = h;
+                        if (typeof h === "function") window.addEventListener("unload", h);
+                    }
+                });
+                patched = true;
+            }
+
+            window.addEventListener = function (type, listener, options) {
+                if (type === "unload") {
+                    ensurePatched();
+                    return window.addEventListener(type, listener, options);
+                }
+                return nativeAdd.call(this, type, listener, options);
+            };
+
+            window.removeEventListener = function (type, listener, options) {
+                if (type === "unload" && !patched) {
+                    return;
+                }
+                return nativeRemove.call(this, type, listener, options);
+            };
+
+            function patchTelerik() {
+                ensurePatched();
+                var ns = window.RadAjaxNamespace;
+                if (!ns || !ns.EventManager || !ns.EventManager.Add || ns.EventManager.__UnloadPatched) return;
+                var origAdd = ns.EventManager.Add;
+                ns.EventManager.Add = function (el, evtName, handler, clientId) {
+                    if (el === window && evtName === "unload") {
+                        return window.addEventListener("unload", handler);
+                    }
+                    return origAdd.call(this, el, evtName, handler, clientId);
+                };
+                ns.EventManager.__UnloadPatched = true;
+            }
+
+            if (window.RadAjaxNamespace)
+                patchTelerik();
+            else (window.requestIdleCallback || function (cb)
+            {
+                setTimeout(cb, 120);
+            })(patchTelerik);
+        })();
+    </script>
+    <!-- Preconnecting to Google Fonts servers -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- Defer Roboto font loading to avoid render-blocking -->
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const robotoLink = document.createElement('link');
+            robotoLink.rel = 'stylesheet';
+            robotoLink.href = 'https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap';
+            document.head.appendChild(robotoLink);
+        });
+    </script>
+
+    <style>
+        .gm-style, .gm-style * {
+            font-family: 'Roboto', system-ui, -apple-system, "Segoe UI", Arial, sans-serif !important;
+        }
+    </style>
+
+    <script>
+        document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, "js");
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+    
+        
+            <script type="text/javascript">
+                window.__oc_flags_ImprovedBreakpointEventHandling = true;
+            </script>
+            
+        
+    
+    
+    
+        <script type="text/javascript">
+            var __metaQueryBreakpoints = {
+                'sc-size-4': '(max-width: 480px)',
+                'sc-size-3': '(min-width: 480px) and (max-width: 768px)',
+                'sc-size-2': '(min-width: 768px) and (max-width: 992px)',
+                'sc-size-1': '(min-width: 992px)'
+            }
+
+            var __ocSizePoints = [
+                { min: 0, name: 'sc-size-4' },
+                { min: 480, name: 'sc-size-3' },
+                { min: 768, name: 'sc-size-2' },
+                { min: 992, name: 'sc-size-1' }
+            ];
+
+        </script>
+    
+
+    <!-- Framework Section -->
+    
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="/files/templates/00000000-0000-0000-0000-000000000000/977bbe5d-8af9-4796-9375-09fa7c214b65/v/164/jquery-3.7.1.min.js?seamlessts=639263247832776859" ><\/script>')</script>
+
+    <!--Google Maps API Loader – Improved Version to avoid Warning
+    This script loads the Google Maps JavaScript API using a dynamic and async method.
+    It replaces the old static <script> tag to avoid performance warnings from Google.
+
+    Dynamically creates the <script> tag with loading = async for better performance
+    Builds the API URL with required libraries(places, geometry, marker, geocoding)
+    Uses a Promise and callback(google.maps.__ib__) to confirm when the script is ready
+
+    It Avoids Google’s warning about direct script loading
+    Improves page load speed by loading the API asynchronously-->
+
+    
+        <script>
+            (function (root) {
+                root.OpenCities = root.OpenCities || {};
+                if (!root.OpenCities.GoogleMapsLoader) {
+                    root.OpenCities.GoogleMapsLoader = {
+                        _cbs: [],
+                        _ready: false,
+                        onReady: function (cb) {
+                            if (this._ready) { try { cb(); } catch (e) { console.error(e); } }
+                            else if (typeof cb === 'function') this._cbs.push(cb);
+                        },
+                        _fire: function () {
+                            if (this._ready) return;
+                            this._ready = true;
+                            var q = this._cbs.splice(0);
+                            for (var i = 0; i < q.length; i++) {
+                                try { q[i](); } catch (e) { console.error(e); }
+                            }
+                        }
+                    };
+                }
+            })(window);
+
+            (g => {
+                var h, a, k, p = "The Google Maps JavaScript API", c = "google", l = "importLibrary", q = "__ib__",
+                    m = document, b = window;
+                b = b[c] || (b[c] = {});
+                var d = b.maps || (b.maps = {}), r = new Set, e = new URLSearchParams,
+                    u = () => h || (h = new Promise(async (resolve, reject) => {
+                        a = m.createElement("script");
+                        e.set("libraries", [...r] + "");
+                        for (k in g) e.set(k.replace(/[A-Z]/g, t => "_" + t[0].toLowerCase()), g[k]);
+                        e.set("callback", c + ".maps." + q);
+                        a.src = "https://maps." + c + "apis.com/maps/api/js?" + e.toString();
+                        a.loading = "async";
+                        a.async = true;
+                        a.defer = true;
+                        d[q] = resolve;
+                        a.onerror = () => reject(Error(p + " could not load."));
+                        a.nonce = m.querySelector("script[nonce]")?.nonce || "";
+                        m.head.append(a);
+                    }));
+                if (d[l]) {
+                    console.warn(p + " only loads once. Ignoring duplicate load.");
+                } else {
+                    d[l] = (f, ...n) => (r.add(f), u().then(() => d[l](f, ...n)));
+                }
+            })({
+                key: "AIzaSyCMmwqinGpFEj69CETUkq2Nx_lPntPs26E",
+                v: "3.65"
+            });
+
+            (async () => {
+                try {
+                    if (!google?.maps?.importLibrary) return;
+
+                    if (!window.OpenCities.__mapsLibsPromise) {
+                        window.OpenCities.__mapsLibsPromise = Promise.all([
+                            google.maps.importLibrary('maps'),
+                            google.maps.importLibrary('places'),
+                            google.maps.importLibrary('geocoding'),
+                            google.maps.importLibrary('marker'),
+                            google.maps.importLibrary('geometry')
+                        ]);
+                    }
+                    await window.OpenCities.__mapsLibsPromise;
+
+                    if (window.OpenCities?.GoogleMapsLoader) {
+                        window.OpenCities.GoogleMapsLoader._fire();
+                    }
+                } catch (err) {
+                    console.error('Google Maps failed to initialise', err);
+                }
+            })();
+        </script>
+    
+    <script src="/files/templates/00000000-0000-0000-0000-000000000000/977bbe5d-8af9-4796-9375-09fa7c214b65/v/164/modernizr.custom.710f3bf.js?seamlessts=639263247832776859" defer></script>
+    
+    <!--// End Framework Section -->
+    <!-- OpenCities Section -->
+    <script>
+        var OpenCities = OpenCities || {};
+        OpenCities.Paths = {
+            SiteTemplate: '/files/templates/00000000-0000-0000-0000-000000000000/977bbe5d-8af9-4796-9375-09fa7c214b65/v/164/',
+            ThemePath: '/files/templates/00000000-0000-0000-0000-000000000000/977bbe5d-8af9-4796-9375-09fa7c214b65/v/164/'
+        };
+    </script>
+    <script src='/ocapi/31f2321a-9254-4e70-8788-bd85dcedda36/en-US/websitesettings.js'></script>
+    <script src="/files/templates/00000000-0000-0000-0000-000000000000/977bbe5d-8af9-4796-9375-09fa7c214b65/v/164/oc_head.js?applied=20260910011506"></script>
+    <!-- Script Combine. To enter debug mode for this browser session, enter OcScriptCombineDebug=true as a querystring -->
+<link href="/files/oc-templates/00000000-0000-0000-0000-000000000000/977bbe5d-8af9-4796-9375-09fa7c214b65/v/164/oc_grid.css~oc_style.css~oc_wizard_style.css~oc_main.css~oc_forms.css~oc_wizard.css~oc_wizard_menu.css~oc_main_s1.css~oc_wizard_s1.css~oc_wizard_menu_s1.css~oc_grid_s1.css~OcScriptCombine_Minify0?uniqueid=20260910011506" rel="stylesheet" type="text/css">
+    <!-- Script Combine. To enter debug mode for this browser session, enter OcScriptCombineDebug=true as a querystring -->
+<link href="/files/oc-templates/00000000-0000-0000-0000-000000000000/977bbe5d-8af9-4796-9375-09fa7c214b65/v/164/client_style.css~client.css~client_menu.css~client_s1.css~client_menu_s1.css~client_forms.css~OcScriptCombine_Minify0?uniqueid=20260910011506" rel="stylesheet" type="text/css">
+    <script>
+(function (BackgroundSettings, $, undefined) {
+    BackgroundSettings.initialise = function () {
+        this.Application = {"CSSSelector":".content-outer-container","EnableFade":false,"MediaType":"image"};
+    };
+} (OpenCities.BackgroundSettings = OpenCities.BackgroundSettings || {}, jQuery));
+OpenCities.BackgroundSettings.initialise();
+</script>
+    
+    <!-- Script Combine. To enter debug mode for this browser session, enter OcScriptCombineDebug=true as a querystring -->
+<link href="/files/oc-templates/00000000-0000-0000-0000-000000000000/977bbe5d-8af9-4796-9375-09fa7c214b65/v/164/oc_print.css~client_print.css~OcScriptCombine_Minify0?uniqueid=20260910011506" rel="stylesheet" type="text/css" media="print">
+    <!-- Script Combine. To enter debug mode for this browser session, enter OcScriptCombineDebug=true as a querystring -->
+<script src="/files/oc-templates/00000000-0000-0000-0000-000000000000/977bbe5d-8af9-4796-9375-09fa7c214b65/v/164/external_plugins.js~oc_form_helper.js~oc_main.js~plugins.js~oc_main_init.js~OcScriptCombine_Minify0?uniqueid=20260910011506" defer="true"></script>
+    
+    
+
+                                <script>!function(e){var n="https://s.go-mpulse.net/boomerang/";if("False"=="True")e.BOOMR_config=e.BOOMR_config||{},e.BOOMR_config.PageParams=e.BOOMR_config.PageParams||{},e.BOOMR_config.PageParams.pci=!0,n="https://s2.go-mpulse.net/boomerang/";if(window.BOOMR_API_key="DYTCK-JM9C8-ED4EP-C3GGK-Z575H",function(){function e(){if(!r){var e=document.createElement("script");e.id="boomr-scr-as",e.src=window.BOOMR.url,e.async=!0,o.appendChild(e),r=!0}}function t(e){r=!0;var n,t,a,i,d=document,O=window;if(window.BOOMR.snippetMethod=e?"if":"i",t=function(e,n){var t=d.createElement("script");t.id=n||"boomr-if-as",t.src=window.BOOMR.url,BOOMR_lstart=(new Date).getTime(),e=e||d.body,e.appendChild(t)},!window.addEventListener&&window.attachEvent&&navigator.userAgent.match(/MSIE [67]\./))return window.BOOMR.snippetMethod="s",void t(o,"boomr-async");a=document.createElement("IFRAME"),a.src="about:blank",a.title="",a.role="presentation",a.loading="eager",i=(a.frameElement||a).style,i.width=0,i.height=0,i.border=0,i.display="none",o.appendChild(a);try{O=a.contentWindow,d=O.document.open()}catch(_){n=document.domain,a.src="javascript:var d=document.open();d.domain='"+n+"';void 0;",O=a.contentWindow,d=O.document.open()}if(n)d._boomrl=function(){this.domain=n,t()},d.write("<bo"+"dy onload='document._boomrl();'>");else if(O._boomrl=function(){t()},O.addEventListener)O.addEventListener("load",O._boomrl,!1);else if(O.attachEvent)O.attachEvent("onload",O._boomrl);d.close()}function a(e){window.BOOMR_onload=e&&e.timeStamp||(new Date).getTime()}if(!window.BOOMR||!window.BOOMR.version&&!window.BOOMR.snippetExecuted){window.BOOMR=window.BOOMR||{},window.BOOMR.snippetStart=(new Date).getTime(),window.BOOMR.snippetExecuted=!0,window.BOOMR.snippetVersion=14,window.BOOMR.url=n+"DYTCK-JM9C8-ED4EP-C3GGK-Z575H";var i=document.currentScript||document.getElementsByTagName("script")[0],o=i.parentNode,r=!1,d=document.createElement("link");if(d.relList&&"function"==typeof d.relList.supports&&d.relList.supports("preload")&&"as"in d)window.BOOMR.snippetMethod="p",d.href=window.BOOMR.url,d.rel="preload",d.as="script",d.addEventListener("load",e),d.addEventListener("error",function(){t(!0)}),setTimeout(function(){if(!r)t(!0)},3e3),BOOMR_lstart=(new Date).getTime(),o.appendChild(d);else t(!1);if(window.addEventListener)window.addEventListener("load",a,!1);else if(window.attachEvent)window.attachEvent("onload",a)}}(),"".length>0)if(e&&"performance"in e&&e.performance&&"function"==typeof e.performance.setResourceTimingBufferSize)e.performance.setResourceTimingBufferSize();!function(){if(BOOMR=e.BOOMR||{},BOOMR.plugins=BOOMR.plugins||{},!BOOMR.plugins.AK){var n=""=="true"?1:0,t="",a="vqeoe2yxf4zy62w6jboa-f-00637a9e3-clientnsv4-s.akamaihd.net",i="false"=="true"?2:1,o={"ak.v":"41","ak.cp":"1825961","ak.ai":parseInt("1075935",10),"ak.ol":"0","ak.cr":17,"ak.ipv":4,"ak.proto":"h2","ak.rid":"1dbb69eb","ak.r":39728,"ak.a2":n,"ak.m":"dscb","ak.n":"essl","ak.cport":2521,"ak.gh":"23.47.56.143","ak.quicv":"","ak.tlsv":"tls1.3","ak.0rtt":"","ak.0rtt.ed":"","ak.csrc":"-","ak.acc":"","ak.t":"1792952412","ak.ak":"hOBiQwZUYzCg5VSAfCLimQ==c6XD6hh4NiLPaIxw6c1KSFDsMy94qhsULv15oB0nX9ReSjPeJ11ZXVhoc6rcLTNOHKOhWpAE1x03kFxrBX2KZwlAlzh8YpTG53i6t4OzmWpoHt7m9DAxacIa6PVOZIPqAGBVBOzMTXV06b3t2BuW3NCByUi6bk/6MOIRNQH5Rirfy64obUrJovNtXGzxBXsJMPRDLIIdkT4pU3Z+crJiK98N6CDtnSS/c5sSaXk5/AC+9uvuDNvvZMRofM7Nm7BJLNvjHNfeEu13nmwtKdIb0cmKUpVCckH26WMUYAUKaST7ldD76Tr0W4xecBsRc6t1gB/H/8KClxIhPA+YRHFKjHraD1cETy3hI0pyrHnQy1o1gfJvxmOPRJsjzRlee7Oj+inMYIzEFwFs7QrhHTNBH6NXU56GDNmXRi1jG7qWkUY=","ak.pv":"358","ak.dpoabenc":"","ak.tf":i};if(""!==t)o["ak.ruds"]=t;var r={i:!1,av:function(n){var t="http.initiator";if(n&&(!n[t]||"spa_hard"===n[t]))o["ak.feo"]=void 0!==e.aFeoApplied?1:0,BOOMR.addVar(o)},rv:function(){var e=["ak.cport","ak.cr","ak.csrc","ak.gh","ak.ipv","ak.m","ak.n","ak.ol","ak.proto","ak.quicv","ak.tlsv","ak.0rtt","ak.0rtt.ed","ak.r","ak.acc","ak.t","ak.tf"];BOOMR.removeVar(e)}};BOOMR.plugins.AK={akVars:o,akDNSPreFetchDomain:a,init:function(){if(!r.i){var e=BOOMR.subscribe;e("before_beacon",r.av,null,null),e("onbeacon",r.rv,null,null),r.i=!0}return this},is_complete:function(){return!0}}}}()}(window);</script></head>
+<body class="body layout-modern  site-search-always-visble  content-type-oc-event content-template-oc-with-full-width-image group-template-oc-full-width-with-default-header page-name-n102826-flashlight-candy-hunt page-sequence-29 page-depth-4 page-section-9 website-type-defaultsubsite device-desktop homepage-show " id="body-top">
+    <div id="skip-to-content-container">
+        <a href="#main-content" class="visuallyhidden focusable" id="skip-to-content-link">Skip to main content</a>
+    </div>
+    <script>
+        // OCNOW-11988 (Cursor): Proactively focus skip link when returning from browser chrome.
+        // Must run inline (not deferred oc_main.js) so focus is intercepted before NVDA speaks footer.
+        (function () {
+            var awaitingReentry = false;
+            var inertSupported = 'inert' in HTMLElement.prototype;
+
+            function isExplicitlyOutsideDocument(node) {
+                return node != null && !document.documentElement.contains(node);
+            }
+
+            function getSkipContainer() {
+                return document.getElementById('skip-to-content-container');
+            }
+
+            function getSkipLink() {
+                return document.getElementById('skip-to-content-link');
+            }
+
+            function applyGuard() {
+                awaitingReentry = true;
+                if (!inertSupported) {
+                    return;
+                }
+                var skipContainer = getSkipContainer();
+                var children = document.body.children;
+                for (var i = 0; i < children.length; i++) {
+                    if (children[i] !== skipContainer) {
+                        children[i].setAttribute('inert', '');
+                    }
+                }
+            }
+
+            function clearGuard() {
+                awaitingReentry = false;
+                if (!inertSupported) {
+                    return;
+                }
+                var children = document.body.children;
+                for (var i = 0; i < children.length; i++) {
+                    children[i].removeAttribute('inert');
+                }
+            }
+
+            function isSkipLinkElement(target) {
+                if (!target) {
+                    return false;
+                }
+                var skipContainer = getSkipContainer();
+                return target.id === 'skip-to-content-link' ||
+                    (skipContainer && skipContainer.contains(target));
+            }
+
+            function focusSkipLink() {
+                var skipLink = getSkipLink();
+                if (!skipLink) {
+                    return;
+                }
+                if (window.scrollY > 0) {
+                    window.scrollTo(0, 0);
+                }
+                skipLink.focus({ preventScroll: true });
+            }
+
+            function scheduleGuardIfDocumentLostFocus() {
+                window.setTimeout(function () {
+                    if (!document.hasFocus()) {
+                        applyGuard();
+                    }
+                }, 0);
+            }
+
+            document.addEventListener('focusout', function (e) {
+                if (isExplicitlyOutsideDocument(e.relatedTarget)) {
+                    applyGuard();
+                }
+            }, true);
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Tab') {
+                    scheduleGuardIfDocumentLostFocus();
+                } else if (e.key === 'F6' || (e.key === 'l' && e.ctrlKey)) {
+                    scheduleGuardIfDocumentLostFocus();
+                }
+            }, true);
+
+            window.addEventListener('focus', function () {
+                if (!awaitingReentry) {
+                    return;
+                }
+                applyGuard();
+                focusSkipLink();
+            }, true);
+
+            document.addEventListener('focusin', function (e) {
+                var reentryFromChrome = awaitingReentry || isExplicitlyOutsideDocument(e.relatedTarget);
+                if (!reentryFromChrome) {
+                    return;
+                }
+                if (isSkipLinkElement(e.target)) {
+                    clearGuard();
+                    return;
+                }
+                applyGuard();
+                focusSkipLink();
+                clearGuard();
+            }, true);
+        })();
+    </script>
+    <form name="mainForm" method="post" action="/Events-Directory/2026/October/102826-Flashlight-Candy-Hunt" id="mainForm">
+<div>
+<input type="hidden" name="ctl04_seamless_script_manager_TSM" id="ctl04_seamless_script_manager_TSM" value="" />
+<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="" />
+<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="" />
+<input type="hidden" name="__SEAMLESSVIEWSTATE" id="__SEAMLESSVIEWSTATE" value="H4sIAAAAAAAEAAFAAb/+KePpXCDbdRuKstUyNbbsKiWqQEtvjpsPO3umd9tzenK71D6aedq8tJo6K0Q75ha0LVmENcczSpULFUD+p4uKG5gUkgTEnL6k4xQqvaFjZKUNfPHj8DdcL5DUKdLK7mHgO9g7juCNJyMrT1bdawJ6TgY1GvkEHDNW8LFK3vrKiDQuhNTNXwK8vzPmB/r1qOMANbx4du+X40Szfz6KlqPauAtrjLdq0bLHL4VDi8shcKAF4WmYhusJWnYphAOhGHa/4EbHpW6dQaG/o4GljkFSZVtTKVPxdoYW4lcUJ4os0SwFSLQ0/IK6X6tj2DLPIFnTX5ZVnityFHJMsQJlSYciciBx9a14TVXWKY+zNOtP5zaRqRkcH60HoEAN8Het0BYCUd+nLMTCpuYcWYlmAosb04I2zviiTGN1NVqkEzzWHBLTtEzHQAEAAA==" />
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="" />
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['mainForm'];
+if (!theForm) {
+    theForm = document.mainForm;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+//]]>
+</script>
+
+
+<script src="/WebResource.axd?d=pynGkmcFUV13He1Qd6_TZEwxevNHYVPiVa1Imd_CfwV7Ab8FE1aS0qMo2VVt5LKJo2QwSrlAqlF7-BPzzVxibA2&amp;t=639190653332169432" type="text/javascript"></script>
+
+
+<script src="/Telerik.Web.UI.WebResource.axd?_TSM_HiddenField_=ctl04_seamless_script_manager_TSM&amp;compress=1&amp;_TSM_CombinedScripts_=%3b%3bSystem.Web.Extensions%2c+Version%3d4.0.0.0%2c+Culture%3dneutral%2c+PublicKeyToken%3d31bf3856ad364e35%3aen-GB%3add3ac3d5-1e29-4112-8fed-529caffa8f24%3aea597d4b%3ab25378d2" type="text/javascript"></script>
+<script src="/ScriptResource.axd?d=EYVjNsQ7oYmzBqCI0dkEyYe0LYmPcVFL4WPcQCXhKfQwUqkAT7lLra0za-OLMuUUcCyPINdTVMHIWti96-8R_oN-trjXUUZnJRzckxTjid4ecctwwEJyNI-05jZYvXHBRiEKL0MUQMEyEJ2FXanyE1uBk88RxZ1wVK6AUn9D4v8rW-LNx2OOtB8vE3hC8P0jk4XZt7GAPiCeYQolxUlwFZA8cuOfgd4u08OASxFdh8mChz3A0YHhuwRrXGVlulfs9SJVkAvulhjdHYIIp1SRohDxt9acTwxUQrOlxuxC847b00zOOWg9SlpwD_iBuQQ1rOK9WH9O_wN9c2TXm4GeXaQHHT4yQ9IlzZXw6th8ch3f-k_n1yYeeurDMbwChXW1Vh_7rpu00kgmegsg9w2J3ququXIPfy2Gq8IscVTmtwouupfmUzAOicU_yESgQ-dG0" type="text/javascript"></script>
+    <script type="text/javascript">
+//<![CDATA[
+Sys.WebForms.PageRequestManager._initialize('ctl04$seamless_script_manager', 'mainForm', ['tctl09$updPnlAddToCalendar',''], [], [], 90, '');
+//]]>
+</script>
+
+<script type="text/javascript">
+    try{
+        function SeamlessEndRequestHandler(sender, args) {
+            try {
+                var dataItems = args.get_dataItems();
+                if(dataItems.ctl04_seamless_script_manager)
+                    document.getElementById('__SEAMLESSVIEWSTATE').value = dataItems.ctl04_seamless_script_manager;
+            }
+            catch (e) { }
+        }
+
+        Sys.WebForms.PageRequestManager.getInstance().add_endRequest(SeamlessEndRequestHandler);
+    }
+    catch (e) { }
+</script>
+
+    <div class="unsupported-browser-warning js-element"></div>
+    
+    <div hidden>
+        <span id="new-window-0">opens in new tab or window </span>
+    </div>
+    <div class="overlay-container"></div>
+    
+    <div role="region" aria-label="Site announcements" class="emergency-container emergency-container-position-1"><div id="PublicEmergencyAnnouncementList" data-cookiekeydismisseditems="OC_EA_EmergencyAnnouncementList_Dismissed" data-querykeydismisseditem="OC_EA_EmergencyAnnouncementList_Dismiss">
+   <div class="oc-emergency-announcement-container">
+  <div class="oc-emergency-undismissed max-severity-30 results-1">
+    <div class="side-box message-box emergency-message-box oc-emergency-severity-30 " >
+   <h3 class="side-box-title">May Valley Sprayground Closed</h3>
+   <div class="side-box-content">
+      <p >The May Valley Sprayground is currently down. Thank you for your patience.</p>
+      
+      
+   </div>
+   <button type="button" class="emergency-announcement-item-dismiss" aria-label="Close this announcement" data-cvid="f1bd28a2-ea42-4fe4-b916-4753a92b0cc2"></button>
+</div>
+        
+  </div><div class="oc-emergency-dismissed results-0"></div></div></div></div>
+    <div class="background-container">
+        <div class="page-container">
+            <!-- OC Layout Element GROUP TEMPLATE -->
+            <!--groupTemplateStart--><header>
+            <div class="toolbar-outer-container">
+  <div class="toolbar-inner-container clearfix">
+    <div class="toolbar-item toolbar-quicklinks toolbar-display-dropdown">
+	<button type="button" aria-controls="toolbar-quicklinks-drop-down" aria-expanded="false" class="toolbar-button toolbar-button-quicklinks js-element"><span>Quick Links</span><i aria-hidden="true"></i></button>	
+	<div id="toolbar-quicklinks-drop-down" class="toolbar-drop-down toolbar-quicklinks-drop-down clearfix">
+		<ul>
+		  <li><a href="https://thewoodlandstownship-tx.gov" class="oc-icon-b oc-i-tree link-type-external" target="_blank"><span>Township</span></a></li><li><a href="https://www.thewoodlandsparks.com/Recreation/Programs" class="oc-icon-b oc-i-check link-type-internal" target="_blank"><span>Program Registration</span></a></li><li><a href="https://www.thewoodlandsparks.com/Parks/Rentals-Reservations" class="oc-icon-b oc-i-calendar-booking link-type-internal"><span>Rentals</span></a></li><li><a href="https://www.facebook.com/townshipparksandrec/" class="oc-icon-b oc-i-facebook link-type-external" target="_blank"><span>Facebook</span></a></li><li><a href="https://www.instagram.com/townshipparksandrec/" class="oc-icon-b oc-i-instagram link-type-external" target="_blank"><span>Instagram</span></a></li>
+		</ul>
+	</div>
+</div>
+  </div>
+</div>
+            <div class="header-outer-container">
+    <div class="header-container header-layout-1 clearfix">
+			<div class="header-site-logo">
+				<a href="https://www.thewoodlandsparks.com/Home" lang="en-US" aria-label="The Woodlands Township Parks & Recreation - Home - Logo">
+				</a>
+			</div>
+		    <div class="header-website-settings">
+                <button id="btn-mob-nav" type="button" aria-expanded="false" aria-controls="nav">
+                    <i aria-hidden="true"></i><span class="side-menu-btn-text">Menu</span>
+                </button>
+        	</div>
+			
+			<div class="header-search-control-container" id="header-search">
+				<div class="search-inner-container">
+					<div class="sc-search-panel" onkeypress="javascript:return WebForm_FireDefaultButton(event, &#39;ctl06_btnSearch&#39;)">
+	<label for="ctl06_txtSearch" id="ctl06_lblSearch" class="sc-search-label">Search</label><input name="ctl06$txtSearch" type="text" id="ctl06_txtSearch" class="sc-search-text" placeholder="Discover The Woodlands!" /><input type="submit" name="ctl06$btnSearch" value="Search" id="ctl06_btnSearch" class="sc-search-button" />
+</div>
+					<div role="status" id="predictiveResults"></div>
+				</div>
+			</div>
+    </div>
+</div>
+<div class="navigation-outer-container">
+	<div id="nav" role="navigation" class="navigation-container navigation-container-option-2" data-menu-type="horizontal" aria-label="primary">
+        <div class="grid">
+            <div class="col-xs-12">              
+                <ul class="sf-menu mega-menu" id="sc-main-menu"><li class="nav-section-quarters-1   first-item nav-item-seq-1">
+<a href="https://www.thewoodlandsparks.com/Parks" class="nav-level-1 nav-has-children"  target="">
+	<i class="item-icon" aria-hidden="true"></i><span class="item-text">Parks</span>
+</a>
+<button aria-label="Expand" aria-controls="sc-menu-second-level-nav-item-seq-1" aria-haspopup="true" class="mobnav-subarrow" ><i aria-hidden="true"></i></button>
+<ul id="sc-menu-second-level-nav-item-seq-1" class="second-level-container ch-8">
+<li class="navigation-top-tasks-container"><section><h1 class="navigation-top-tasks-heading visuallyhidden">Park Links</h1><ul class="navigation-top-tasks-list"><li><a href="https://www.thewoodlandsparks.com/Parks/311-Report-a-Concern" class="navigation-top-task-icon" target="_self" ><span>Report-a-Concern</span></a></li><li><a href="https://www.thewoodlandsparks.com/Parks/Rentals-Reservations" class="navigation-top-task-icon" target="_self" ><span>Rentals & Reservations</span></a></li><li><a href="https://www.thewoodlandsparks.com/Parks/Maps/Map" class="navigation-top-task-icon" target="_self" ><span>Parks & Facility Map</span></a></li></ul></section></li>
+          
+            <li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Parks/Community-Parks" class="nav-has-children"  target="">Community Parks</a><button aria-label="Expand" aria-controls="sc-menu-third-level-nav-item-seq-1-nav-item-seq-1" class="mobnav-subarrow-child"><i aria-hidden="true"></i>
+              </button>
+<ul  id="sc-menu-third-level-nav-item-seq-1-nav-item-seq-1" class="third-level-container">
+          
+            <li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Parks/Community-Parks/Parks-Directory"  target="">Parks Directory</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Parks/Community-Parks/Dog-Parks"  target="">Dog Parks</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Parks/Community-Parks/Wheel-Friendly-Parks"  target="">Wheel Friendly Parks</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Parks/Community-Parks/Policies-and-Rules"  target="">Policies & Rules</a></li></ul></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Parks/311-Report-a-Concern" class=""  target="">311 Report-a-Concern</a></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Parks/Pathways" class=""  target="">Pathways</a></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Parks/George-Mitchell-Nature-Preserve" class=""  target="">George Mitchell Nature Preserve</a></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Parks/Artificial-Turf-Fields" class=""  target="">Artificial Turf Fields</a></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Parks/Maps" class=""  target="">Maps</a></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Parks/Rentals-Reservations" class=""  target="">Rentals & Reservations</a></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Parks/Surveys" class=""  target="">Park Surveys</a></li></ul></li>
+          
+            <li class="nav-section-quarters-1   nav-item-seq-2">
+<a href="https://www.thewoodlandsparks.com/Recreation" class="nav-level-1 nav-has-children"  target="">Recreation</a>
+<button aria-label="Expand" aria-controls="sc-menu-second-level-nav-item-seq-2" aria-haspopup="true" class="mobnav-subarrow" ><i aria-hidden="true"></i></button>
+<ul id="sc-menu-second-level-nav-item-seq-2" class="second-level-container ch-11">
+<li class="navigation-top-tasks-container"><section><h1 class="navigation-top-tasks-heading visuallyhidden">Recreation Links</h1><ul class="navigation-top-tasks-list"><li><a href="/activityguide" class="navigation-top-task-icon" target="_blank" ><span>Activity Guide</span></a></li><li><a href="https://www.thewoodlandsparks.com/Recreation/Programs" class="navigation-top-task-icon" target="_self" ><span>Program Registration</span></a></li><li><a href="https://www.thewoodlandsparks.com/Recreation/Recreation-Centers" class="navigation-top-task-icon" target="_self" ><span>Recreation Centers</span></a></li><li><a href="https://www.thewoodlandsparks.com/Recreation/Youth-Camps" class="navigation-top-task-icon" target="_self" ><span>Youth Camps</span></a></li><li><a href="https://www.thewoodlandsparks.com/Events-Directory" class="navigation-top-task-icon" target="_self" ><span>View Calendar</span></a></li></ul></section></li>
+          
+            <li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Recreation/Activity-Guide" class=""  target="_blank">Activity Guide</a></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Recreation/Calendar" class=""  target="_self">Calendar of Events</a></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Recreation/Programs" class=""  target="">Programs</a></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Recreation/TreeVentures" class=""  target="_blank">TreeVentures</a></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Recreation/Boat-Houses" class=""  target="_blank">Boat Houses</a></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Recreation/Bicycling" class=""  target="">Bicycling</a></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Recreation/Recreation-Centers" class=""  target="">Recreation Centers</a></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Recreation/Adult-Leagues" class=""  target="">Adult Leagues</a></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Recreation/Youth-Camps" class=""  target="">Youth Camps</a></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Recreation/Pickleball" class=""  target="">Pickleball</a></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Recreation/Tennis" class="nav-has-children"  target="">Tennis</a><button aria-label="Expand" aria-controls="sc-menu-third-level-nav-item-seq-2-nav-item-seq-11" class="mobnav-subarrow-child"><i aria-hidden="true"></i>
+              </button>
+<ul  id="sc-menu-third-level-nav-item-seq-2-nav-item-seq-11" class="third-level-container">
+          
+            <li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Recreation/Tennis/Adult"  target="">Adult Tennis</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Recreation/Tennis/Youth-Tennis"  target="">Youth Tennis</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Recreation/Tennis/Youth-Advance"  target="">Youth Advance Tennis</a></li></ul></li></ul></li>
+          
+            <li class="nav-section-quarters-2   nav-item-seq-3">
+<a href="https://www.thewoodlandsparks.com/Events" class="nav-level-1 nav-has-children"  target="">Events</a>
+<button aria-label="Expand" aria-controls="sc-menu-second-level-nav-item-seq-3" aria-haspopup="true" class="mobnav-subarrow" ><i aria-hidden="true"></i></button>
+<ul id="sc-menu-second-level-nav-item-seq-3" class="second-level-container ch-8">
+<li class="navigation-top-tasks-container"><section><h1 class="navigation-top-tasks-heading visuallyhidden">Event Links</h1><ul class="navigation-top-tasks-list"><li><a href="https://www.thewoodlandsparks.com/Events/Special-Event-Permits" class="navigation-top-task-icon" target="_self" ><span>Special Event Permits</span></a></li><li><a href="https://www.thewoodlandsparks.com/Events-Directory" class="navigation-top-task-icon" target="_self" ><span>View Calendar</span></a></li><li><a href="https://www.thewoodlandsparks.com/Events/Volunteer" class="navigation-top-task-icon" target="_self" ><span>Volunteer at Events</span></a></li></ul></section></li>
+          
+            <li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Events/Festivals" class="nav-has-children"  target="">Festivals</a><button aria-label="Expand" aria-controls="sc-menu-third-level-nav-item-seq-3-nav-item-seq-1" class="mobnav-subarrow-child"><i aria-hidden="true"></i>
+              </button>
+<ul  id="sc-menu-third-level-nav-item-seq-3-nav-item-seq-1" class="third-level-container">
+          
+            <li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Events/Festivals/Spicy-Tails"  target="">Spicy Tails Art Sale</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Events/Festivals/Memorial-Day"  target="">Memorial Day Tribute</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Events/Festivals/4th-of-July"  target="">4th of July</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Events/Festivals/Labor-Day"  target="">Labor Day Festival</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Events/Festivals/Shakespeare-in-the-Park"  target="">Shakespeare in the Park</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Events/Festivals/Trick-or-Treat-Trail"  target="">Trick or Treat Trail</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Events/Festivals/Lighting-of-the-Doves"  target="">Lighting of the Doves</a></li></ul></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Events/Races" class="nav-has-children"  target="">Races</a><button aria-label="Expand" aria-controls="sc-menu-third-level-nav-item-seq-3-nav-item-seq-2" class="mobnav-subarrow-child"><i aria-hidden="true"></i>
+              </button>
+<ul  id="sc-menu-third-level-nav-item-seq-3-nav-item-seq-2" class="third-level-container">
+          
+            <li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Events/Races/Crush-Rush"  target="">Crush Rush</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Events/Races/Run-and-Done"  target="">Run and Done</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Events/Races/Firecracker-5K"  target="_self">Firecracker 5K</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Events/Races/Memorial-Hermann-10-for-Texas"  target="">Memorial Hermann 10 for Texas</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Events/Races/Glow-and-Go"  target="">Glow and Go</a></li></ul></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Events/Bike-Month" class=""  target="">Bike Month</a></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Events/Concerts" class="nav-has-children"  target="">Concerts</a><button aria-label="Expand" aria-controls="sc-menu-third-level-nav-item-seq-3-nav-item-seq-4" class="mobnav-subarrow-child"><i aria-hidden="true"></i>
+              </button>
+<ul  id="sc-menu-third-level-nav-item-seq-3-nav-item-seq-4" class="third-level-container">
+          
+            <li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Events/Concerts/Concert-in-the-Park"  target="">Concert in the Park</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Events/Concerts/Rock-the-Row"  target="">Rock the Row</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Events/Concerts/Waterway-Nights"  target="">Waterway Nights</a></li></ul></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Events/Ceremonies" class="nav-has-children"  target="">Ceremonies</a><button aria-label="Expand" aria-controls="sc-menu-third-level-nav-item-seq-3-nav-item-seq-5" class="mobnav-subarrow-child"><i aria-hidden="true"></i>
+              </button>
+<ul  id="sc-menu-third-level-nav-item-seq-3-nav-item-seq-5" class="third-level-container">
+          
+            <li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Events/Ceremonies/Patriot-Day-of-Remembrance"  target="">Patriot Day of Remembrance</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Events/Ceremonies/Veterans-Day-Tribute"  target="">Veterans Day Tribute</a></li></ul></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Events/Special-Event-Permits" class=""  target="">Special Event Permits</a></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Events/View-Calendar" class=""  target="_self">View Calendar</a></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Events/Volunteer" class=""  target="">Volunteer at Events</a></li></ul></li>
+          
+            <li class="nav-section-quarters-2   nav-item-seq-4">
+<a href="https://www.thewoodlandsparks.com/Aquatics" class="nav-level-1 nav-has-children"  target="">Aquatics</a>
+<button aria-label="Expand" aria-controls="sc-menu-second-level-nav-item-seq-4" aria-haspopup="true" class="mobnav-subarrow" ><i aria-hidden="true"></i></button>
+<ul id="sc-menu-second-level-nav-item-seq-4" class="second-level-container ch-7">
+<li class="navigation-top-tasks-container"><section><h1 class="navigation-top-tasks-heading visuallyhidden">Aquatics Links</h1><ul class="navigation-top-tasks-list"><li><a href="https://www.thewoodlandstownship-tx.gov/splash" class="navigation-top-task-icon" target="_blank" ><span>2026 Splash Guide</span></a></li><li><a href="https://www.thewoodlandsparks.com/Aquatics/Pools/Pool-Pass" class="navigation-top-task-icon" target="_self" ><span>Pool Pass</span></a></li><li><a href="https://www.thewoodlandsparks.com/Aquatics/Swim-Teams" class="navigation-top-task-icon" target="_self" ><span>Swim Teams</span></a></li><li><a href="https://www.thewoodlandsparks.com/Aquatics/Swim-Lessons" class="navigation-top-task-icon" target="_self" ><span>Swim Lessons</span></a></li><li><a href="https://www.thewoodlandsparks.com/Aquatics/Summer-Jobs" class="navigation-top-task-icon" target="_self" ><span>Summer Jobs</span></a></li></ul></section></li>
+          
+            <li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Aquatics/Pools" class="nav-has-children"  target="">Pools</a><button aria-label="Expand" aria-controls="sc-menu-third-level-nav-item-seq-4-nav-item-seq-1" class="mobnav-subarrow-child"><i aria-hidden="true"></i>
+              </button>
+<ul  id="sc-menu-third-level-nav-item-seq-4-nav-item-seq-1" class="third-level-container">
+          
+            <li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Aquatics/Pools/Pool-Locations"  target="">Pool Locations</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Aquatics/Pools/Pool-Fees"  target="">Pool Fees</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Aquatics/Pools/Pool-Pass"  target="">Pool Pass Procedures</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Aquatics/Pools/Pool-Rentals"  target="">Pool Rentals</a></li></ul></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Aquatics/Spraygrounds" class="nav-has-children"  target="">Spraygrounds</a><button aria-label="Expand" aria-controls="sc-menu-third-level-nav-item-seq-4-nav-item-seq-2" class="mobnav-subarrow-child"><i aria-hidden="true"></i>
+              </button>
+<ul  id="sc-menu-third-level-nav-item-seq-4-nav-item-seq-2" class="third-level-container">
+          
+            <li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Aquatics/Spraygrounds/Bear-Branch-Sprayground"  target="_self">Bear Branch Sprayground</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Aquatics/Spraygrounds/May-Valley-Sprayground"  target="">May Valley Sprayground</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Aquatics/Spraygrounds/Sawmill-Sprayground"  target="_self">Sawmill Sprayground</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Aquatics/Spraygrounds/Shadowbend-Sprayground"  target="_self">Shadowbend Sprayground</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Aquatics/Spraygrounds/Timarron-Sprayground"  target="">Timarron Sprayground</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Aquatics/Spraygrounds/Village-Green-Sprayground"  target="">Village Green Sprayground</a></li></ul></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Aquatics/Splash-Guide" class=""  target="_blank">Splash Guide</a></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Aquatics/Swim-Lessons" class=""  target="">Swim Lessons</a></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Aquatics/Swim-Teams" class=""  target="">Swim Teams</a></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Aquatics/Summer-Jobs" class=""  target="">Summer Jobs</a></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Aquatics/Pool-FAQ" class=""  target="">Aquatics FAQ</a></li></ul></li>
+          
+            <li class="nav-section-quarters-3   nav-item-seq-5">
+<a href="https://www.thewoodlandsparks.com/Discover-More" class="nav-level-1 nav-has-children"  target="">Discover More!</a>
+<button aria-label="Expand" aria-controls="sc-menu-second-level-nav-item-seq-5" aria-haspopup="true" class="mobnav-subarrow" ><i aria-hidden="true"></i></button>
+<ul id="sc-menu-second-level-nav-item-seq-5" class="second-level-container ch-9">
+<li class="navigation-top-tasks-container"><section><h1 class="navigation-top-tasks-heading visuallyhidden">Discover More Navigation Items</h1><ul class="navigation-top-tasks-list"><li><a href="https://www.thewoodlandsparks.com/Discover-More/Job-Openings" class="navigation-top-task-icon" target="_self" ><span>Job Openings</span></a></li><li><a href="https://www.thewoodlandsparks.com/Discover-More/Planning/Bid-Openings" class="navigation-top-task-icon" target="_self" ><span>Bid Openings</span></a></li><li><a href="https://www.thewoodlandsparks.com/Home" class="navigation-top-task-icon" target="_self" ><span>Contributions</span></a></li><li><a href="https://www.thewoodlandsparks.com/Discover-More/FAQ" class="navigation-top-task-icon" target="_self" ><span>Frequently Asked Questions</span></a></li><li><a href="https://www.thewoodlandsparks.com/Discover-More/Contact-Us" class="navigation-top-task-icon" target="_self" ><span>Contact Us</span></a></li></ul></section></li>
+          
+            <li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Discover-More/About" class=""  target="">About Our Department</a></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Discover-More/Planning" class="nav-has-children"  target="">Planning</a><button aria-label="Expand" aria-controls="sc-menu-third-level-nav-item-seq-5-nav-item-seq-2" class="mobnav-subarrow-child"><i aria-hidden="true"></i>
+              </button>
+<ul  id="sc-menu-third-level-nav-item-seq-5-nav-item-seq-2" class="third-level-container">
+          
+            <li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Discover-More/Planning/Bid-Openings"  target="">Bid Opportunities</a></li></ul></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Discover-More/Streetscapes" class="nav-has-children"  target="">Streetscapes</a><button aria-label="Expand" aria-controls="sc-menu-third-level-nav-item-seq-5-nav-item-seq-3" class="mobnav-subarrow-child"><i aria-hidden="true"></i>
+              </button>
+<ul  id="sc-menu-third-level-nav-item-seq-5-nav-item-seq-3" class="third-level-container">
+          
+            <li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Discover-More/Streetscapes/Cul-de-Sac"  target="">Cul-de-Sac Maintenance</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Discover-More/Streetscapes/Access-and-Easements"  target="">Access & Easements</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Discover-More/Streetscapes/Community-Entry-Maintenance"  target="">Community Entry Maintenance</a></li></ul></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Discover-More/Forest-Management" class="nav-has-children"  target="">Forest Management</a><button aria-label="Expand" aria-controls="sc-menu-third-level-nav-item-seq-5-nav-item-seq-4" class="mobnav-subarrow-child"><i aria-hidden="true"></i>
+              </button>
+<ul  id="sc-menu-third-level-nav-item-seq-5-nav-item-seq-4" class="third-level-container">
+          
+            <li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Discover-More/Forest-Management/Hazardous-Trees"  target="">Hazardous Trees</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Discover-More/Forest-Management/Insects-Diseases"  target="">Insects & Diseases</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Discover-More/Forest-Management/Invasive-Species"  target="">Invasive Species</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Discover-More/Forest-Management/Reforestation"  target="">Reforestation</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Discover-More/Forest-Management/Reserve-Management"  target="">Reserve Management</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Discover-More/Forest-Management/Wildfires"  target="">Wildfires</a></li></ul></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Discover-More/Get-Involved" class="nav-has-children"  target="">Get Involved</a><button aria-label="Expand" aria-controls="sc-menu-third-level-nav-item-seq-5-nav-item-seq-5" class="mobnav-subarrow-child"><i aria-hidden="true"></i>
+              </button>
+<ul  id="sc-menu-third-level-nav-item-seq-5-nav-item-seq-5" class="third-level-container">
+          
+            <li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Discover-More/Get-Involved/Volunteer"  target="_self">Volunteer</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Discover-More/Get-Involved/Community-Contributions"  target="">Community Contributions</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Discover-More/Get-Involved/Community-Flag-Program"  target="">Community Flag Program</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Discover-More/Get-Involved/Park-Surveys"  target="_self">Park Surveys</a></li><li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Discover-More/Get-Involved/The-Way-Home-Project"  target="">The Way Home Project</a></li></ul></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Discover-More/Job-Openings" class="nav-has-children"  target="">Job Opportunities</a><button aria-label="Expand" aria-controls="sc-menu-third-level-nav-item-seq-5-nav-item-seq-6" class="mobnav-subarrow-child"><i aria-hidden="true"></i>
+              </button>
+<ul  id="sc-menu-third-level-nav-item-seq-5-nav-item-seq-6" class="third-level-container">
+          
+            <li  class="third-level-item  "><a href="https://www.thewoodlandsparks.com/Discover-More/Job-Openings/Summer-Jobs"  target="">Summer Jobs</a></li></ul></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Discover-More/FAQ" class=""  target="">FAQ</a></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Discover-More/Contact-Us" class=""  target="">Contact Us</a></li><li class="second-level-item  "><a href="https://www.thewoodlandsparks.com/Discover-More/Township" class=""  target="_self">The Woodlands Township</a></li></ul></li>
+          
+            </ul>
+            </div>
+        </div>
+    </div>
+</div>
+            </header>
+            <div class="content-outer-container">
+                <div id="main" role="main" class="main-outer-container clearfix">
+                        
+                        <div class="content-main-container">
+                            <div class="grid">
+					            <div class="col-xs-12">
+						            <nav id="breadcrumbs-container" aria-label="You Are Here :">
+							            <span role="list">
+<span role="listitem">
+	<a href="https://www.thewoodlandsparks.com/Home"  lang="en-US">Home</a>
+	<span class="nav-separator" aria-hidden="true" role="presentation">/</span>
+</span>
+          <span class="current-page" role="listitem" aria-current="page" >Flashlight Candy Hunt</span></span>
+						            </nav>
+					            </div>
+                      
+					            <div class="col-xs-12">
+						            <div class="main-inner-container">
+							            <div id="main-content" class="main-container clearfix">
+							              
+                            <!-- OC Layout Element Conent Template -->
+							              <!--normalTemplateStart--><div class="grid">
+    <div class="col-xs-12 col-m-8">
+        <h1 class='oc-page-title '>Flashlight Candy Hunt</h1>
+        <p class="event-date">Next date:&nbsp;Wednesday, October 28, 2026 | 07:30 PM 
+	</p>
+        
+       <picture>
+  <source media="(min-width: 992px)" srcset="/files/sharedassets/parks/v/1/images/events-and-festivals-gallery/flashlight-candy-hunt.png?dimension=pageimagefullwidth&w=1140">
+  <source media="(min-width: 768px)" srcset="/files/sharedassets/parks/v/1/images/events-and-festivals-gallery/flashlight-candy-hunt.png?dimension=pageimagefullwidth&w=992">
+  <source srcset="/files/sharedassets/parks/v/1/images/events-and-festivals-gallery/flashlight-candy-hunt.png?dimension=pageimagefullwidth&w=768">
+  <img class="main-page-image full-width" src="/files/sharedassets/parks/v/1/images/events-and-festivals-gallery/flashlight-candy-hunt.png?dimension=pageimagefullwidth&w=1140" alt="A group of people gathered in costumes with flashlights at night" title="A group of people gathered in costumes with flashlights at night"/>
+</picture> 
+        <p>Join us for a <span data-start="14" data-end="41">spooktacular candy hunt</span> at Terramont Park! Dress in your Halloween best, grab your flashlight and bring a trick-or-treat bag or bucket for an evening of sweet treats and festive fun. Costumed encouraged! Prizes will be awarded for best costume and for those that find the hidden Halloween surprise. Parents must accompany children (no charge for adults). Please note: hunts begins at the start time, please be sure to check in by then or you will miss it!</p>
+<p><span style="font-size: 100%;"><a href="https://apm.activecommunities.com/wcscparksandrec/Activity_Search/flashlight-candy-hunt---terramont-park-oct-28/74535?locale=en-US" target="_blank" class="styled-button">Sign Up for Flashlight Candy Hunt</a></span></p>
+<p><span style="font-size: 100%;">Other dates available:</span></p>
+<ul>
+<li>
+<p>Thursday, October 8</p>
+</li>
+<li>
+<p>Tuesday, October 13</p>
+</li>
+<li>
+<p>Tuesday, October 20</p>
+</li>
+</ul>
+
+
+        <div class="clearfix"></div>
+        
+            
+            
+                <h2 class="sub-title">When</h2>
+      <div class="multi-date-list-container">
+<ul class="multi-date-list future-events-list"><li class="multi-date-item" data-start-year='2026' data-start-month='10' data-start-day='28' data-end-year='' data-end-month='' data-end-day='' data-start-hour='19' data-start-mins='30' data-end-hour='' data-end-mins=''>
+	Wednesday, October 28, 2026 | 07:30 PM 
+	
+</li></ul></div>
+                
+                    <h2 class="sub-title">Location</h2>
+                
+                
+                <p>Terramont Park,&nbsp;8500 Terramont Dr,&nbsp;The Woodlands, TX,&nbsp;77382,&nbsp;<a href="https://maps.google.com?q=Terramont%20Park%208500%20Terramont%20Dr%20The%20Woodlands%2C%20TX%2077382" target="_blank">View Map</a>
+      
+                    </p>
+                    <div id="skip-map-container-top" class="skip-map-container rs_skip">
+    <a href='#map-bottom' class="visuallyhidden focusable skip-map-link" id="map-top">Skip to below map</a>
+</div>
+<div class="gmap rs_skip" data-params='{"zoom" : 14, "autoOpenInfoWindow" : false, "hideControls" : true, "autoBounds" : true, "centerPoint" : "30.2026524,-95.55680579999999"}'>
+    <div class="gmap-marker hidden">
+        <div class="gmap-latlong">
+          30.2026524,-95.55680579999999
+        </div>
+        <div class="gmap-address">
+          8500 Terramont Dr&nbsp;,
+          The Woodlands, TX&nbsp;77382
+        </div>
+        <div class="gmap-info">
+            <h2>Terramont Park</h2>
+            <p>
+          8500 Terramont Dr&nbsp;,
+          The Woodlands, TX&nbsp;77382</p>
+        </div>
+		<div class="gmap-title">
+	        Flashlight Candy Hunt
+        </div>
+    </div>
+    <div class="map-canvas gmap-container">
+        <div class="gmap-target">
+           <img src="https://maps.google.com/maps/api/staticmap?center=8500 Terramont Dr,The Woodlands, TX,77382&amp;zoom=14&amp;size=340x202&amp;maptype=road&amp;markers=color:red|30.2026524,-95.55680579999999&amp;key=AIzaSyCMmwqinGpFEj69CETUkq2Nx_lPntPs26E" alt="Google Map" />
+        </div>
+    </div>
+</div>
+<div id="skip-map-container-bottom" class="skip-map-container rs_skip">
+    <a href='#map-top' class="visuallyhidden focusable skip-map-link" id="map-bottom">Skip to above map</a>
+</div>
+                
+            
+        
+        
+    </div>
+    <div class="col-xs-12 col-m-4">
+        
+        <div class='add-to-calendar-header'>
+<h2>Add to Calendar
+<a class='accordion-trigger add-to-calendar-trigger' href='#' data-accordion-body='#addToCalendarBody' data-open='false' data-accordion-all-device='true'><i aria-hidden='true'></i></a></h2></div><div class='add-to-calendar-body accordion-panel  clearfix' id='addToCalendarBody'><div id="ctl09_updPnlAddToCalendar">
+	<div onkeypress="javascript:return WebForm_FireDefaultButton(event, &#39;ctl09_btnSubmit&#39;)">
+		<p>Fields marked as 'Required' must be completed</p><p id="addToCalendarEmailsAnchor" class="label">Email Address<span class="se-form-required-asterisk">*</span><span class="se-form-required-text">(Required)</span></p>
+<p>Enter your email address or your friend's email addresses all separated by commas.</p><div>
+			<label for="ctl09_txtEmails" class="emails-label">Enter emails</label><textarea name="ctl09$txtEmails" rows="2" cols="20" id="ctl09_txtEmails" autocomplete="email">
+</textarea>
+		</div><div>
+
+		</div><input type="submit" name="ctl09$btnSubmit" value="Send Invite" id="ctl09_btnSubmit" />
+	</div>
+</div><div id="ctl09_ctl11" style="display:none;">
+	<div class="oc-progress-panel"><div></div><div></div><div></div></div>
+</div></div>
+        
+        
+        
+    </div>
+	<div class="col-xs-12 col-m-8">
+        <div class="grid">
+            <div class="col-xs-12">
+                <div class="categories-list-container"><span role="heading" aria-level="2">Tagged as:</span><ul class="categories-list clearfix">
+	<li><a href="https://www.thewoodlandsparks.com/Events-Directory?dlv_OC%20CL%20Parks%20Events%20Listing=(dd_OC Event Categories=Kids%20%26%20family)(dd_OC Composite Date=0d)">Kids & family</a></li></ul></div>
+            </div>
+            
+            
+                
+            
+        </div>
+	</div>
+</div>
+<!--normalTemplateEnd-->
+                            
+                            
+                            
+							            </div>
+						            </div>
+					            </div>
+                        <div class="col-xs-12">
+					            	<div class="share-page-container share-page-link-right share-page-link-small share-page-link-rounded share-page-link-no-labels" data-item-id="31f2321a-9254-4e70-8788-bd85dcedda36" id="share-page-container clearfix">
+                                        <section aria-labelledby="share-page-info-label">
+                                            <span id="share-page-info-label" class="share-page-info">Share</span><ul class="share-page-links no-translate"><li><a href="https://www.facebook.com/sharer/sharer.php?u=https%3a%2f%2fwww.thewoodlandsparks.com%2fEvents-Directory%2f2026%2fOctober%2f102826-Flashlight-Candy-Hunt" target="{ShareTarget}" class="share-page-link share-page-link-facebook" data-channel="facebook" data-channel-id="1"><i aria-hidden="true"></i><span class="share-page-link-name share-page-link-name-facebook">Facebook</span></a></li><li><a href="https://twitter.com/share?url=https%3a%2f%2fwww.thewoodlandsparks.com%2fEvents-Directory%2f2026%2fOctober%2f102826-Flashlight-Candy-Hunt" target="_blank" class="share-page-link share-page-link-x" data-channel="x" data-channel-id="2"><i aria-hidden="true"></i><span class="share-page-link-name share-page-link-name-x">X</span></a></li><li><a href="mailto:?Body=https%3a%2f%2fwww.thewoodlandsparks.com%2fEvents-Directory%2f2026%2fOctober%2f102826-Flashlight-Candy-Hunt" target="_self" class="share-page-link share-page-link-email" data-channel="email" data-channel-id="3"><i aria-hidden="true"></i><span class="share-page-link-name share-page-link-name-email">Email</span></a></li><li><a href="#" target="_self" class="share-page-link share-page-link-print" data-channel="print" data-channel-id="5"><i aria-hidden="true"></i><span class="share-page-link-name share-page-link-name-print">Print</span></a></li></ul>
+                                        </section>
+                                    </div></div>
+                            </div>
+                        </div>
+                        <div class="back-to-top-container text-center">
+                            <a href="#body-top" id="back-to-top"><i aria-hidden="true"></i><span class="js-visuallyhidden">Back to top</span></a>
+                        </div>
+                </div>
+            </div><!--groupTemplateEnd-->
+            <footer>
+                
+                    <div class="footer-outer-container footer-first-row">
+                        <div class="footer-container clearfix">
+                            <div class="grid grid-pad">
+                                <div class="col-xs-12 col-s-6 col-m-4 col-lg-4 visuallyhidden" >
+	
+	<h2>Site Footer</h2>
+
+
+	
+	
+</div><div class="col-xs-12 col-s-12 col-m-6 col-lg-3 footer-widget-contact-us" >
+	
+			<h2 class="visuallyhidden">Site Footer</h2>
+			<h3 class="footer-title">Contact Us</h3>
+			
+	<p>The Woodlands Township<br />
+Parks &amp; Recreation Department<br />
+2801 Technology Forest Blvd.<br />
+The Woodlands, TX 77381<br />
+<a href="https://www.thewoodlandstownship-tx.gov/Departments/Parks-Recreation#" target="_blank" aria-describedby="new-window-0"><strong>View on Map</strong></a></p>
+<p>Phone:&nbsp;<a href="tel:2812103800">281-210-3800</a><br />
+<strong><a href="https://www.thewoodlandsparks.com/Parks/311-Report-a-Concern">Report a Concern</a><br />
+<a href="https://www.thewoodlandsparks.com/Discover-More/Contact-Us">Email Us</a></strong></p>
+
+
+	
+	
+</div><div class="col-xs-12 col-s-12 col-m-6 col-lg-3 footer-widget-facebook" >
+	
+			<h2 class="visuallyhidden">Site Footer</h2>
+			<h3 class="footer-title">Facebook</h3>
+			
+	
+	<ul class="footer-links with-icons social-media-links">  <li class="footer-link-facebook">
+	<a href="https://www.facebook.com/townshipparksandrec/" target="_blank"  >
+<i aria-hidden="true"></i>Parks and Rec
+</a>
+</li>
+          <li class="footer-link-facebook">
+	<a href="https://www.facebook.com/rivarowboathouse/" target="_blank"  >
+<i aria-hidden="true"></i>Boat House
+</a>
+</li>
+          <li class="footer-link-facebook">
+	<a href="https://www.facebook.com/TXTreeVentures/" target="_blank"  >
+<i aria-hidden="true"></i>Texas TreeVentures
+</a>
+</li>
+           </ul>
+	
+</div><div class="col-xs-12 col-s-12 col-m-6 col-lg-3 footer-widget-instagram" >
+	
+			<h2 class="visuallyhidden">Site Footer</h2>
+			<h3 class="footer-title">Instagram</h3>
+			
+	
+	<ul class="footer-links with-icons social-media-links">  <li class="footer-link-instagram">
+	<a href="https://www.instagram.com/townshipparksandrec/" target="_blank"  >
+<i aria-hidden="true"></i>Parks and Rec
+</a>
+</li>
+          <li class="footer-link-instagram">
+	<a href="https://www.instagram.com/rivarowboathouse/" target="_blank"  >
+<i aria-hidden="true"></i>Boat House
+</a>
+</li>
+          <li class="footer-link-instagram">
+	<a href="https://www.instagram.com/txtreeventures/" target="_blank"  >
+<i aria-hidden="true"></i>Texas TreeVentures
+</a>
+</li>
+           </ul>
+	
+</div><div class="col-xs-12 col-s-12 col-m-6 col-lg-3 footer-widget-logo" >
+	
+	<p style="text-align: center;"><a href="https://thewoodlandstownship-tx.gov" target="_blank"><img alt="The Woodlands Township" src="/files/assets/parks/v/1/logo-footer.svg?w=&amp;h=" /></a></p>
+
+
+	
+	
+</div>
+                            </div>
+                        </div>
+                    </div>
+                
+                <div class="footer-outer-container footer-second-row">
+                    <div class="footer-container clearfix">
+                        <div class="grid grid-pad footer-secondary-links">
+                            <div class="col-xs-12 col-m-7">
+                                
+                                    <div><a href="https://www.thewoodlandsparks.com/Legal/Copyright" target="_self"  >Copyright</a>&nbsp;| <a href="https://www.thewoodlandsparks.com/Legal/Terms-and-Privacy" target="_self"  >Terms & Privacy</a>&nbsp;| <a href="https://www.thewoodlandsparks.com/Legal/Accessibility" target="_self"  >Accessibility</a>&nbsp;| <a href="https://www.thewoodlandsparks.com/Sitemap" target="_self"  >Sitemap</a></div>
+                                
+                            </div>
+                            <div class="col-xs-12 col-m-5 powered-by">
+                                <div class="right">
+                                    &copy; 2026 The Woodlands Township Parks & Recreation&nbsp;|&nbsp;<span class="powered-by">Powered by <a href="https://granicus.com/solution/govaccess/opencities/" target="_blank">Granicus</a></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script src="/files/oc-resources/f1e52ddc-2444-4243-9b86-793f4fb3e4fe/JsTextSnippets.js?ocsvclang=en-US" type="text/javascript"></script><script>OpenCitiesResourceStrings["Sys Js Tell me more about"] = "Explore";</script>
+    
+    
+    <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-5DLGMD8CXH"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-5DLGMD8CXH');
+</script>
+    
+    
+
+<script type="text/javascript">
+//<![CDATA[
+window.__TsmHiddenField = $get('ctl04_seamless_script_manager_TSM');Sys.Application.add_init(function() {
+    $create(Sys.UI._UpdateProgress, {"associatedUpdatePanelId":"ctl09_updPnlAddToCalendar","displayAfter":500,"dynamicLayout":true}, null, null, $get("ctl09_ctl11"));
+});
+//]]>
+</script>
+</form>
+</body>
+</html>

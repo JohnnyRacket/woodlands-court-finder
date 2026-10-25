@@ -13,14 +13,16 @@ export type SlotLabel =
   | { kind: "program"; publicCanJoin: false; event: ScheduleEvent }
   | { kind: "likely_event"; publicCanJoin: false }
   | { kind: "private"; publicCanJoin: false }
+  | { kind: "not_open"; publicCanJoin: false }
   | { kind: "no_data"; publicCanJoin: false };
 
 export interface LabelInput {
   /**
    * ActiveNet status for this court-hour. null = the court isn't reservable online;
-   * "unknown" = it is, but there's no data for this hour (not synced yet, or too far ahead).
+   * "not_open" = it is, but residents can't book this date yet;
+   * "unknown" = it is, but there's no data for this hour (not synced yet).
    */
-  status: "free" | "booked" | "unknown" | null;
+  status: "free" | "booked" | "not_open" | "unknown" | null;
   hour: number;
   courtKind: CourtKind;
   /** Events at this court's park on this date. */
@@ -56,6 +58,7 @@ export function labelSlot({ status, hour, courtKind, events, parkFullyBooked }: 
   if (program) return { kind: "program", publicCanJoin: false, event: program };
 
   if (status === null) return { kind: "first_come", publicCanJoin: true };
+  if (status === "not_open") return { kind: "not_open", publicCanJoin: false };
   if (status === "unknown") return { kind: "no_data", publicCanJoin: false };
   if (parkFullyBooked) return { kind: "likely_event", publicCanJoin: false };
   return { kind: "private", publicCanJoin: false };

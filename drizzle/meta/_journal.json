@@ -29,6 +29,13 @@
       "when": 1792912095409,
       "tag": "0003_schedule_events",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1792952749334,
+      "tag": "0004_conditions_alerts_events_history",
+      "breakpoints": true
     }
   ]
 }

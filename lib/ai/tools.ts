@@ -1,10 +1,12 @@
 import { tool } from "ai";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+import { allBookingDates, BOOKING_WINDOW_DAYS } from "@/lib/booking-window";
 import { getDb, type Db } from "@/lib/db/client";
 import { parks } from "@/lib/db/tables";
 import { formatHour, formatMinutes } from "@/lib/format";
 import { LABEL_META } from "@/lib/label-meta";
+import { getActiveAlerts, getDayConditions, getParkEvents } from "@/lib/queries/conditions";
 import { getCourtStatuses, type CourtStatus } from "@/lib/queries/court-status";
 import { getFreshness } from "@/lib/queries/freshness";
 import { weatherHours } from "@/lib/sources/weather/table";
@@ -28,12 +30,17 @@ const describe = (court: CourtStatus) => ({
   ...(court.kind === "tennis_pickleball" && { note: "tennis court with pickleball lines" }),
 });
 
+/** "tennis 2 days ahead, pickleball 1 day ahead" */
+const bookingWindows = Object.entries(BOOKING_WINDOW_DAYS)
+  .map(([pool, days]) => `${pool} ${days} day${days === 1 ? "" : "s"} ahead`)
+  .join(", ");
+
 export function createTools(now: Date, db: Db = getDb()) {
   const current = chicagoDateHour(now);
-  const dates = [current.date, addDays(current.date, 1)];
+  const dates = allBookingDates(current.date);
   const dateSchema = z
-    .enum(dates as [string, string])
-    .describe(`Date: ${dates[0]} (today) or ${dates[1]} (tomorrow). Reservation data only exists for these two days.`);
+    .enum(dates)
+    .describe(`Date: ${dates.join(", ")} (today first). Residents can book ${bookingWindows}; later dates have no reservation data.`);
   const hourSchema = z.number().int().min(FIRST_HOUR).max(LAST_HOUR).describe("Start hour, 7–22 (24-hour clock, America/Chicago)");
   const freshness = () => ({
     reservationsUpdatedAt: getFreshness(db).find((f) => f.source === "activenet-slots")?.lastSuccessAt ?? null,
@@ -45,7 +52,7 @@ export function createTools(now: Date, db: Db = getDb()) {
       description: "List every Township park with tennis or pickleball courts, with its id and court counts.",
       inputSchema: z.object({}),
       execute: async () => {
-        const statuses = getCourtStatuses(current.date, Math.min(Math.max(current.hour, FIRST_HOUR), LAST_HOUR), db);
+        const statuses = getCourtStatuses(current.date, Math.min(Math.max(current.hour, FIRST_HOUR), LAST_HOUR), current.date, db);
         const byPark = Map.groupBy(statuses, (court) => court.parkId);
         return [...byPark].map(([parkId, list]) => ({
           parkId,
@@ -74,7 +81,7 @@ export function createTools(now: Date, db: Db = getDb()) {
         const hours = [];
         for (let hour = startHour; hour <= last; hour++) {
           if (isPast(date, hour)) continue;
-          const courts = getCourtStatuses(date, hour, db).filter(
+          const courts = getCourtStatuses(date, hour, current.date, db).filter(
             (c) => playsSport(c, sport) && (!parkId || c.parkId === parkId) && (!litOnly || c.lighted === true),
           );
           const byPark = Map.groupBy(courts, (c) => c.parkName);
@@ -104,7 +111,7 @@ export function createTools(now: Date, db: Db = getDb()) {
         const timeline = new Map<string, string[]>();
         const events = new Map<string, string>();
         for (let hour = FIRST_HOUR; hour <= LAST_HOUR; hour++) {
-          for (const court of getCourtStatuses(date, hour, db).filter((c) => c.parkId === parkId)) {
+          for (const court of getCourtStatuses(date, hour, current.date, db).filter((c) => c.parkId === parkId)) {
             const entry = `${formatHour(hour)}: ${LABEL_META[court.label.kind].text}${court.dark ? " (dark)" : ""}`;
             timeline.set(court.name, [...(timeline.get(court.name) ?? []), entry]);
             if ("event" in court.label) {
@@ -118,6 +125,7 @@ export function createTools(now: Date, db: Db = getDb()) {
           date,
           sunset: sunTimes(date).sunset.toLocaleTimeString("en-US", { timeZone: "America/Chicago", hour: "numeric", minute: "2-digit" }),
           events: [...events.values()],
+          ...parkContext(parkId, date),
           courts: Object.fromEntries(timeline),
           ...freshness(),
         };
@@ -128,6 +136,7 @@ export function createTools(now: Date, db: Db = getDb()) {
       description: "Hourly forecast (National Weather Service) and sunset for The Woodlands.",
       inputSchema: z.object({ date: dateSchema, startHour: hourSchema, endHour: hourSchema.optional() }),
       execute: async ({ date, startHour, endHour }) => {
+        const conditions = getDayConditions(date, db);
         const rows = db
           .select()
           .from(weatherHours)
@@ -137,18 +146,60 @@ export function createTools(now: Date, db: Db = getDb()) {
         return {
           date,
           sunset: sunTimes(date).sunset.toLocaleTimeString("en-US", { timeZone: "America/Chicago", hour: "numeric", minute: "2-digit" }),
-          hours: rows.map((row) => ({
-            hour: formatHour(row.hour),
-            tempF: row.tempF,
-            chanceOfRain: `${row.precipPct}%`,
-            windMph: row.windMph,
-            forecast: row.shortForecast,
-          })),
+          hours: rows.map((row) => {
+            const detail = conditions.get(row.hour)!;
+            return {
+              hour: formatHour(row.hour),
+              tempF: row.tempF,
+              chanceOfRain: `${row.precipPct}%`,
+              windMph: row.windMph,
+              forecast: row.shortForecast,
+              ...(detail.gustMph !== null && { gustMph: detail.gustMph }),
+              ...(detail.thunderPct !== null && { chanceOfThunder: `${detail.thunderPct}%` }),
+              ...(detail.heatIndexF !== null && { heatIndexF: detail.heatIndexF }),
+              ...(detail.wbgtF !== null && { wbgtF: detail.wbgtF }),
+              ...(detail.conditions.length > 0 && { warnings: detail.conditions.map((c) => c.text) }),
+            };
+          }),
         };
       },
     }),
+
+    getAlerts: tool({
+      description:
+        "Township court closures and National Weather Service alerts in effect now, plus Township events (festivals, kids' events) at parks with courts on a date. " +
+        "Check this before recommending courts.",
+      inputSchema: z.object({ date: dateSchema }),
+      execute: async ({ date }) => ({
+        alerts: getActiveAlerts(now, db).map((a) => ({
+          from: a.source === "nws" ? "National Weather Service" : "Township",
+          title: a.title,
+          ...(a.body && { detail: a.body }),
+          ...(a.parkIds.length > 0 && { parks: a.parkIds }),
+          ...(a.endsAt && { until: a.endsAt }),
+        })),
+        parkEvents: getParkEvents(date, db).map(describeParkEvent),
+      }),
+    }),
   };
+
+  /** Township notices and events for one park and date, for the park schedule. */
+  function parkContext(parkId: string, date: string) {
+    const alerts = getActiveAlerts(now, db).filter((a) => a.parkIds.includes(parkId));
+    const parkEvents = getParkEvents(date, db).filter((e) => e.parkId === parkId);
+    return {
+      ...(alerts.length > 0 && { alerts: alerts.map((a) => `${a.title}${a.body ? `: ${a.body}` : ""}`) }),
+      ...(parkEvents.length > 0 && { townshipEvents: parkEvents.map(describeParkEvent) }),
+    };
+  }
 }
+
+const describeParkEvent = (e: { title: string; parkId: string; startMin: number | null; endMin: number | null }) => ({
+  title: e.title,
+  parkId: e.parkId,
+  time: e.startMin === null ? "time not listed" : `${formatMinutes(e.startMin)}${e.endMin === null ? "" : `–${formatMinutes(e.endMin)}`}`,
+  note: "Township event at the park, not a court booking: expect more people and fuller parking",
+});
 
 export function systemPrompt(now: Date): string {
   const { date, hour } = chicagoDateHour(now);
@@ -159,8 +210,9 @@ export function systemPrompt(now: Date): string {
     "- Answer only from tool results. If the tools don't cover something, say so plainly; never guess court availability.",
     "- Say \"no reservation\", never \"empty\" or \"free\": reservation data is not occupancy, and walk-ups may be playing.",
     "- Open play (drop-in) means anyone can join. Programs and tournaments need registration. \"Likely event\" is unconfirmed.",
-    "- Reservation data only exists for today and tomorrow (residents book 1 day ahead). For later dates, explain that.",
+    `- Residents can book ${bookingWindows}, so reservation data only exists that far out. "Booking not open yet" means that day isn't reservable yet. For later dates, explain that.`,
     "- Mention when a court is after sunset and not known to be lit.",
+    "- Mention closures and weather alerts (getAlerts), and warnings such as wet courts, storms or heat (getWeather). They don't change a court's status.",
     "- Mention how fresh the reservation data is when you give availability.",
     "- Keep answers short: lead with the best options (park and court counts), then details. Use plain text with short lists.",
   ].join("\n");

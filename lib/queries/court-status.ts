@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { getDb, type Db } from "@/lib/db/client";
 import { courts, parks, scheduleEvents, type ScheduleEvent } from "@/lib/db/tables";
+import { bookingDates, poolOf } from "@/lib/booking-window";
 import { labelSlot, type CourtKind, type SlotLabel } from "@/lib/labels";
 import { slots } from "@/lib/sources/activenet-slots/table";
 import { sunTimes } from "@/lib/sun";
@@ -24,10 +25,8 @@ export interface CourtStatus {
   dark: boolean;
 }
 
-const pool = (kind: CourtKind) => (kind === "pickleball" ? "pickleball" : "tennis");
-
-/** Every active court with its label for one Chicago-local date and hour. */
-export function getCourtStatuses(date: string, hour: number, db: Db = getDb()): CourtStatus[] {
+/** Every active court with its label for one Chicago-local date and hour; `today` decides which pools can be booked. */
+export function getCourtStatuses(date: string, hour: number, today: string, db: Db = getDb()): CourtStatus[] {
   const courtRows = db
     .select({
       id: courts.id,
@@ -67,7 +66,7 @@ export function getCourtStatuses(date: string, hour: number, db: Db = getDb()): 
   for (const court of courtRows) {
     const status = statusByCourt.get(court.id);
     if (status === undefined) continue;
-    const key = `${court.parkId}|${pool(court.kind)}`;
+    const key = `${court.parkId}|${poolOf(court.kind)}`;
     fullyBooked.set(key, (fullyBooked.get(key) ?? true) && status === "booked");
   }
 
@@ -79,11 +78,16 @@ export function getCourtStatuses(date: string, hour: number, db: Db = getDb()): 
     reservable: activenetId !== null,
     dark: afterSunset && court.lighted !== true,
     label: labelSlot({
-      status: activenetId === null ? null : (statusByCourt.get(court.id) ?? "unknown"),
+      status:
+        activenetId === null
+          ? null
+          : !bookingDates(poolOf(court.kind), today).includes(date)
+            ? "not_open"
+            : (statusByCourt.get(court.id) ?? "unknown"),
       hour,
       courtKind: court.kind,
       events: eventsByPark.get(court.parkId) ?? [],
-      parkFullyBooked: fullyBooked.get(`${court.parkId}|${pool(court.kind)}`) ?? false,
+      parkFullyBooked: fullyBooked.get(`${court.parkId}|${poolOf(court.kind)}`) ?? false,
     }),
   }));
 }

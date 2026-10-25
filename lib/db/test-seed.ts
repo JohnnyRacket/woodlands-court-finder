@@ -1,11 +1,17 @@
 import { slots } from "@/lib/sources/activenet-slots/table";
+import { weatherAlerts } from "@/lib/sources/nws-alerts/table";
+import { rainHours } from "@/lib/sources/rainfall/table";
+import { townshipAlerts } from "@/lib/sources/township-alerts/table";
+import { parkEvents } from "@/lib/sources/township-events/table";
 import { weatherHours } from "@/lib/sources/weather/table";
+import { weatherDetails } from "@/lib/sources/weather-details/table";
 import { openDb } from "./client";
 import { courts, parks, scheduleEvents } from "./tables";
 
 /**
  * A tiny in-memory database for tests: Falconwing with two reservable pickleball courts,
- * two tennis courts (one unlit), and one walk-up court, on 2026-10-26.
+ * two tennis courts (one unlit), and one walk-up court, on 2026-10-26. Rain falls 6–7 a.m.,
+ * storms are forecast at 5 p.m., Falconwing's tennis courts are closed, and a heat advisory runs all day.
  */
 export function seedSampleDb() {
   const db = openDb(":memory:");
@@ -58,6 +64,32 @@ export function seedSampleDb() {
     .run();
   db.insert(weatherHours)
     .values({ date: "2026-10-26", hour: 8, tempF: 60, precipPct: 10, windMph: 5, shortForecast: "Sunny", isDaytime: true, fetchedAt: "x" })
+    .run();
+  const detail = (hour: number, thunderPct: number) => ({ date: "2026-10-26", hour, gustMph: 12, thunderPct, heatIndexF: null, wbgtF: 70, rainIn: 0, fetchedAt: "x" });
+  db.insert(weatherDetails).values([detail(8, 0), detail(17, 45)]).run();
+  db.insert(rainHours).values({ date: "2026-10-26", hour: 6, precipIn: 0.15, fetchedAt: "x" }).run();
+  const seen = { firstSeenAt: "x", lastSeenAt: "x", active: true };
+  db.insert(townshipAlerts)
+    .values([
+      { id: "closed", title: "Falconwing tennis courts closed", body: "Resurfacing this week.", severity: 30, parkIds: ["falconwing"], aboutCourts: true, ...seen },
+      { id: "sprayground", title: "May Valley Sprayground Closed", body: "", severity: 30, parkIds: [], aboutCourts: false, ...seen },
+    ])
+    .run();
+  db.insert(weatherAlerts)
+    .values({
+      id: "heat",
+      event: "Heat Advisory",
+      headline: "Heat Advisory until 8 PM",
+      severity: "Moderate",
+      description: null,
+      instruction: null,
+      startsAt: "2026-10-26T12:00:00.000Z",
+      endsAt: "2026-10-27T01:00:00.000Z",
+      ...seen,
+    })
+    .run();
+  db.insert(parkEvents)
+    .values({ id: "hunt", title: "Flashlight Candy Hunt", parkId: "falconwing", date: "2026-10-26", startMin: 1170, endMin: null, venue: "Falconwing Park", tags: [], url: "https://example.test/hunt" })
     .run();
   return db;
 }

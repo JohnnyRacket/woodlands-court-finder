@@ -32,11 +32,13 @@ export function startScheduler() {
 
   const profile = syncProfile();
   for (const source of sources) {
-    cron.schedule(source.schedule[profile], () => void runSource(source), {
-      name: source.name,
-      timezone: "America/Chicago",
-      noOverlap: true,
-    });
+    for (const expression of [source.schedule[profile]].flat()) {
+      cron.schedule(expression, () => void runSource(source), {
+        name: source.name,
+        timezone: "America/Chicago",
+        noOverlap: true,
+      });
+    }
   }
 
   const onBoot = bootSources(sources, profile, new Date(), getFreshness(getDb()));

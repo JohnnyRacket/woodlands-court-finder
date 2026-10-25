@@ -1,11 +1,17 @@
 import { count } from "drizzle-orm";
+import type { SQLiteTable } from "drizzle-orm/sqlite-core";
 import { describeSchedule, previousRun } from "@/lib/cron-text";
 import { getDb, type Db } from "@/lib/db/client";
 import { courts, parks, scheduleEvents } from "@/lib/db/tables";
 import { sources } from "@/lib/sources";
-import { slots } from "@/lib/sources/activenet-slots/table";
+import { slotChanges, slots } from "@/lib/sources/activenet-slots/table";
+import { weatherAlerts } from "@/lib/sources/nws-alerts/table";
+import { rainHours } from "@/lib/sources/rainfall/table";
+import { townshipAlerts } from "@/lib/sources/township-alerts/table";
+import { parkEvents } from "@/lib/sources/township-events/table";
 import type { SyncProfile } from "@/lib/sources/types";
 import { weatherHours } from "@/lib/sources/weather/table";
+import { weatherDetails } from "@/lib/sources/weather-details/table";
 import { syncProfile } from "@/lib/sync-profile";
 import { getFreshness } from "./freshness";
 
@@ -57,15 +63,15 @@ const SEVERITY: SourceState[] = ["up_to_date", "paused", "delayed", "never", "fa
 export function sourceState(
   lastRun: { ok: boolean } | null,
   lastSuccessAt: string | null,
-  cron: string,
+  cron: string | string[],
   schedulerEnabled: boolean,
   now: Date,
 ): SourceState {
   if (!lastRun) return "never";
   if (!lastRun.ok) return "failed";
   if (!schedulerEnabled) return "paused";
-  const due = previousRun(cron, now);
-  if (due && lastSuccessAt && new Date(lastSuccessAt).getTime() < due.getTime() - GRACE_MS) return "delayed";
+  const due = Math.max(...[cron].flat().map((c) => previousRun(c, now)?.getTime() ?? 0));
+  if (due && lastSuccessAt && new Date(lastSuccessAt).getTime() < due - GRACE_MS) return "delayed";
   return "up_to_date";
 }
 
@@ -74,8 +80,7 @@ export function getStatus(now: Date = new Date(), db: Db = getDb()): AppStatus {
   const profile = syncProfile();
   const schedulerEnabled = process.env.SYNC_ENABLED === "true";
   const freshness = new Map(getFreshness(db).map((f) => [f.source, f]));
-  const tableCount = (table: typeof parks | typeof courts | typeof slots | typeof weatherHours | typeof scheduleEvents) =>
-    db.select({ n: count() }).from(table).get()?.n ?? 0;
+  const tableCount = (table: SQLiteTable) => db.select({ n: count() }).from(table).get()?.n ?? 0;
 
   const statuses = sources.map((source): SourceStatus => {
     const f = freshness.get(source.name);
@@ -84,7 +89,7 @@ export function getStatus(now: Date = new Date(), db: Db = getDb()): AppStatus {
       name: source.name,
       title: source.title,
       origin: source.origin,
-      schedule: describeSchedule(cron),
+      schedule: [cron].flat().map(describeSchedule).join("; "),
       state: sourceState(f?.lastRun ?? null, f?.lastSuccessAt ?? null, cron, schedulerEnabled, now),
       lastSuccessAt: f?.lastSuccessAt ?? null,
       error: f?.lastRun && !f.lastRun.ok ? f.lastRun.error : null,
@@ -101,8 +106,14 @@ export function getStatus(now: Date = new Date(), db: Db = getDb()): AppStatus {
       { table: "parks", rows: tableCount(parks) },
       { table: "courts", rows: tableCount(courts) },
       { table: "slots", rows: tableCount(slots) },
+      { table: "slot_changes", rows: tableCount(slotChanges) },
       { table: "schedule_events", rows: tableCount(scheduleEvents) },
+      { table: "park_events", rows: tableCount(parkEvents) },
       { table: "weather_hours", rows: tableCount(weatherHours) },
+      { table: "weather_details", rows: tableCount(weatherDetails) },
+      { table: "rain_hours", rows: tableCount(rainHours) },
+      { table: "weather_alerts", rows: tableCount(weatherAlerts) },
+      { table: "township_alerts", rows: tableCount(townshipAlerts) },
     ],
   };
 }

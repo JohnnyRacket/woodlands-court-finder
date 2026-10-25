@@ -10,12 +10,13 @@ describe("describeSchedule", () => {
     ["5 */6 * * *", "Every 6 hours"],
     ["0 4 * * *", "Daily at 4 AM"],
     ["15 6 * * *", "Daily at 6:15 AM"],
+    ["1 0 * * *", "Daily at 12:01 AM"],
     ["30 5 * * 1", "Weekly on Mondays at 5:30 AM"],
   ])("%s → %s", (cron, text) => expect(describeSchedule(cron)).toBe(text));
 
   it("describes every registered schedule without falling back to raw cron", () => {
     for (const source of sources) {
-      for (const cron of Object.values(source.schedule)) expect(describeSchedule(cron)).not.toBe(cron);
+      for (const cron of Object.values(source.schedule).flat()) expect(describeSchedule(cron)).not.toBe(cron);
     }
   });
 

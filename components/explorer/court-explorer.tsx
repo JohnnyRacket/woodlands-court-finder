@@ -33,9 +33,10 @@ export function CourtExplorer() {
     setSelection({ parkId, courtId: null });
     setDayCourtId(null);
   };
+  // Selecting a court (on the map or in the panel) also opens its day.
   const select = (next: Selection) => {
     setSelection(next);
-    if (next.parkId !== selection.parkId) setDayCourtId(null);
+    setDayCourtId(next.courtId);
   };
   const [assistantOpen, setAssistantOpen] = useState(false);
 
@@ -124,12 +125,9 @@ export function CourtExplorer() {
           hour={data.hour}
           events={data.events.filter((event) => event.parkId === selectedPark.id)}
           selectedCourtId={selection.courtId}
-          onSelectCourt={(courtId) => setSelection({ parkId: selectedPark.id, courtId })}
+          onSelectCourt={(courtId) => select({ parkId: selectedPark.id, courtId })}
           dayCourtId={dayCourtId}
-          onOpenDay={(courtId) => {
-            setDayCourtId(courtId);
-            if (courtId) setSelection({ parkId: selectedPark.id, courtId });
-          }}
+          onCloseDay={() => setDayCourtId(null)}
           now={data.now}
           onPickHour={(hour) => setTime({ date: data.date, hour })}
           onClose={() => selectPark(null)}

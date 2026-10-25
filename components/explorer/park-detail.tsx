@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarClock, ExternalLink, MoonStar, X } from "lucide-react";
+import { ExternalLink, MoonStar, X } from "lucide-react";
 import { useEffect, useRef } from "react";
 import type { ScheduleEvent } from "@/lib/db/tables";
 import { formatHour, formatMinutes } from "@/lib/format";
@@ -25,7 +25,7 @@ interface ParkDetailProps {
   onSelectCourt: (courtId: string) => void;
   /** The court whose full day is open beside the list, if any. */
   dayCourtId: string | null;
-  onOpenDay: (courtId: string | null) => void;
+  onCloseDay: () => void;
   now: { date: string; hour: number; open: boolean };
   onPickHour: (hour: number) => void;
   onClose: () => void;
@@ -51,7 +51,7 @@ export function ParkDetail({
   selectedCourtId,
   onSelectCourt,
   dayCourtId,
-  onOpenDay,
+  onCloseDay,
   now,
   onPickHour,
   onClose,
@@ -131,9 +131,7 @@ export function ParkDetail({
                       court={court}
                       sport={sport}
                       selected={court.id === selectedCourtId}
-                      dayOpen={court.id === dayCourtId}
                       onSelect={() => onSelectCourt(court.id)}
-                      onOpenDay={() => onOpenDay(court.id === dayCourtId ? null : court.id)}
                     />
                   ))}
                 </ul>
@@ -150,7 +148,7 @@ export function ParkDetail({
           hour={hour}
           now={now}
           onPickHour={onPickHour}
-          onClose={() => onOpenDay(null)}
+          onClose={onCloseDay}
         />
       )}
     </section>
@@ -161,17 +159,13 @@ function CourtRow({
   court,
   sport,
   selected,
-  dayOpen,
   onSelect,
-  onOpenDay,
   ref,
 }: {
   court: CourtStatus;
   sport: Sport;
   selected: boolean;
-  dayOpen: boolean;
   onSelect: () => void;
-  onOpenDay: () => void;
   ref?: React.Ref<HTMLLIElement>;
 }) {
   const meta = LABEL_META[court.label.kind];
@@ -184,7 +178,7 @@ function CourtRow({
 
   return (
     <li ref={ref} className={cn("flex items-center rounded-2xl transition", selected ? "bg-primary/10 ring-1 ring-primary/40" : "hover:bg-white/70")}>
-      <button type="button" onClick={onSelect} className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2 text-left">
+      <button type="button" onClick={onSelect} title="Show this court's day" className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2 text-left">
         <StatusDot className="size-3" color={meta.color} hollow={meta.hollow} />
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-medium">{court.name}</span>
@@ -204,19 +198,6 @@ function CourtRow({
             </span>
           )}
         </span>
-      </button>
-      <button
-        type="button"
-        onClick={onOpenDay}
-        aria-pressed={dayOpen}
-        title={dayOpen ? "Hide this court's day" : "Show this court's whole day"}
-        aria-label={`Whole day for ${court.name}`}
-        className={cn(
-          "mr-2 grid size-8 shrink-0 place-items-center rounded-full transition",
-          dayOpen ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-primary",
-        )}
-      >
-        <CalendarClock className="size-4" />
       </button>
     </li>
   );

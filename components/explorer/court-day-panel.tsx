@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, CloudRain, Lightbulb, LightbulbOff, MoonStar } from "lucide-react";
+import { ArrowLeft, CloudRain, Lightbulb, LightbulbOff, Lock, MoonStar } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatClock, formatHour, formatMinutes } from "@/lib/format";
@@ -82,7 +82,7 @@ export function CourtDayPanel({ courtId, date, hour, now, onPickHour, onClose, c
 
       <ol key={current ? "day" : "loading"} className={cn("panel-scroll flex min-h-0 flex-col gap-0.5 px-2", current && "animate-in fade-in duration-200")}>
         {current
-          ? current.hours.map(({ hour: h, label, dark, weather, conditions }) => {
+          ? current.hours.map(({ hour: h, label, bookingClosed, dark, weather, conditions }) => {
               const meta = LABEL_META[label.kind];
               const past = date === now.date && h < now.hour;
               return (
@@ -110,6 +110,11 @@ export function CourtDayPanel({ courtId, date, hour, now, onPickHour, onClose, c
                         </span>
                       )}
                     </span>
+                    {bookingClosed && !past && (
+                      <span className="shrink-0 text-muted-foreground" title="Too late to book online; showing the last status seen before booking closed">
+                        <Lock className="size-3" aria-label="Booking closed" />
+                      </span>
+                    )}
                     {dark && <MoonStar className="size-3 shrink-0 text-muted-foreground" aria-label="After sunset and not known to be lit" />}
                     {conditions.length > 0 && (
                       <span className="flex shrink-0 items-center gap-0.5" title={conditions.map((c) => c.text).join("\n")}>

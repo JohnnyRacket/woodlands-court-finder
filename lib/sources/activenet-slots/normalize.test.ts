@@ -60,10 +60,19 @@ describe("keepLastOpenStatus", () => {
   it("keeps what was seen before booking closed instead of ActiveNet's 'taken'", () => {
     const previous = [row(13, "booked", "t1"), row(14, "free", "t1"), row(16, "free", "t1")];
     const fetched = [row(13, "booked", "t2"), row(14, "booked", "t2"), row(15, "booked", "t2"), row(16, "booked", "t2")];
-    const closed = (r: { hour: number }) => r.hour < 16;
+    const readWhileOpen = (r: { hour: number; fetchedAt: string }) => r.fetchedAt === "t1" || r.hour >= 16;
     // 13 and 14 keep the earlier reading, 15 was never seen open so it's dropped, 16 is still bookable.
-    expect(keepLastOpenStatus(fetched, previous, closed)).toEqual([row(13, "booked", "t1"), row(14, "free", "t1"), row(16, "booked", "t2")]);
-    expect(diffSlots(previous, keepLastOpenStatus(fetched, previous, closed)).map((c) => c.hour)).toEqual([16]);
+    expect(keepLastOpenStatus(fetched, previous, readWhileOpen)).toEqual([row(13, "booked", "t1"), row(14, "free", "t1"), row(16, "booked", "t2")]);
+    expect(diffSlots(previous, keepLastOpenStatus(fetched, previous, readWhileOpen)).map((c) => c.hour)).toEqual([16]);
+  });
+
+  it("drops stored rows that were themselves read after booking closed", () => {
+    // 15 was stored "booked" by a sync at the cutoff; it's discarded rather than carried forward.
+    const previous = [row(14, "free", "t1"), row(15, "booked", "late")];
+    const fetched = [row(14, "booked", "t2"), row(15, "booked", "t2")];
+    const readWhileOpen = (r: { fetchedAt: string }) => r.fetchedAt === "t1";
+    expect(keepLastOpenStatus(fetched, previous, readWhileOpen)).toEqual([row(14, "free", "t1")]);
+    expect(diffSlots(previous, keepLastOpenStatus(fetched, previous, readWhileOpen))).toEqual([]);
   });
 });
 

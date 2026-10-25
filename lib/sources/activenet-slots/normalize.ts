@@ -55,12 +55,13 @@ const slotKey = (row: { courtId: string; date: string; hour: number }) => `${row
 
 /**
  * Once booking closes for an hour, ActiveNet reports it taken whether or not anyone reserved it.
- * For those hours keep the last status seen while booking was open, or drop the row if there is none.
+ * For hours not read while still bookable, keep the last stored row that was, or drop the row
+ * if there is none (stored rows read too late are discarded, not carried forward).
  */
-export function keepLastOpenStatus(rows: SlotRow[], previous: SlotRow[], closed: (row: SlotRow) => boolean): SlotRow[] {
-  const before = new Map(previous.map((row) => [slotKey(row), row]));
+export function keepLastOpenStatus(rows: SlotRow[], previous: SlotRow[], readWhileOpen: (row: SlotRow) => boolean): SlotRow[] {
+  const before = new Map(previous.filter(readWhileOpen).map((row) => [slotKey(row), row]));
   return rows.flatMap((row) => {
-    if (!closed(row)) return [row];
+    if (readWhileOpen(row)) return [row];
     const last = before.get(slotKey(row));
     return last ? [last] : [];
   });

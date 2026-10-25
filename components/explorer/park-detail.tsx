@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, ExternalLink, MoonStar, X } from "lucide-react";
+import { CalendarDays, ExternalLink, Lock, MoonStar, X } from "lucide-react";
 import { useEffect, useRef } from "react";
 import type { Condition } from "@/lib/conditions";
 import type { ScheduleEvent } from "@/lib/db/tables";
@@ -117,6 +117,15 @@ export function ParkDetail({
                 </li>
               ))}
             </ul>
+          )}
+
+          {park.courts.some((court) => court.bookingClosed) && (
+            <p className="mx-4 mb-2 flex gap-1.5 px-1 text-xs text-muted-foreground">
+              <Lock className="mt-px size-3.5 shrink-0" />
+              <span>
+                Too late to book {formatHour(hour)} online (reservations close an hour ahead). Showing the last reservations seen before then.
+              </span>
+            </p>
           )}
 
           {events.length > 0 && (

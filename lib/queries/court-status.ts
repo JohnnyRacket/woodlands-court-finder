@@ -1,11 +1,11 @@
 import { and, eq } from "drizzle-orm";
 import { getDb, type Db } from "@/lib/db/client";
 import { courts, parks, scheduleEvents, type ScheduleEvent } from "@/lib/db/tables";
-import { bookingDates, poolOf } from "@/lib/booking-window";
+import { bookingClosed, bookingDates, poolOf } from "@/lib/booking-window";
 import { labelSlot, type CourtKind, type SlotLabel } from "@/lib/labels";
 import { slots } from "@/lib/sources/activenet-slots/table";
 import { sunTimes } from "@/lib/sun";
-import { chicagoMinuteOfDay } from "@/lib/time";
+import { chicagoDate, chicagoMinuteOfDay } from "@/lib/time";
 
 export interface CourtStatus {
   id: string;
@@ -21,12 +21,16 @@ export interface CourtStatus {
   parkLng: number;
   reservable: boolean;
   label: SlotLabel;
+  /** Reservable, but too late to book this hour online; the label is the last status seen before booking closed. */
+  bookingClosed: boolean;
   /** The hour starts after sunset and the court isn't known to be lit. */
   dark: boolean;
 }
 
-/** Every active court with its label for one Chicago-local date and hour; `today` decides which pools can be booked. */
-export function getCourtStatuses(date: string, hour: number, today: string, db: Db = getDb()): CourtStatus[] {
+/** Every active court with its label for one Chicago-local date and hour; `now` decides what can be booked. */
+export function getCourtStatuses(date: string, hour: number, now: Date, db: Db = getDb()): CourtStatus[] {
+  const today = chicagoDate(now);
+  const closed = bookingClosed(date, hour, now);
   const courtRows = db
     .select({
       id: courts.id,
@@ -73,21 +77,20 @@ export function getCourtStatuses(date: string, hour: number, today: string, db: 
   // Dark when most of the hour falls after sunset.
   const afterSunset = hour * 60 + 30 > chicagoMinuteOfDay(sunTimes(date).sunset);
 
-  return courtRows.map(({ activenetId, ...court }) => ({
-    ...court,
-    reservable: activenetId !== null,
-    dark: afterSunset && court.lighted !== true,
-    label: labelSlot({
-      status:
-        activenetId === null
-          ? null
-          : !bookingDates(poolOf(court.kind), today).includes(date)
-            ? "not_open"
-            : (statusByCourt.get(court.id) ?? "unknown"),
-      hour,
-      courtKind: court.kind,
-      events: eventsByPark.get(court.parkId) ?? [],
-      parkFullyBooked: fullyBooked.get(`${court.parkId}|${poolOf(court.kind)}`) ?? false,
-    }),
-  }));
+  return courtRows.map(({ activenetId, ...court }) => {
+    const bookable = activenetId !== null && bookingDates(poolOf(court.kind), today).includes(date);
+    return {
+      ...court,
+      reservable: activenetId !== null,
+      bookingClosed: bookable && closed,
+      dark: afterSunset && court.lighted !== true,
+      label: labelSlot({
+        status: activenetId === null ? null : !bookable ? "not_open" : (statusByCourt.get(court.id) ?? "unknown"),
+        hour,
+        courtKind: court.kind,
+        events: eventsByPark.get(court.parkId) ?? [],
+        parkFullyBooked: fullyBooked.get(`${court.parkId}|${poolOf(court.kind)}`) ?? false,
+      }),
+    };
+  });
 }

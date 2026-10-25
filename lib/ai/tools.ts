@@ -30,6 +30,8 @@ const describe = (court: CourtStatus) => ({
   ...(court.kind === "tennis_pickleball" && { note: "tennis court with pickleball lines" }),
 });
 
+const BOOKING_CLOSED_NOTE = "Too late to book this hour online (bookings close 1 hour ahead); statuses are the last seen before booking closed";
+
 /** "tennis 2 days ahead, pickleball 1 day ahead" */
 const bookingWindows = Object.entries(BOOKING_WINDOW_DAYS)
   .map(([pool, days]) => `${pool} ${days} day${days === 1 ? "" : "s"} ahead`)
@@ -52,7 +54,7 @@ export function createTools(now: Date, db: Db = getDb()) {
       description: "List every Township park with tennis or pickleball courts, with its id and court counts.",
       inputSchema: z.object({}),
       execute: async () => {
-        const statuses = getCourtStatuses(current.date, Math.min(Math.max(current.hour, FIRST_HOUR), LAST_HOUR), current.date, db);
+        const statuses = getCourtStatuses(current.date, Math.min(Math.max(current.hour, FIRST_HOUR), LAST_HOUR), now, db);
         const byPark = Map.groupBy(statuses, (court) => court.parkId);
         return [...byPark].map(([parkId, list]) => ({
           parkId,
@@ -81,12 +83,13 @@ export function createTools(now: Date, db: Db = getDb()) {
         const hours = [];
         for (let hour = startHour; hour <= last; hour++) {
           if (isPast(date, hour)) continue;
-          const courts = getCourtStatuses(date, hour, current.date, db).filter(
+          const courts = getCourtStatuses(date, hour, now, db).filter(
             (c) => playsSport(c, sport) && (!parkId || c.parkId === parkId) && (!litOnly || c.lighted === true),
           );
           const byPark = Map.groupBy(courts, (c) => c.parkName);
           hours.push({
             hour: formatHour(hour),
+            ...(courts.some((c) => c.bookingClosed) && { bookingClosed: BOOKING_CLOSED_NOTE }),
             parks: [...byPark]
               .map(([park, list]) => ({
                 park,
@@ -111,8 +114,8 @@ export function createTools(now: Date, db: Db = getDb()) {
         const timeline = new Map<string, string[]>();
         const events = new Map<string, string>();
         for (let hour = FIRST_HOUR; hour <= LAST_HOUR; hour++) {
-          for (const court of getCourtStatuses(date, hour, current.date, db).filter((c) => c.parkId === parkId)) {
-            const entry = `${formatHour(hour)}: ${LABEL_META[court.label.kind].text}${court.dark ? " (dark)" : ""}`;
+          for (const court of getCourtStatuses(date, hour, now, db).filter((c) => c.parkId === parkId)) {
+            const entry = `${formatHour(hour)}: ${LABEL_META[court.label.kind].text}${court.bookingClosed ? " (booking closed)" : ""}${court.dark ? " (dark)" : ""}`;
             timeline.set(court.name, [...(timeline.get(court.name) ?? []), entry]);
             if ("event" in court.label) {
               const e = court.label.event;
@@ -211,6 +214,7 @@ export function systemPrompt(now: Date): string {
     "- Say \"no reservation\", never \"empty\" or \"free\": reservation data is not occupancy, and walk-ups may be playing.",
     "- Open play (drop-in) means anyone can join. Programs and tournaments need registration. \"Likely event\" is unconfirmed.",
     `- Residents can book ${bookingWindows}, so reservation data only exists that far out. "Booking not open yet" means that day isn't reservable yet. For later dates, explain that.`,
+    "- Reservations close 1 hour before each hour starts. For those hours (\"booking closed\"), statuses are the last seen before then: a court with no reservation can be walked onto but not booked online.",
     "- Mention when a court is after sunset and not known to be lit.",
     "- Mention closures and weather alerts (getAlerts), and warnings such as wet courts, storms or heat (getWeather). They don't change a court's status.",
     "- Mention how fresh the reservation data is when you give availability.",

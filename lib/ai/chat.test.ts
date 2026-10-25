@@ -40,6 +40,20 @@ describe("assistant tools", () => {
     expect(day.events).toEqual(["Pickleball drop-in play, 8 AM–10 AM, open to everyone"]);
   });
 
+  it("says when it's too late to book an hour online", async () => {
+    const lateTools = createTools(new Date("2026-10-26T11:30:00-05:00"), db);
+    const result = (await run(lateTools.findCourts, { sport: "pickleball", date: "2026-10-26", startHour: 12, endHour: 13 })) as {
+      hours: { hour: string; bookingClosed?: string }[];
+    };
+    expect(result.hours.map((h) => [h.hour, h.bookingClosed !== undefined])).toEqual([
+      ["12 PM", true],
+      ["1 PM", false],
+    ]);
+    const day = (await run(lateTools.getParkSchedule, { parkId: "falconwing", date: "2026-10-26" })) as { courts: Record<string, string[]> };
+    expect(day.courts["pb-1"][5]).toBe("12 PM: Reserved (booking closed)");
+    expect(day.courts["pb-walkup"][5]).toBe("12 PM: First come");
+  });
+
   it("reports unknown parks instead of throwing", async () => {
     expect(await run(tools.getParkSchedule, { parkId: "nowhere", date: "2026-10-26" })).toEqual({ error: expect.stringMatching(/Unknown park/) });
   });

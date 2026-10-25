@@ -1,7 +1,7 @@
 import { inArray, isNotNull } from "drizzle-orm";
 import { ActiveNetClient, FACILITY_GROUPS, fetchAvailability } from "@/lib/activenet/client";
 import { courts } from "@/lib/db/tables";
-import { allBookingDates, bookingClosed, bookingDates, type Pool } from "@/lib/booking-window";
+import { allBookingDates, bookingDates, readWhileBookable, type Pool } from "@/lib/booking-window";
 import { chicagoDate } from "@/lib/time";
 import type { SourceModule } from "../types";
 import { diffSlots, keepLastOpenStatus, toSlotRows, type SlotRow } from "./normalize";
@@ -47,7 +47,7 @@ export const activenetSlotsSource: SourceModule = {
     if (!dryRun) {
       db.transaction((tx) => {
         const previous = tx.select().from(slots).where(inArray(slots.date, dates)).all();
-        stored = keepLastOpenStatus(rows, previous, (row) => bookingClosed(row.date, row.hour, now));
+        stored = keepLastOpenStatus(rows, previous, (row) => readWhileBookable(row.date, row.hour, row.fetchedAt));
 
         // Log what changed since the last run before replacing it: this is the booking history.
         const changes = diffSlots(previous, stored);

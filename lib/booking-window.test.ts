@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allBookingDates, bookingClosed, bookingDates, poolOf } from "./booking-window";
+import { allBookingDates, bookingClosed, bookingDates, poolOf, readWhileBookable } from "./booking-window";
 
 describe("booking window", () => {
   it("gives tennis three days and pickleball two", () => {
@@ -14,6 +14,13 @@ describe("booking window", () => {
     expect(bookingClosed("2026-10-25", 15, new Date("2026-10-25T14:00:00-05:00"))).toBe(false);
     expect(bookingClosed("2026-10-24", 22, at219)).toBe(true);
     expect(bookingClosed("2026-10-26", 7, at219)).toBe(false);
+  });
+
+  it("doesn't trust a reading taken right at the cutoff", () => {
+    // Syncs run at :00, :15, :30, :45; at 2:00 ActiveNet already reports 3 PM taken.
+    expect(readWhileBookable("2026-10-25", 15, "2026-10-25T19:00:00.000Z")).toBe(false);
+    expect(readWhileBookable("2026-10-25", 15, "2026-10-25T18:45:00.000Z")).toBe(true);
+    expect(readWhileBookable("2026-10-25", 16, "2026-10-25T19:00:00.000Z")).toBe(true);
   });
 
   it("books tennis courts with pickleball lines as tennis", () => {

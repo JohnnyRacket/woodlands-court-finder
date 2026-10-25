@@ -66,7 +66,7 @@ export function getExplorerData(date: string, hour: number, now: Date, db: Db = 
     parkEvents: getParkEvents(date, db),
     sunset: sunTimes(date).sunset.toISOString(),
     reservationsUpdatedAt: getFreshness(db).find((f) => f.source === "activenet-slots")?.lastSuccessAt ?? null,
-    courts: getCourtStatuses(date, hour, today, db),
+    courts: getCourtStatuses(date, hour, now, db),
     events: db
       .select()
       .from(scheduleEvents)

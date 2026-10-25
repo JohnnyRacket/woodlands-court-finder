@@ -3,16 +3,13 @@
 import { LoaderCircle, LocateFixed, Sparkles } from "lucide-react";
 import dynamic from "next/dynamic";
 import { catchError } from "next/error";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { flushSync } from "react-dom";
+import { useMemo, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { bookingDates } from "@/lib/booking-window";
-import { fetchJson } from "@/lib/fetch-json";
 import { assistantEnabled } from "@/lib/flags";
-import { distanceMiles, type LatLng } from "@/lib/geo";
-import type { CourtInfo } from "@/lib/queries/court-status";
-import type { ExplorerData } from "@/lib/queries/explorer";
+import { distanceMiles } from "@/lib/geo";
 import { usePresence } from "@/lib/use-presence";
+import { useWidth } from "@/lib/use-width";
 import { cn } from "@/lib/utils";
 import { AlertsBanner } from "./alerts-banner";
 import { AssistantPanel } from "./assistant-panel";
@@ -25,7 +22,10 @@ import { filterCourts, SPORTS, summarizeParks, withHourStatus, type Filters } fr
 import { StatusBar } from "./status-bar";
 import { TimeScrubber } from "./time-scrubber";
 import { isPastTime } from "./url-state";
+import { useExplorerData } from "./use-explorer-data";
 import { useExplorerView } from "./use-explorer-view";
+import { useNearest } from "./use-nearest";
+import { useSheetMorph } from "./use-sheet-morph";
 import { WeatherPill } from "./weather-pill";
 
 // The ArcGIS SDK needs the browser, so the map never renders on the server.
@@ -45,8 +45,8 @@ const MapBoundary = catchError(function MapUnavailable() {
   );
 });
 
-/** How often an open, visible page re-reads court data (reservations sync every 15 minutes). */
-const REFRESH_MS = 5 * 60_000;
+/** Space kept between a right-hand panel and the map's center: the panel's 1rem inset plus 1rem of air. */
+const PANEL_MARGIN_PX = 32;
 
 // Side panels ease in from the right (from below on phones) and back out the same way.
 const PANEL_IN = "animate-in fade-in duration-200 ease-out max-md:slide-in-from-bottom-4 md:slide-in-from-right-4";
@@ -58,11 +58,12 @@ export function CourtExplorer() {
   const { time, filters } = view;
   const setTime = (next: { date: string; hour: number }) => updateView({ time: next });
   const setFilters = (change: Partial<Filters>) => updateView({ filters: { ...filters, ...change } });
-  const [data, setData] = useState<ExplorerData | null>(null);
-  const [failed, setFailed] = useState(false);
-  const [refreshes, setRefreshes] = useState(0);
+  // An hour that has passed while the page sat open goes back to following now.
+  const { data, catalog, failed, refresh } = useExplorerData(time, () => {
+    if (time && isPastTime(time, new Date())) updateView({ time: null });
+  });
+
   const selection = useMemo<Selection>(() => ({ parkId: view.parkId, courtId: view.courtId }), [view.parkId, view.courtId]);
-  const selectedParkId = selection.parkId;
   // Selecting a court (on the map or in the panel) also opens its day; closing the day keeps the court selected.
   const [closedDayCourtId, setClosedDayCourtId] = useState<string | null>(null);
   const dayCourtId = selection.courtId !== closedDayCourtId ? selection.courtId : null;
@@ -71,74 +72,11 @@ export function CourtExplorer() {
     updateView(next, "push");
   };
   const selectPark = (parkId: string | null) => select({ parkId, courtId: null });
+
   const [assistantOpen, setAssistantOpen] = useState(false);
   // Phones open on the map with the time dial; this only affects phone layouts.
-  const [sheetCollapsed, setSheetCollapsed] = useState(true);
-  // Once the bar and sheet have morphed into each other, the bar stops playing its own entrance.
-  const [sheetMorphed, setSheetMorphed] = useState(false);
-  // The bar grows into the sheet and shrinks back (the `phone-sheet` view transition), where the browser can.
-  const toggleSheet = (collapsed: boolean) => {
-    if (!document.startViewTransition || matchMedia("(prefers-reduced-motion: reduce)").matches) return setSheetCollapsed(collapsed);
-    const root = document.documentElement;
-    root.dataset.sheetMorph = "";
-    const transition = document.startViewTransition(() =>
-      flushSync(() => {
-        setSheetMorphed(true);
-        setSheetCollapsed(collapsed);
-      }),
-    );
-    transition.finished.finally(() => delete root.dataset.sheetMorph);
-  };
-
-  // What the courts are (names, outlines, lights) is loaded once; each hour only brings labels.
-  const [catalog, setCatalog] = useState<Map<string, CourtInfo> | null>(null);
-  const catalogRef = useRef(catalog);
-  const [catalogLoads, setCatalogLoads] = useState(0);
-  const [catalogFailed, setCatalogFailed] = useState(false);
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchJson<{ courts: CourtInfo[] }>("/api/courts/catalog", controller.signal)
-      .then(({ courts }) => {
-        catalogRef.current = new Map(courts.map((court) => [court.id, court]));
-        setCatalog(catalogRef.current);
-        setCatalogFailed(false);
-      })
-      .catch(() => !controller.signal.aborted && setCatalogFailed(true));
-    return () => controller.abort();
-  }, [catalogLoads]);
-
-  const refresh = useCallback(() => {
-    // An hour that has passed while the page sat open goes back to following now.
-    if (time && isPastTime(time, new Date())) updateView({ time: null });
-    if (!catalogRef.current) setCatalogLoads((n) => n + 1);
-    setRefreshes((n) => n + 1);
-  }, [time, updateView]);
-
-
-  useEffect(() => {
-    const refreshIfVisible = () => document.visibilityState === "visible" && refresh();
-    const timer = setInterval(refreshIfVisible, REFRESH_MS);
-    document.addEventListener("visibilitychange", refreshIfVisible);
-    return () => {
-      clearInterval(timer);
-      document.removeEventListener("visibilitychange", refreshIfVisible);
-    };
-  }, [refresh]);
-
-  // By value: a filter change rewrites the URL, which shouldn't refetch the same hour.
-  const query = time ? `?date=${time.date}&hour=${time.hour}` : "";
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchJson<ExplorerData>(`/api/courts${query}`, controller.signal)
-      .then((next) => {
-        setData(next);
-        setFailed(false);
-        // A court added since the catalog loaded (the courts source runs daily): load it again.
-        if (catalogRef.current && next.courts.some((court) => !catalogRef.current!.has(court.id))) setCatalogLoads((n) => n + 1);
-      })
-      .catch(() => !controller.signal.aborted && setFailed(true));
-    return () => controller.abort();
-  }, [query, refreshes]);
+  const sheet = useSheetMorph();
+  const [nearest, toggleNearest] = useNearest();
 
   // Sports residents can book on the shown date (pickleball opens a day later than tennis).
   // The user's choice is kept, so pickleball comes back on dates it's bookable.
@@ -149,30 +87,6 @@ export function CourtExplorer() {
   }, [filters, bookableSports]);
 
   const courts = useMemo(() => (data && catalog ? filterCourts(withHourStatus(catalog, data.courts), shownFilters) : []), [data, catalog, shownFilters]);
-  // Sort by distance only after the user asks: location is requested on that click, never on load.
-  const [nearest, setNearest] = useState<{ on: boolean; location: LatLng | null; locating: boolean; error: string | null }>({
-    on: false,
-    location: null,
-    locating: false,
-    error: null,
-  });
-  const toggleNearest = () => {
-    if (nearest.on) return setNearest({ ...nearest, on: false });
-    if (nearest.location) return setNearest({ ...nearest, on: true, error: null });
-    if (!("geolocation" in navigator)) return setNearest({ ...nearest, error: "Location isn't available in this browser." });
-    setNearest({ ...nearest, locating: true, error: null });
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => setNearest({ on: true, location: { lat: coords.latitude, lng: coords.longitude }, locating: false, error: null }),
-      (err) =>
-        setNearest((prev) => ({
-          ...prev,
-          locating: false,
-          error: err.code === err.PERMISSION_DENIED ? "Location access was declined." : "Couldn't get your location.",
-        })),
-      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 5 * 60_000 },
-    );
-  };
-
   const summarized = useMemo(() => summarizeParks(courts, shownFilters.sports), [courts, shownFilters.sports]);
   const distances = useMemo(
     () => (nearest.location ? new Map(summarized.map((park) => [park.id, distanceMiles(nearest.location!, park)])) : null),
@@ -182,7 +96,7 @@ export function CourtExplorer() {
     () => (nearest.on && distances ? [...summarized].sort((a, b) => distances.get(a.id)! - distances.get(b.id)!) : summarized),
     [summarized, nearest.on, distances],
   );
-  const selectedPark = parks.find((park) => park.id === selectedParkId) ?? null;
+  const selectedPark = parks.find((park) => park.id === selection.parkId) ?? null;
   const loading = !data || (time !== null && (data.date !== time.date || data.hour !== time.hour));
 
   // Panels stay mounted briefly after closing, showing what they last showed, so they can animate out.
@@ -194,6 +108,10 @@ export function CourtExplorer() {
       [detailOpen, selectedPark, selection.courtId, dayCourtId],
     ),
   );
+  // The map keeps its center clear of whichever panel is open on the right (measured, as a court's day widens it).
+  const [detailRef, detailWidth] = useWidth<HTMLElement>();
+  const [assistantRef, assistantWidth] = useWidth<HTMLElement>();
+  const rightPanelWidth = assistantOpen ? assistantWidth + PANEL_MARGIN_PX : detailOpen ? detailWidth + PANEL_MARGIN_PX : 0;
 
   return (
     <main className="relative h-dvh w-full overflow-hidden bg-background">
@@ -203,7 +121,7 @@ export function CourtExplorer() {
           courts={courts}
           selection={selection}
           onSelect={select}
-          rightPanelWidth={selectedPark && !assistantOpen ? (dayCourtId ? 736 : 400) : assistantOpen ? 400 : 0}
+          rightPanelWidth={rightPanelWidth}
           userLocation={nearest.on ? nearest.location : null}
         />
       </MapBoundary>
@@ -216,7 +134,7 @@ export function CourtExplorer() {
           "[:root[data-sheet-morph]_&]:transition-none",
           // On phones the park or assistant sheet takes this spot, so the controls get out of the way.
           // The morph's name goes on only while it runs: a named element stops the glass inside it from blurring the map.
-          (detailOpen || assistantOpen || sheetCollapsed) ? "max-md:invisible max-md:opacity-0" : "max-md:[:root[data-sheet-morph]_&]:[view-transition-name:phone-sheet]",
+          (detailOpen || assistantOpen || sheet.collapsed) ? "max-md:invisible max-md:opacity-0" : "max-md:[:root[data-sheet-morph]_&]:[view-transition-name:phone-sheet]",
         )}
       >
         <ControlsPanel
@@ -230,13 +148,13 @@ export function CourtExplorer() {
           bookableSports={bookableSports}
           onTimeChange={(date, hour) => setTime({ date, hour })}
           onFiltersChange={setFilters}
-          onCollapse={() => toggleSheet(true)}
+          onCollapse={() => sheet.toggle(true)}
         />
         {data && catalog ? (
           <ParkList
             className={cn("pointer-events-auto shrink-0 animate-in fade-in duration-300 transition-opacity md:min-h-40 md:flex-1 md:shrink", loading && "opacity-60", selectedPark && "max-md:hidden")}
             parks={parks}
-            selectedParkId={selectedParkId}
+            selectedParkId={selection.parkId}
             onSelectPark={selectPark}
             nearest={{ ...nearest, distances: nearest.on ? distances : null }}
             onToggleNearest={toggleNearest}
@@ -251,18 +169,18 @@ export function CourtExplorer() {
         )}
       </div>
 
-      {sheetCollapsed && !detailOpen && !assistantOpen && !data && (
+      {sheet.collapsed && !detailOpen && !assistantOpen && !data && (
         <div className="glass-panel absolute inset-x-3 bottom-7 flex flex-col gap-3 px-5 pt-4 pb-3 md:hidden">
           <Skeleton className="h-4 w-32 rounded-full bg-muted" />
           <Skeleton className="h-3 w-44 rounded-full bg-muted" />
           <Skeleton className="h-9 rounded-xl bg-muted" />
         </div>
       )}
-      {sheetCollapsed && !detailOpen && !assistantOpen && data && (
+      {sheet.collapsed && !detailOpen && !assistantOpen && data && (
         <TimeScrubber
           className={cn(
             "absolute inset-x-3 bottom-7 md:hidden [:root[data-sheet-morph]_&]:[view-transition-name:phone-sheet]",
-            !sheetMorphed && "animate-in duration-200 fade-in slide-in-from-bottom-4",
+            !sheet.morphed && "animate-in duration-200 fade-in slide-in-from-bottom-4",
           )}
           dates={data.dates}
           hours={data.hours}
@@ -272,7 +190,7 @@ export function CourtExplorer() {
           onChange={(date, hour) => setTime({ date, hour })}
           summary={`${parks.filter((park) => park.joinable > 0).length} of ${parks.length} parks with a court`}
           loading={loading}
-          onExpand={() => toggleSheet(false)}
+          onExpand={() => sheet.toggle(false)}
         />
       )}
 
@@ -323,6 +241,7 @@ export function CourtExplorer() {
 
       {assistant.value && (
         <AssistantPanel
+          ref={assistantRef}
           className={cn(
             "absolute inset-x-3 bottom-7 z-10 h-[62dvh] md:inset-x-auto md:top-20 md:right-4 md:bottom-28 md:h-auto md:w-[23rem]",
             assistant.state === "open" ? PANEL_IN : PANEL_OUT,
@@ -333,6 +252,7 @@ export function CourtExplorer() {
 
       {detail.value && data && (
         <ParkDetail
+          ref={detailRef}
           className={cn(
             "absolute inset-x-3 bottom-7 max-h-[58dvh] md:inset-x-auto md:top-20 md:right-4 md:bottom-28 md:max-h-none",
             detail.state === "open" ? PANEL_IN : PANEL_OUT,
@@ -358,7 +278,7 @@ export function CourtExplorer() {
         <StatusBar className="pointer-events-auto w-fit" updatedAt={data?.reservationsUpdatedAt ?? null} />
       </div>
 
-      {(failed || catalogFailed) && (
+      {failed && (
         <div
           role="alert"
           className="glass-panel absolute top-4 left-1/2 z-20 flex w-max max-w-[calc(100%-1.5rem)] -translate-x-1/2 animate-in items-center gap-3 rounded-full py-2 pr-2 pl-4 text-sm text-destructive duration-300 fade-in slide-in-from-top-2 max-md:top-15"

@@ -42,6 +42,7 @@ interface ParkDetailProps {
   onPickHour: (hour: number) => void;
   onClose: () => void;
   className?: string;
+  ref?: React.Ref<HTMLElement>;
 }
 
 /** How a sport can be booked at this park, mirroring ActiveNet's reservation groups. */
@@ -71,6 +72,7 @@ export function ParkDetail({
   onPickHour,
   onClose,
   className,
+  ref,
 }: ParkDetailProps) {
   const selectedRef = useRef<HTMLLIElement>(null);
   useEffect(() => {
@@ -80,7 +82,7 @@ export function ParkDetail({
   const day = usePresence(dayCourtId);
 
   return (
-    <section className={cn("glass-panel flex min-h-0", className)}>
+    <section ref={ref} className={cn("glass-panel flex min-h-0", className)}>
       <div key={park.id} className={cn("flex min-h-0 w-full animate-in flex-col fade-in duration-200 md:w-[23rem] md:shrink-0", dayCourtId && "max-md:hidden")}>
         <header className="flex items-start justify-between gap-3 px-5 pt-5 pb-3">
           <div>

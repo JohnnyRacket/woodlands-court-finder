@@ -31,7 +31,7 @@ function errorText(error: Error): string {
   }
 }
 
-export function AssistantPanel({ onClose, className }: { onClose: () => void; className?: string }) {
+export function AssistantPanel({ onClose, className, ref }: { onClose: () => void; className?: string; ref?: React.Ref<HTMLElement> }) {
   const [input, setInput] = useState("");
   const { messages, sendMessage, regenerate, status, stop, error } = useChat({
     transport: new DefaultChatTransport({ api: "/api/chat" }),
@@ -49,7 +49,7 @@ export function AssistantPanel({ onClose, className }: { onClose: () => void; cl
   };
 
   return (
-    <section className={cn("glass-panel flex min-h-0 flex-col", className)} aria-label="Woodlands Court Finder assistant">
+    <section ref={ref} className={cn("glass-panel flex min-h-0 flex-col", className)} aria-label="Woodlands Court Finder assistant">
       <header className="flex items-center gap-3 px-5 pt-5 pb-3">
         <span className="grid size-9 shrink-0 place-items-center rounded-2xl bg-primary text-brand-mint">
           <Sparkles className="size-4.5" />

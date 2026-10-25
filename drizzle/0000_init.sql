@@ -3,13 +3,15 @@ CREATE TABLE `courts` (
 	`park_id` text NOT NULL,
 	`name` text NOT NULL,
 	`kind` text NOT NULL,
-	`lighted` integer NOT NULL,
-	`geometry` text NOT NULL,
+	`lighted` integer,
+	`geometry` text,
 	`gis_id` text,
 	`activenet_id` integer,
+	`active` integer DEFAULT true NOT NULL,
 	FOREIGN KEY (`park_id`) REFERENCES `parks`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE UNIQUE INDEX `courts_activenet_id_unique` ON `courts` (`activenet_id`);--> statement-breakpoint
 CREATE TABLE `parks` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
@@ -24,5 +26,6 @@ CREATE TABLE `sync_runs` (
 	`finished_at` text NOT NULL,
 	`ok` integer NOT NULL,
 	`rows` integer DEFAULT 0 NOT NULL,
-	`error` text
+	`error` text,
+	`notes` text
 );

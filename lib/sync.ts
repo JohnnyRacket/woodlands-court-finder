@@ -3,7 +3,7 @@ import { syncRuns } from "@/lib/db/tables";
 import type { SourceModule } from "@/lib/sources/types";
 
 export type SyncResult =
-  | { source: string; status: "ok"; rows: number; ms: number }
+  | { source: string; status: "ok"; rows: number; notes: string[]; ms: number }
   | { source: string; status: "failed"; error: string; ms: number }
   | { source: string; status: "skipped"; reason: "already running" };
 
@@ -29,14 +29,21 @@ export async function runSource(source: SourceModule, options: RunOptions = {}):
   const startedAt = now();
 
   try {
-    const { rows } = await source.run({ db, now: startedAt, dryRun, log });
+    const { rows, notes = [] } = await source.run({ db, now: startedAt, dryRun, log });
     const finishedAt = now();
     if (!dryRun) {
       db.insert(syncRuns)
-        .values({ source: source.name, startedAt: startedAt.toISOString(), finishedAt: finishedAt.toISOString(), ok: true, rows })
+        .values({
+          source: source.name,
+          startedAt: startedAt.toISOString(),
+          finishedAt: finishedAt.toISOString(),
+          ok: true,
+          rows,
+          notes: notes.length ? notes : null,
+        })
         .run();
     }
-    return { source: source.name, status: "ok", rows, ms: finishedAt.getTime() - startedAt.getTime() };
+    return { source: source.name, status: "ok", rows, notes, ms: finishedAt.getTime() - startedAt.getTime() };
   } catch (err) {
     const finishedAt = now();
     const error = err instanceof Error ? err.message : String(err);

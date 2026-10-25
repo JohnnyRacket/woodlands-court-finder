@@ -17,5 +17,6 @@ export interface SourceModule {
   name: string;
   /** Cron expression, evaluated in America/Chicago. */
   schedule: string;
-  run(ctx: SyncContext): Promise<{ rows: number }>;
+  /** notes: data-quality findings worth showing on /status (not errors). */
+  run(ctx: SyncContext): Promise<{ rows: number; notes?: string[] }>;
 }

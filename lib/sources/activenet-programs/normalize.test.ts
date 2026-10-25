@@ -53,8 +53,8 @@ describe("expandMeetings with real schedules", () => {
   });
 
   it("uses explicit additional dates", () => {
-    // Adda's Club: Fridays 9 a.m.–noon, listed date by date
-    const program = programs.find((p) => p.name.includes("Adda's Club"))!;
+    // Jo's Club: Fridays 9 a.m.–noon, listed date by date
+    const program = programs.find((p) => p.name.includes("Jo's Club"))!;
     expect(expandMeetings(meetingFor(program.id), window)).toEqual([
       { date: "2026-10-30", startMin: 540, endMin: 720 },
       { date: "2026-11-06", startMin: 540, endMin: 720 },

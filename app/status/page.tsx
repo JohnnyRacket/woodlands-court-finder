@@ -2,6 +2,7 @@ import { CheckCircle2, CircleAlert, CircleDashed, Clock, PauseCircle, TriangleAl
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { ExpandableChips } from "@/components/expandable-chips";
 import { PageShell } from "@/components/page-shell";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatAgo } from "@/lib/format";
@@ -132,37 +133,17 @@ function SourceCard({ source, now }: { source: SourceStatus; now: Date }) {
   );
 }
 
-const VISIBLE_ITEMS = 8;
-
 function FindingCard({ source, finding }: { source: string; finding: Finding }) {
-  const shown = finding.items.slice(0, VISIBLE_ITEMS);
-  const hidden = finding.items.slice(VISIBLE_ITEMS);
   return (
     <article className="rounded-2xl bg-white/75 px-4 py-3.5">
       <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">{source}</p>
       <h3 className="mt-0.5 text-sm font-semibold">{finding.headline}</h3>
       {finding.detail && <p className="mt-1 text-sm text-muted-foreground">{finding.detail}</p>}
       {finding.items.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {shown.map((item) => (
-            <Chip key={item}>{item}</Chip>
-          ))}
-          {hidden.length > 0 && (
-            <details className="group contents">
-              <summary className="cursor-pointer list-none rounded-full px-2.5 py-1 text-xs font-medium text-primary group-open:hidden hover:bg-accent">
-                +{hidden.length} more
-              </summary>
-              {hidden.map((item) => (
-                <Chip key={item}>{item}</Chip>
-              ))}
-            </details>
-          )}
+        <div className="mt-2">
+          <ExpandableChips items={finding.items} />
         </div>
       )}
     </article>
   );
-}
-
-function Chip({ children }: { children: React.ReactNode }) {
-  return <span className="rounded-full bg-muted px-2.5 py-1 text-xs">{children}</span>;
 }

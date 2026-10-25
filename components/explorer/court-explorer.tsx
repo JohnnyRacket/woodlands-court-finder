@@ -54,7 +54,7 @@ export function CourtExplorer() {
       <CourtMap parks={parks} courts={courts} selection={selection} onSelect={setSelection} />
 
       {/* Left column: controls + park list (a bottom sheet on phones) */}
-      <div className="pointer-events-none absolute inset-x-3 bottom-3 flex max-h-[58dvh] flex-col gap-3 md:inset-y-4 md:right-auto md:bottom-4 md:left-4 md:max-h-none md:w-[23rem]">
+      <div className="absolute inset-x-3 bottom-3 flex max-h-[58dvh] flex-col gap-3 overflow-y-auto rounded-3xl [scrollbar-width:none] md:pointer-events-none md:inset-y-4 md:right-auto md:bottom-4 md:left-4 md:max-h-none md:w-[23rem] md:overflow-visible md:rounded-none">
         <ControlsPanel
           className="pointer-events-auto shrink-0"
           dates={data?.dates ?? []}
@@ -68,7 +68,7 @@ export function CourtExplorer() {
         />
         {data ? (
           <ParkList
-            className={cn("pointer-events-auto min-h-40 flex-1 transition-opacity", loading && "opacity-60", selectedPark && "max-md:hidden")}
+            className={cn("pointer-events-auto shrink-0 transition-opacity md:min-h-40 md:flex-1 md:shrink", loading && "opacity-60", selectedPark && "max-md:hidden")}
             parks={parks}
             selectedParkId={selectedParkId}
             onSelectPark={selectPark}

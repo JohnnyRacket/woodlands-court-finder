@@ -10,7 +10,12 @@ RUN npm ci
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-ENV NEXT_TELEMETRY_DISABLED=1
+# Optional: an ArcGIS Location Platform key switches the map to Esri's basemap (baked in at build time).
+ARG NEXT_PUBLIC_ARCGIS_API_KEY
+ENV NEXT_TELEMETRY_DISABLED=1 \
+    NEXT_PUBLIC_ARCGIS_API_KEY=$NEXT_PUBLIC_ARCGIS_API_KEY \
+    NODE_OPTIONS=--max-old-space-size=1280 \
+    SKIP_BUILD_TYPECHECK=1
 RUN npm run build
 
 FROM base AS runner

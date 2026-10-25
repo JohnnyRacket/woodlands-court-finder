@@ -7,7 +7,7 @@ import { runSource, runSources } from "@/lib/sync";
 const silent = () => {};
 
 function source(name: string, run: SourceModule["run"]): SourceModule {
-  return { name, schedule: { live: "* * * * *", gentle: "* * * * *" }, run };
+  return { name, title: name, origin: "test", schedule: { live: "* * * * *", gentle: "* * * * *" }, run };
 }
 
 describe("runSource", () => {

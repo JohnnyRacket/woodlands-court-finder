@@ -43,6 +43,8 @@ const searchBody = (keyword: string) => ({
 // takes a few minutes at the polite request pace; it runs once a day.
 export const activenetProgramsSource: SourceModule = {
   name: SOURCE,
+  title: "Lessons, leagues & clinics",
+  origin: "Township ActiveNet",
   schedule: { live: "30 5 * * *", gentle: "30 5 * * 1" }, // daily / weekly
 
   async run({ db, now, dryRun, log }) {
@@ -83,16 +85,16 @@ export const activenetProgramsSource: SourceModule = {
         );
         events.push(...toProgramEvents(program, location, meeting, window));
         const mismatch = titleWeekdayMismatch(program.name, meeting);
-        if (mismatch) mismatched.push(`"${program.name.trim()}" (${program.id}): ${mismatch}`);
+        if (mismatch) mismatched.push(`"${program.name.trim()}" (#${program.id}) ${mismatch}`);
       } catch (err) {
         unreadable.push(`${program.name} (${program.id}): ${err instanceof Error ? err.message : String(err)}`);
       }
     }
 
+    log(`${found.size} programs found; ${noCourt} skipped with no park court as location (TBD, various, gym, …)`);
     const notes = [
-      `${found.size} programs found; ${noCourt} skipped with no park court as location (TBD, various, gym, …)`,
-      ...unreadable.map((line) => `Skipped unreadable schedule: ${line}`),
-      ...mismatched.map((line) => `Program title doesn't match its schedule: ${line}`),
+      ...unreadable.map((line) => `A program's schedule couldn't be read: ${line}`),
+      ...mismatched.map((line) => `A program's title doesn't match its schedule: ${line}`),
     ];
     for (const note of notes) log(note);
     if (unreadable.length > 0 && unreadable.length >= found.size - noCourt) {

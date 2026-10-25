@@ -10,6 +10,8 @@ const FORECAST_URL = "https://api.weather.gov/gridpoints/HGX/59,112/forecast/hou
 
 export const weatherSource: SourceModule = {
   name: "weather",
+  title: "Weather forecast",
+  origin: "National Weather Service",
   schedule: { live: "5 * * * *", gentle: "5 */6 * * *" }, // hourly / every 6 h
 
   async run({ db, now, dryRun }) {

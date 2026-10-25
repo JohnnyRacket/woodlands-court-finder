@@ -8,6 +8,8 @@ import { PAGE_URL, parsePickleballPage, SOURCE } from "./normalize";
 // Pickleball drop-in times and tournaments, published only as a web page.
 export const townshipPageSource: SourceModule = {
   name: SOURCE,
+  title: "Drop-in play & tournaments",
+  origin: "thewoodlandsparks.com",
   schedule: { live: "15 6 * * *", gentle: "15 6 * * 1" }, // daily / weekly
 
   async run({ db, now, dryRun, log }) {

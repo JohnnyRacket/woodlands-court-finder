@@ -71,9 +71,9 @@ describe("buildReference with real data", () => {
 
   it("reports the known data-quality findings", () => {
     expect(notes).toEqual([
-      expect.stringMatching(/^GIS ID PKTN01-HRL is used by 2 courts/),
-      expect.stringMatching(/^19 ActiveNet court\(s\) have no GIS outline: Creekwood Pickleball 1/),
-      expect.stringMatching(/^5 GIS court\(s\) aren't reservable in ActiveNet: PKL01-BBR/),
+      "2 courts share the GIS ID PKTN01-HRL: Harper's Landing Park #2 and Harper's Landing Park #1",
+      expect.stringMatching(/^19 bookable courts are missing from the Township GIS map: Creekwood Pickleball 1, /),
+      "5 courts on the GIS map can't be booked online: PKL01-BBR, PKL02-BBR, PKL03-BBR, PKL04-BBR, PKL05-BBR",
     ]);
   });
 });
@@ -85,12 +85,12 @@ describe("buildReference edge cases", () => {
   it("skips and reports an ActiveNet court whose park isn't in GIS", () => {
     const result = buildReference([gisCourt], [{ id: 1, name: "Nowhere Tennis 1", group: "tennis" }]);
     expect(result.courts.map((c) => c.id)).toEqual(["example-tennis-1"]);
-    expect(result.notes[0]).toMatch(/"Nowhere Tennis 1" \(1\) doesn't match any GIS park/);
+    expect(result.notes[0]).toBe(`A bookable court doesn't match any park on the GIS map: "Nowhere Tennis 1" (ActiveNet 1)`);
   });
 
   it("skips and reports a GIS court with an unknown type", () => {
     const result = buildReference([{ ...gisCourt, type: "Squash" }], []);
     expect(result.courts).toEqual([]);
-    expect(result.notes[0]).toMatch(/unknown type "Squash"/);
+    expect(result.notes[0]).toMatch(/type we don't recognize: "Squash"/);
   });
 });

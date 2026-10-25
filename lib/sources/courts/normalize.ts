@@ -55,6 +55,8 @@ export function parseActiveNetName(name: string): { parkKey: string; number: num
   return { parkKey: compact(match[1].replace(/tennis|pickleball|court/gi, "")), number: Number(match[2]) };
 }
 
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
 const titleCase = (text: string) => text.toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase());
 
 function centroid(polygons: number[][][][]): { lat: number; lng: number } {
@@ -83,18 +85,18 @@ export function buildReference(gis: GisCourt[], activenet: ActiveNetCourt[]) {
 
   const duplicateIds = [...Map.groupBy(gis, (c) => c.id)].filter(([, list]) => list.length > 1);
   for (const [id, list] of duplicateIds) {
-    notes.push(`GIS ID ${id} is used by ${list.length} courts (${list.map((c) => `${titleCase(c.parkName)} #${c.courtNumber}`).join(", ")})`);
+    notes.push(`${list.length} courts share the GIS ID ${id}: ${list.map((c) => `${titleCase(c.parkName)} #${c.courtNumber}`).join(" and ")}`);
   }
 
   const unmatchedGis = new Map<string, GisCourt>();
   for (const court of gis) {
     const kind = GIS_KINDS[court.type];
     if (!kind) {
-      notes.push(`GIS court ${court.id} has unknown type "${court.type}"; skipped`);
+      notes.push(`A court on the GIS map has a type we don't recognize: "${court.type}" (${court.id})`);
       continue;
     }
     const key = `${poolOf(kind)}|${parkKey(court.parkName)}|${court.courtNumber}`;
-    if (unmatchedGis.has(key)) notes.push(`Two GIS courts claim ${titleCase(court.parkName)} ${poolOf(kind)} #${court.courtNumber}; using the first`);
+    if (unmatchedGis.has(key)) notes.push(`Two courts on the GIS map are both ${titleCase(court.parkName)} ${poolOf(kind)} #${court.courtNumber}`);
     else unmatchedGis.set(key, court);
   }
 
@@ -119,7 +121,7 @@ export function buildReference(gis: GisCourt[], activenet: ActiveNetCourt[]) {
     const parsed = parseActiveNetName(court.name);
     const park = parsed && parks.get(parsed.parkKey);
     if (!parsed || !park) {
-      notes.push(`ActiveNet court "${court.name}" (${court.id}) doesn't match any GIS park; skipped`);
+      notes.push(`A bookable court doesn't match any park on the GIS map: "${court.name}" (ActiveNet ${court.id})`);
       continue;
     }
     const key = `${court.group}|${parsed.parkKey}|${parsed.number}`;
@@ -131,7 +133,7 @@ export function buildReference(gis: GisCourt[], activenet: ActiveNetCourt[]) {
   }
 
   if (noOutline.length) {
-    notes.push(`${noOutline.length} ActiveNet court(s) have no GIS outline: ${noOutline.join(", ")}`);
+    notes.push(`${plural(noOutline.length, "bookable court is", "bookable courts are")} missing from the Township GIS map: ${noOutline.join(", ")}`);
   }
 
   const notReservable = [...unmatchedGis.values()].sort((a, b) => a.id.localeCompare(b.id));
@@ -140,7 +142,7 @@ export function buildReference(gis: GisCourt[], activenet: ActiveNetCourt[]) {
     courts.push(toRow(park, GIS_KINDS[gisCourt.type], gisCourt.courtNumber, gisCourt));
   }
   if (notReservable.length) {
-    notes.push(`${notReservable.length} GIS court(s) aren't reservable in ActiveNet: ${notReservable.map((c) => c.id).join(", ")}`);
+    notes.push(`${plural(notReservable.length, "court on the GIS map can't", "courts on the GIS map can't")} be booked online: ${notReservable.map((c) => c.id).join(", ")}`);
   }
 
   return { parks: [...parks.values()], courts, notes };

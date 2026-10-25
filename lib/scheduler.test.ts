@@ -3,7 +3,7 @@ import { bootSources } from "./scheduler";
 import { syncProfile } from "./sync-profile";
 import type { SourceModule } from "./sources/types";
 
-const source = (name: string): SourceModule => ({ name, schedule: { live: "* * * * *", gentle: "* * * * *" }, run: async () => ({ rows: 0 }) });
+const source = (name: string): SourceModule => ({ name, title: name, origin: "test", schedule: { live: "* * * * *", gentle: "* * * * *" }, run: async () => ({ rows: 0 }) });
 const list = [source("fresh"), source("stale"), source("never")];
 const now = new Date("2026-10-25T12:00:00Z");
 const freshness = [

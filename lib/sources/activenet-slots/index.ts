@@ -9,6 +9,8 @@ import { slots } from "./table";
 // Hourly reservation status for today and tomorrow (residents can book 1 day ahead).
 export const activenetSlotsSource: SourceModule = {
   name: "activenet-slots",
+  title: "Court reservations",
+  origin: "Township ActiveNet",
   schedule: { live: "*/15 7-22 * * *", gentle: "0 8-20/3 * * *" }, // every 15 min / every 3 h
 
   async run({ db, now, dryRun, log }) {

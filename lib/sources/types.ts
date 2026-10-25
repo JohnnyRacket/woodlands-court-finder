@@ -18,6 +18,10 @@ export type SyncProfile = "live" | "gentle";
  */
 export interface SourceModule {
   name: string;
+  /** For the public status page, e.g. "Court reservations". */
+  title: string;
+  /** Where the data comes from, e.g. "Township ActiveNet". */
+  origin: string;
   /** Cron expressions per profile, evaluated in America/Chicago. */
   schedule: Record<SyncProfile, string>;
   /** notes: data-quality findings worth showing on /status (not errors). */

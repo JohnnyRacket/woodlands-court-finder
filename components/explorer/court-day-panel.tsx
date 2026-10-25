@@ -23,21 +23,21 @@ interface CourtDayPanelProps {
 /** One court's 7 a.m.–11 p.m. day, shown beside the park's court list. */
 export function CourtDayPanel({ courtId, date, hour, now, onPickHour, onClose, className }: CourtDayPanelProps) {
   const [day, setDay] = useState<CourtDay | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [failure, setFailure] = useState<{ key: string; message: string } | null>(null);
+  const key = `${courtId}/${date}`;
 
   useEffect(() => {
     const controller = new AbortController();
     fetch(`/api/courts/${courtId}/day?date=${date}`, { signal: controller.signal })
       .then((response) => (response.ok ? response.json() : Promise.reject(new Error(`HTTP ${response.status}`))))
-      .then((next: CourtDay) => {
-        setDay(next);
-        setError(null);
-      })
-      .catch((err: Error) => err.name !== "AbortError" && setError(err.message));
+      .then((next: CourtDay) => setDay(next))
+      .catch((err: Error) => err.name !== "AbortError" && setFailure({ key: `${courtId}/${date}`, message: err.message }));
     return () => controller.abort();
   }, [courtId, date]);
 
   const current = day?.court.id === courtId && day.date === date ? day : null;
+  // Only the court and date on screen; an earlier court's failure shouldn't show here.
+  const error = !current && failure?.key === key ? failure.message : null;
   const playable = current?.hours.filter((h) => h.label.publicCanJoin && !h.dark && !(date === now.date && h.hour < now.hour)).length;
 
   return (

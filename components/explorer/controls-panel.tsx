@@ -76,7 +76,7 @@ export function ControlsPanel({ dates, hours, date, hour, now, filters, bookable
             const next = value[0];
             if (!next || !hour) return;
             const firstOpen = next === now?.date ? Math.max(now.hour, hours[0]) : hours[0];
-            onTimeChange(next, Math.max(hour, firstOpen));
+            onTimeChange(next, Math.min(Math.max(hour, firstOpen), hours[hours.length - 1]));
           }}
           spacing={1}
           className="w-full rounded-2xl bg-muted p-1"
@@ -85,6 +85,8 @@ export function ControlsPanel({ dates, hours, date, hour, now, filters, bookable
             <ToggleGroupItem
               key={d}
               value={d}
+              // After the last hour today there's nothing left to book.
+              disabled={d === now?.date && now.hour > hours[hours.length - 1]}
               className="h-11 min-w-0 flex-1 flex-col gap-0 rounded-xl text-sm leading-tight data-[pressed]:bg-white data-[pressed]:text-primary data-[pressed]:shadow-sm"
             >
               {i === 0 ? "Today" : i === 1 ? "Tomorrow" : formatDay(d).split(", ")[0]}

@@ -271,7 +271,7 @@ export function CourtExplorer() {
         />
       )}
 
-      <div className="pointer-events-none absolute right-20 bottom-8 left-[25.5rem] flex justify-center max-md:hidden">
+      <div className="@container pointer-events-none absolute right-[4.5rem] bottom-8 left-[25rem] flex justify-center max-md:hidden">
         <StatusBar className="pointer-events-auto w-fit" updatedAt={data?.reservationsUpdatedAt ?? null} />
       </div>
 

@@ -7,10 +7,10 @@ import type { SlotLabel } from "@/lib/labels";
 
 export type StatusGroup = "open" | "open_play" | "program" | "reserved" | "no_data";
 
-export const GROUP_META: Record<StatusGroup, { text: string; hint: string; color: string; foreground: string; hollow?: boolean }> = {
+export const GROUP_META: Record<StatusGroup, { text: string; short?: string; hint: string; color: string; foreground: string; hollow?: boolean }> = {
   open: { text: "Open", hint: "No reservation: you can walk on (or book it)", color: "#2e9e5b", foreground: "#ffffff" },
   open_play: { text: "Open play", hint: "Drop-in play: anyone can join", color: "#1d54a6", foreground: "#ffffff" },
-  program: { text: "Program / event", hint: "Lesson, league, clinic, tournament or Township event", color: "#e3b552", foreground: "#4a3305" },
+  program: { text: "Program / event", short: "Event", hint: "Lesson, league, clinic, tournament or Township event", color: "#e3b552", foreground: "#4a3305" },
   reserved: { text: "Reserved", hint: "Privately reserved", color: "#c9d0cb", foreground: "#3f4a43" },
   no_data: { text: "No data", hint: "Reservation data isn't available for this hour, or booking isn't open yet", color: "#9aa59e", foreground: "#56625a", hollow: true },
 };

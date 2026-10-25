@@ -1,6 +1,6 @@
 "use client";
 
-import { Trees } from "lucide-react";
+import { Check, Trees } from "lucide-react";
 import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -132,8 +132,9 @@ export function ControlsPanel({ dates, hours, date, hour, now, filters, onTimeCh
             <ToggleGroupItem
               key={sport}
               value={sport}
-              className="h-9 flex-1 rounded-xl text-sm capitalize data-[pressed]:bg-white data-[pressed]:text-primary data-[pressed]:shadow-sm"
+              className="group/sport h-9 flex-1 gap-1.5 rounded-xl text-sm text-muted-foreground capitalize data-[pressed]:bg-primary data-[pressed]:text-primary-foreground data-[pressed]:shadow-sm"
             >
+              <Check className="hidden size-3.5 group-data-[pressed]/sport:block" />
               {sport}
             </ToggleGroupItem>
           ))}

@@ -51,7 +51,7 @@ export function ParkList({ parks, selectedParkId, onSelectPark, className }: Par
                       <span key={sport} className="flex items-center gap-2">
                         <span className="flex w-[6.25rem] shrink-0 items-baseline gap-1.5 text-xs">
                           <span className="text-muted-foreground">{SPORT_LABEL[sport]}</span>
-                          <span className={cn("tabular-nums", summary.joinable ? "font-semibold text-foreground" : "text-muted-foreground")}>
+                          <span className={cn("tabular-nums", summary.joinable ? "font-medium text-foreground/70" : "text-muted-foreground/70")}>
                             {summary.joinable}/{summary.courts.length}
                           </span>
                         </span>

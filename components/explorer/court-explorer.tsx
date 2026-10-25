@@ -210,7 +210,7 @@ export function CourtExplorer() {
         disabled={nearest.locating}
         aria-label={nearest.on ? "Stop showing my location" : "Show my location and sort parks by distance"}
         className={cn(
-          "glass-panel absolute top-3 left-3 grid size-10 place-items-center rounded-full transition active:scale-95 disabled:opacity-60 md:hidden",
+          "glass-panel absolute top-3 left-3 grid size-9.5 place-items-center rounded-full transition active:scale-95 disabled:opacity-60 md:hidden",
           nearest.on ? "bg-primary text-brand-mint" : "text-primary",
         )}
       >

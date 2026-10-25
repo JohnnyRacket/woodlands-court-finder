@@ -15,6 +15,13 @@
       "when": 1792910577878,
       "tag": "0001_slots",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1792911351567,
+      "tag": "0002_weather",
+      "breakpoints": true
     }
   ]
 }

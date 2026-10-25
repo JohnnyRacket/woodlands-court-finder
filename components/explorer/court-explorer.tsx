@@ -169,10 +169,9 @@ export function CourtExplorer() {
         />
       )}
 
-      <StatusBar
-        className="absolute bottom-8 left-[25.5rem] w-fit max-w-[calc(100%-31rem)] max-md:hidden"
-        updatedAt={data?.reservationsUpdatedAt ?? null}
-      />
+      <div className="pointer-events-none absolute right-20 bottom-8 left-[25.5rem] flex justify-center max-md:hidden">
+        <StatusBar className="pointer-events-auto w-fit" updatedAt={data?.reservationsUpdatedAt ?? null} />
+      </div>
 
       {error && (
         <p className="glass-panel absolute top-4 left-1/2 -translate-x-1/2 rounded-full px-4 py-2 text-sm text-destructive">

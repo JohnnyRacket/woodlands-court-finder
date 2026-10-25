@@ -136,11 +136,23 @@ npm run lint
    NEXT_PUBLIC_ARCGIS_API_KEY=...        # optional build arg: Esri light-gray basemap
    ```
    `NODE_ENV=production` selects the live sync schedules; set `SYNC_PROFILE=gentle` to stay slow.
-4. Keep **one replica** (SQLite and the in-process scheduler assume a single instance). Port 3000; health check `GET /api/health`.
+4. Keep **one replica** (SQLite and the in-process scheduler assume a single instance). Port 3000; health check `GET /api/health`, which answers 200 whenever the database opens (an upstream outage never restarts the app) and reports `"status": "degraded"` when a source has failed or fallen behind its schedule, for an uptime monitor to alert on.
 
 The image is about 500 MB and builds on a 2 GB host: the Docker build sizes Next.js workers to available memory and skips the in-build type check (`SKIP_BUILD_TYPECHECK=1`), which `npm run typecheck` covers instead.
 
 The first boot runs every source once to fill the database (the programs crawl takes a few minutes), then follows the schedules.
+
+### Beyond one instance
+
+One container serves a township's worth of residents comfortably: every page and assistant answer is a local SQLite read. Running several would mean:
+
+- **Sync once, not per replica:** move the scheduler into its own worker process (or take a lease row in the database before each run), so Township systems still see one polite client.
+- **Shared data:** Postgres instead of the SQLite file (Drizzle and the queries carry over), or one writer replicating SQLite to read replicas with Litestream or LiteFS.
+- **Shared rate limits:** the assistant's per-IP limit lives in memory; it would move to the database or Redis.
+
+## How the app treats Township systems
+
+The data comes from public pages and the JSON endpoints ActiveNet's own public pages call, read the way a resident's browser reads them: no logins, no bookings, nothing behind an account. Every request identifies the app and a contact URL in its User-Agent, requests to a host are spaced at least 3 seconds apart, the busiest source (reservations) makes a handful of requests every 15 minutes, and parsers fail loudly rather than guess when a page changes. The reconciliation report is written for the Township, and a published API or data feed would replace the scraping outright.
 
 ## Project layout
 

@@ -75,14 +75,12 @@ export function sourceState(
   return "up_to_date";
 }
 
-/** Everything /status shows: per-source health in plain language, findings, and table sizes. */
-export function getStatus(now: Date = new Date(), db: Db = getDb()): AppStatus {
+/** Each source's health against its schedule, as /status and /api/health report it. */
+export function getSourceStatuses(now: Date = new Date(), db: Db = getDb()): SourceStatus[] {
   const profile = syncProfile();
   const schedulerEnabled = process.env.SYNC_ENABLED === "true";
   const freshness = new Map(getFreshness(db).map((f) => [f.source, f]));
-  const tableCount = (table: SQLiteTable) => db.select({ n: count() }).from(table).get()?.n ?? 0;
-
-  const statuses = sources.map((source): SourceStatus => {
+  return sources.map((source): SourceStatus => {
     const f = freshness.get(source.name);
     const cron = source.schedule[profile];
     return {
@@ -96,11 +94,17 @@ export function getStatus(now: Date = new Date(), db: Db = getDb()): AppStatus {
       findings: (f?.lastRun?.notes ?? []).map(parseFinding),
     };
   });
+}
+
+/** Everything /status shows: per-source health in plain language, findings, and table sizes. */
+export function getStatus(now: Date = new Date(), db: Db = getDb()): AppStatus {
+  const tableCount = (table: SQLiteTable) => db.select({ n: count() }).from(table).get()?.n ?? 0;
+  const statuses = getSourceStatuses(now, db);
 
   return {
     overall: statuses.reduce<SourceState>((worst, s) => (SEVERITY.indexOf(s.state) > SEVERITY.indexOf(worst) ? s.state : worst), "up_to_date"),
-    profile,
-    schedulerEnabled,
+    profile: syncProfile(),
+    schedulerEnabled: process.env.SYNC_ENABLED === "true",
     sources: statuses,
     rowCounts: [
       { table: "parks", rows: tableCount(parks) },

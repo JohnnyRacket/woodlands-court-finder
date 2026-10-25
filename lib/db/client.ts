@@ -13,6 +13,8 @@ export function openDb(file: string): Db {
   if (file !== ":memory:") mkdirSync(path.dirname(file), { recursive: true });
   const sqlite = new Database(file);
   sqlite.pragma("journal_mode = WAL");
+  // `npm run sync` can write while the server's scheduler does; wait for the lock instead of failing.
+  sqlite.pragma("busy_timeout = 5000");
   sqlite.pragma("foreign_keys = ON");
   const db = drizzle(sqlite, { schema });
   migrate(db, { migrationsFolder });

@@ -10,7 +10,7 @@ import type { Condition } from "@/lib/conditions";
 import type { ParkEvent } from "@/lib/sources/township-events/table";
 import { getActiveAlerts, getDayConditions, getParkEvents, type Alert, type HourDetails } from "./conditions";
 import { getCourtStatuses, type CourtStatus } from "./court-status";
-import { getFreshness } from "./freshness";
+import { lastSuccessAt } from "./freshness";
 
 export interface ExplorerData {
   date: string;
@@ -65,7 +65,7 @@ export function getExplorerData(date: string, hour: number, now: Date, db: Db = 
     alerts: getActiveAlerts(now, db),
     parkEvents: getParkEvents(date, db),
     sunset: sunTimes(date).sunset.toISOString(),
-    reservationsUpdatedAt: getFreshness(db).find((f) => f.source === "activenet-slots")?.lastSuccessAt ?? null,
+    reservationsUpdatedAt: lastSuccessAt("activenet-slots", db),
     courts: getCourtStatuses(date, hour, now, db),
     events: db
       .select()

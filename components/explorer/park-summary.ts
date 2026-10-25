@@ -42,7 +42,13 @@ export function filterCourts(courts: CourtStatus[], filters: Filters): CourtStat
 }
 
 export function summarizeParks(courts: CourtStatus[], sports: Sport[]): ParkSummary[] {
-  const byPark = Map.groupBy(courts, (court) => court.parkId);
+  // Not Map.groupBy: it needs Safari 17.4, and Next supports 16.4.
+  const byPark = new Map<string, CourtStatus[]>();
+  for (const court of courts) {
+    const list = byPark.get(court.parkId);
+    if (list) list.push(court);
+    else byPark.set(court.parkId, [court]);
+  }
   return [...byPark.values()]
     .map((list) => {
       const bySport: Partial<Record<Sport, SportSummary>> = {};

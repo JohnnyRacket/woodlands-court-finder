@@ -7,8 +7,8 @@ import { parks } from "@/lib/db/tables";
 import { formatHour, formatMinutes } from "@/lib/format";
 import { LABEL_META } from "@/lib/label-meta";
 import { getActiveAlerts, getDayConditions, getParkEvents } from "@/lib/queries/conditions";
-import { getCourtStatuses, type CourtStatus } from "@/lib/queries/court-status";
-import { getFreshness } from "@/lib/queries/freshness";
+import { courtStatusesForDay, getCourtStatuses, type CourtStatus } from "@/lib/queries/court-status";
+import { lastSuccessAt } from "@/lib/queries/freshness";
 import { weatherHours } from "@/lib/sources/weather/table";
 import { sunTimes } from "@/lib/sun";
 import { addDays, chicagoDateHour, FIRST_HOUR, LAST_HOUR } from "@/lib/time";
@@ -45,7 +45,7 @@ export function createTools(now: Date, db: Db = getDb()) {
     .describe(`Date: ${dates.join(", ")} (today first). Residents can book ${bookingWindows}; later dates have no reservation data.`);
   const hourSchema = z.number().int().min(FIRST_HOUR).max(LAST_HOUR).describe("Start hour, 7–22 (24-hour clock, America/Chicago)");
   const freshness = () => ({
-    reservationsUpdatedAt: getFreshness(db).find((f) => f.source === "activenet-slots")?.lastSuccessAt ?? null,
+    reservationsUpdatedAt: lastSuccessAt("activenet-slots", db),
   });
   const isPast = (date: string, hour: number) => date === current.date && hour < current.hour;
 
@@ -80,10 +80,11 @@ export function createTools(now: Date, db: Db = getDb()) {
       }),
       execute: async ({ sport, date, startHour, endHour, parkId, litOnly }) => {
         const last = Math.min(endHour ?? startHour, startHour + 5);
+        const statusesAt = courtStatusesForDay(date, now, db);
         const hours = [];
         for (let hour = startHour; hour <= last; hour++) {
           if (isPast(date, hour)) continue;
-          const courts = getCourtStatuses(date, hour, now, db).filter(
+          const courts = statusesAt(hour).filter(
             (c) => playsSport(c, sport) && (!parkId || c.parkId === parkId) && (!litOnly || c.lighted === true),
           );
           const byPark = Map.groupBy(courts, (c) => c.parkName);
@@ -113,8 +114,9 @@ export function createTools(now: Date, db: Db = getDb()) {
         if (!park) return { error: `Unknown park "${parkId}". Use listParks for ids.` };
         const timeline = new Map<string, string[]>();
         const events = new Map<string, string>();
+        const statusesAt = courtStatusesForDay(date, now, db);
         for (let hour = FIRST_HOUR; hour <= LAST_HOUR; hour++) {
-          for (const court of getCourtStatuses(date, hour, now, db).filter((c) => c.parkId === parkId)) {
+          for (const court of statusesAt(hour).filter((c) => c.parkId === parkId)) {
             const entry = `${formatHour(hour)}: ${LABEL_META[court.label.kind].text}${court.bookingClosed ? " (booking closed)" : ""}${court.dark ? " (dark)" : ""}`;
             timeline.set(court.name, [...(timeline.get(court.name) ?? []), entry]);
             if ("event" in court.label) {

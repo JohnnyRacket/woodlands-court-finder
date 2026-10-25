@@ -2,12 +2,15 @@
 
 import { LoaderCircle, LocateFixed, Sparkles } from "lucide-react";
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useState } from "react";
+import { catchError } from "next/error";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { bookingDates } from "@/lib/booking-window";
+import { fetchJson } from "@/lib/fetch-json";
 import { assistantEnabled } from "@/lib/flags";
 import { distanceMiles, type LatLng } from "@/lib/geo";
 import type { ExplorerData } from "@/lib/queries/explorer";
+import { currentPlayHour } from "@/lib/time";
 import { usePresence } from "@/lib/use-presence";
 import { cn } from "@/lib/utils";
 import { AlertsBanner } from "./alerts-banner";
@@ -28,6 +31,20 @@ const CourtMap = dynamic(() => import("./court-map").then((m) => m.CourtMap), {
   loading: () => <div className="absolute inset-0 animate-pulse bg-[#e9efe9]" />,
 });
 
+// No WebGL2, a lost connection while loading the map code, or an ArcGIS failure: keep the panels usable.
+const MapBoundary = catchError(function MapUnavailable() {
+  return (
+    <div className="absolute inset-0 flex justify-center bg-[#e9efe9] px-6 pt-28 md:items-center md:pt-0 md:pl-[25rem]">
+      <p className="glass-panel h-fit max-w-xs rounded-2xl px-4 py-3 text-center text-sm text-muted-foreground">
+        The map couldn&apos;t load on this device. The park list still works.
+      </p>
+    </div>
+  );
+});
+
+/** How often an open, visible page re-reads court data (reservations sync every 15 minutes). */
+const REFRESH_MS = 5 * 60_000;
+
 // Side panels ease in from the right (from below on phones) and back out the same way.
 const PANEL_IN = "animate-in fade-in duration-200 ease-out max-md:slide-in-from-bottom-4 md:slide-in-from-right-4";
 const PANEL_OUT = "pointer-events-none animate-out fade-out duration-200 ease-in fill-mode-forwards max-md:slide-out-to-bottom-4 md:slide-out-to-right-4";
@@ -35,7 +52,8 @@ const PANEL_OUT = "pointer-events-none animate-out fade-out duration-200 ease-in
 export function CourtExplorer() {
   const [time, setTime] = useState<{ date: string; hour: number } | null>(null);
   const [data, setData] = useState<ExplorerData | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [refreshes, setRefreshes] = useState(0);
   const [filters, setFilters] = useState<Filters>({ sports: ["tennis", "pickleball"], joinableOnly: false, litOnly: false });
   const [selection, setSelection] = useState<Selection>({ parkId: null, courtId: null });
   const selectedParkId = selection.parkId;
@@ -53,18 +71,34 @@ export function CourtExplorer() {
   // Phones open on the map with the time dial; this only affects phone layouts.
   const [sheetCollapsed, setSheetCollapsed] = useState(true);
 
+  const refresh = useCallback(() => {
+    // An hour that has passed while the page sat open goes back to following now.
+    const current = currentPlayHour(new Date());
+    setTime((t) => (t && (t.date < current.date || (t.date === current.date && t.hour < current.hour)) ? null : t));
+    setRefreshes((n) => n + 1);
+  }, []);
+
+  useEffect(() => {
+    const refreshIfVisible = () => document.visibilityState === "visible" && refresh();
+    const timer = setInterval(refreshIfVisible, REFRESH_MS);
+    document.addEventListener("visibilitychange", refreshIfVisible);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", refreshIfVisible);
+    };
+  }, [refresh]);
+
   useEffect(() => {
     const controller = new AbortController();
     const query = time ? `?date=${time.date}&hour=${time.hour}` : "";
-    fetch(`/api/courts${query}`, { signal: controller.signal })
-      .then((response) => (response.ok ? response.json() : Promise.reject(new Error(`HTTP ${response.status}`))))
-      .then((next: ExplorerData) => {
+    fetchJson<ExplorerData>(`/api/courts${query}`, controller.signal)
+      .then((next) => {
         setData(next);
-        setError(null);
+        setFailed(false);
       })
-      .catch((err: Error) => err.name !== "AbortError" && setError(err.message));
+      .catch(() => !controller.signal.aborted && setFailed(true));
     return () => controller.abort();
-  }, [time]);
+  }, [time, refreshes]);
 
   // Sports residents can book on the shown date (pickleball opens a day later than tennis).
   // The user's choice is kept, so pickleball comes back on dates it's bookable.
@@ -123,14 +157,16 @@ export function CourtExplorer() {
 
   return (
     <main className="relative h-dvh w-full overflow-hidden bg-background">
-      <CourtMap
-        parks={parks}
-        courts={courts}
-        selection={selection}
-        onSelect={select}
-        rightPanelWidth={selectedPark && !assistantOpen ? (dayCourtId ? 736 : 400) : assistantOpen ? 400 : 0}
-        userLocation={nearest.on ? nearest.location : null}
-      />
+      <MapBoundary>
+        <CourtMap
+          parks={parks}
+          courts={courts}
+          selection={selection}
+          onSelect={select}
+          rightPanelWidth={selectedPark && !assistantOpen ? (dayCourtId ? 736 : 400) : assistantOpen ? 400 : 0}
+          userLocation={nearest.on ? nearest.location : null}
+        />
+      </MapBoundary>
 
       {/* Left column: controls + park list (a bottom sheet on phones) */}
       <div
@@ -161,6 +197,7 @@ export function CourtExplorer() {
             onSelectPark={selectPark}
             nearest={{ ...nearest, distances: nearest.on ? distances : null }}
             onToggleNearest={toggleNearest}
+            emptyText={data.courts.length ? "No courts match these filters." : "Court data hasn't loaded yet. Check back in a few minutes."}
           />
         ) : (
           <div className="glass-panel pointer-events-auto flex flex-1 flex-col gap-2 p-4">
@@ -275,10 +312,16 @@ export function CourtExplorer() {
         <StatusBar className="pointer-events-auto w-fit" updatedAt={data?.reservationsUpdatedAt ?? null} />
       </div>
 
-      {error && (
-        <p className="glass-panel absolute top-4 left-1/2 -translate-x-1/2 animate-in fade-in slide-in-from-top-2 duration-300 rounded-full px-4 py-2 text-sm text-destructive">
-          Couldn&apos;t load courts ({error}). Retrying when you change the time.
-        </p>
+      {failed && (
+        <div
+          role="alert"
+          className="glass-panel absolute top-4 left-1/2 z-20 flex w-max max-w-[calc(100%-1.5rem)] -translate-x-1/2 animate-in items-center gap-3 rounded-full py-2 pr-2 pl-4 text-sm text-destructive duration-300 fade-in slide-in-from-top-2 max-md:top-15"
+        >
+          {data ? "Couldn't refresh courts; showing the last loaded." : "Couldn't load courts."}
+          <button type="button" onClick={refresh} className="shrink-0 rounded-full bg-destructive/10 px-3 py-1 font-medium transition hover:bg-destructive/15">
+            Try again
+          </button>
+        </div>
       )}
     </main>
   );

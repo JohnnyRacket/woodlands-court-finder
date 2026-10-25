@@ -36,13 +36,22 @@ export async function politeFetch(url: string, init: RequestInit = {}): Promise<
 
   for (let attempt = 1; ; attempt++) {
     await waitForTurn(host);
+    let backoff = 1000 * 2 ** attempt;
     try {
       const response = await fetch(url, { ...init, headers, signal: AbortSignal.timeout(TIMEOUT_MS) });
       if (response.ok) return response;
-      if (response.status < 500 || attempt >= RETRIES) throw new HttpError(response.status, url);
+      // Release the connection; the body of an error response is never read.
+      await response.body?.cancel().catch(() => {});
+      const retryable = response.status >= 500 || response.status === 429;
+      if (!retryable || attempt >= RETRIES) throw new HttpError(response.status, url);
+      // Honor a rate limit's Retry-After (in seconds), within reason.
+      const retryAfter = Number(response.headers.get("retry-after"));
+      if (retryAfter > 0) backoff = Math.max(backoff, Math.min(retryAfter, 60) * 1000);
     } catch (err) {
-      if (err instanceof HttpError || attempt >= RETRIES) throw err;
+      if (err instanceof HttpError) throw err;
+      // Timeouts and network errors don't name the URL; say which request gave up.
+      if (attempt >= RETRIES) throw new Error(`${err instanceof Error ? err.message : String(err)} (${url})`, { cause: err });
     }
-    await sleep(1000 * 2 ** attempt);
+    await sleep(backoff);
   }
 }

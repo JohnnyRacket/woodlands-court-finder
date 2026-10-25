@@ -27,32 +27,28 @@ export async function runSource(source: SourceModule, options: RunOptions = {}):
   const dryRun = options.dryRun ?? false;
   const log = options.log ?? ((message: string) => console.log(`[sync:${source.name}] ${message}`));
   const startedAt = now();
+  // The scheduler fires and forgets runs, so a failure to record one is logged, never thrown.
+  const record = (run: Omit<typeof syncRuns.$inferInsert, "source" | "startedAt">) => {
+    if (dryRun) return;
+    try {
+      db.insert(syncRuns)
+        .values({ source: source.name, startedAt: startedAt.toISOString(), ...run })
+        .run();
+    } catch (err) {
+      log(`couldn't record the run: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  };
 
   try {
     const { rows, notes = [] } = await source.run({ db, now: startedAt, dryRun, log });
     const finishedAt = now();
-    if (!dryRun) {
-      db.insert(syncRuns)
-        .values({
-          source: source.name,
-          startedAt: startedAt.toISOString(),
-          finishedAt: finishedAt.toISOString(),
-          ok: true,
-          rows,
-          notes: notes.length ? notes : null,
-        })
-        .run();
-    }
+    record({ finishedAt: finishedAt.toISOString(), ok: true, rows, notes: notes.length ? notes : null });
     return { source: source.name, status: "ok", rows, notes, ms: finishedAt.getTime() - startedAt.getTime() };
   } catch (err) {
     const finishedAt = now();
     const error = err instanceof Error ? err.message : String(err);
     log(`failed: ${error}`);
-    if (!dryRun) {
-      db.insert(syncRuns)
-        .values({ source: source.name, startedAt: startedAt.toISOString(), finishedAt: finishedAt.toISOString(), ok: false, error })
-        .run();
-    }
+    record({ finishedAt: finishedAt.toISOString(), ok: false, error });
     return { source: source.name, status: "failed", error, ms: finishedAt.getTime() - startedAt.getTime() };
   } finally {
     running.delete(source.name);

@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { openDb } from "@/lib/db/client";
 import { syncRuns } from "@/lib/db/tables";
@@ -29,6 +30,16 @@ describe("runSource", () => {
 
     expect(result).toMatchObject({ status: "failed", error: "upstream changed" });
     expect(db.select().from(syncRuns).all()).toMatchObject([{ source: "bad-source", ok: false, error: "upstream changed" }]);
+  });
+
+  it("still resolves when the run can't be recorded", async () => {
+    const db = openDb(":memory:");
+    db.run(sql`DROP TABLE sync_runs`);
+    const logged: string[] = [];
+    const result = await runSource(source("unrecorded", async () => ({ rows: 1 })), { db, log: (m) => logged.push(m) });
+
+    expect(result).toMatchObject({ status: "ok", rows: 1 });
+    expect(logged).toEqual([expect.stringContaining("couldn't record the run")]);
   });
 
   it("writes nothing on a dry run", async () => {

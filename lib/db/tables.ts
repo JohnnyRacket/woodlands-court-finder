@@ -49,19 +49,24 @@ export const scheduleEvents = sqliteTable(
     publicCanJoin: integer("public_can_join", { mode: "boolean" }).notNull(),
     url: text("url"),
   },
-  (table) => [index("schedule_events_park_date").on(table.parkId, table.date)],
+  (table) => [index("schedule_events_date_park").on(table.date, table.parkId)],
 );
 
 export type ScheduleEvent = typeof scheduleEvents.$inferInsert;
 
-export const syncRuns = sqliteTable("sync_runs", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  source: text("source").notNull(),
-  startedAt: text("started_at").notNull(),
-  finishedAt: text("finished_at").notNull(),
-  ok: integer("ok", { mode: "boolean" }).notNull(),
-  rows: integer("rows").notNull().default(0),
-  error: text("error"),
-  /** JSON array of data-quality notes reported by the source */
-  notes: text("notes", { mode: "json" }).$type<string[]>(),
-});
+export const syncRuns = sqliteTable(
+  "sync_runs",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    source: text("source").notNull(),
+    startedAt: text("started_at").notNull(),
+    finishedAt: text("finished_at").notNull(),
+    ok: integer("ok", { mode: "boolean" }).notNull(),
+    rows: integer("rows").notNull().default(0),
+    error: text("error"),
+    /** JSON array of data-quality notes reported by the source */
+    notes: text("notes", { mode: "json" }).$type<string[]>(),
+  },
+  // Every run is kept; this finds each source's latest run and latest success without reading them all.
+  (table) => [index("sync_runs_source_ok").on(table.source, table.ok)],
+);

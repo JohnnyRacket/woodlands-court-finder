@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { bootSources } from "./scheduler";
+import { bootSources, retryDelay } from "./scheduler";
 import { syncProfile } from "./sync-profile";
 import type { SourceModule } from "./sources/types";
 
@@ -25,6 +25,22 @@ describe("bootSources", () => {
 
   it("in gentle mode, only re-fetches data that is missing or over a day old", () => {
     expect(bootSources(list, "gentle", now, freshness).map((s) => s.name)).toEqual(["stale", "never"]);
+  });
+});
+
+describe("retryDelay", () => {
+  const at = new Date("2026-10-25T09:00:00Z");
+  const inMinutes = (minutes: number) => new Date(at.getTime() + minutes * 60_000);
+
+  it("retries a failed daily run twice, then leaves it to the schedule", () => {
+    expect(retryDelay(0, inMinutes(24 * 60), at)).toBe(5 * 60_000);
+    expect(retryDelay(1, inMinutes(24 * 60), at)).toBe(20 * 60_000);
+    expect(retryDelay(2, inMinutes(24 * 60), at)).toBeNull();
+  });
+
+  it("doesn't retry when the next scheduled run comes first", () => {
+    expect(retryDelay(0, inMinutes(5), at)).toBeNull();
+    expect(retryDelay(1, inMinutes(15), at)).toBeNull();
   });
 });
 

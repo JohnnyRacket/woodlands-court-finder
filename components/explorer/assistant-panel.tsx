@@ -20,17 +20,20 @@ const TOOL_TEXT: Record<string, string> = {
   listParks: "Looking up parks",
 };
 
+const FALLBACK_ERROR = "The assistant couldn't answer just now. Try again in a moment.";
+
+/** Our route's JSON error message, or a plain fallback (network failures and proxy error pages aren't JSON). */
 function errorText(error: Error): string {
   try {
-    return (JSON.parse(error.message) as { error?: string }).error ?? error.message;
+    return (JSON.parse(error.message) as { error?: string }).error ?? FALLBACK_ERROR;
   } catch {
-    return error.message || "Something went wrong.";
+    return FALLBACK_ERROR;
   }
 }
 
 export function AssistantPanel({ onClose, className }: { onClose: () => void; className?: string }) {
   const [input, setInput] = useState("");
-  const { messages, sendMessage, status, stop, error } = useChat({
+  const { messages, sendMessage, regenerate, status, stop, error } = useChat({
     transport: new DefaultChatTransport({ api: "/api/chat" }),
   });
   const busy = status === "submitted" || status === "streaming";
@@ -116,7 +119,14 @@ export function AssistantPanel({ onClose, className }: { onClose: () => void; cl
             <LoaderCircle className="size-3.5 animate-spin" /> Thinking…
           </span>
         )}
-        {error && <p className="rounded-2xl bg-destructive/10 px-4 py-2.5 text-sm text-destructive">{errorText(error)}</p>}
+        {error && (
+          <div role="alert" className="flex items-center gap-3 rounded-2xl bg-destructive/10 px-4 py-2.5 text-sm text-destructive">
+            <p className="flex-1">{errorText(error)}</p>
+            <button type="button" onClick={() => void regenerate()} className="shrink-0 font-medium hover:underline">
+              Try again
+            </button>
+          </div>
+        )}
         <div ref={endRef} />
       </div>
 
@@ -137,6 +147,7 @@ export function AssistantPanel({ onClose, className }: { onClose: () => void; cl
             }
           }}
           rows={1}
+          maxLength={1000}
           placeholder="Ask about courts, open play, weather…"
           className="max-h-32 min-h-10 flex-1 resize-none rounded-2xl bg-white/90 px-4 py-2.5 text-sm shadow-xs outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
         />

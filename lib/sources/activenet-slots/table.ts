@@ -14,7 +14,8 @@ export const slots = sqliteTable(
     status: text("status", { enum: ["free", "booked"] }).notNull(),
     fetchedAt: text("fetched_at").notNull(),
   },
-  (table) => [primaryKey({ columns: [table.courtId, table.date, table.hour] })],
+  // The key leads with the court; every read is by date.
+  (table) => [primaryKey({ columns: [table.courtId, table.date, table.hour] }), index("slots_date").on(table.date)],
 );
 
 // Every status change seen between syncs: when each hour was booked or freed, and how far

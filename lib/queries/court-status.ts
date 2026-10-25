@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { getDb, type Db } from "@/lib/db/client";
 import { courts, parks, scheduleEvents, type ScheduleEvent } from "@/lib/db/tables";
 import { bookingClosed, bookingDates, poolOf } from "@/lib/booking-window";
@@ -29,8 +29,12 @@ export interface CourtStatus {
 
 /** Every active court with its label for one Chicago-local date and hour; `now` decides what can be booked. */
 export function getCourtStatuses(date: string, hour: number, now: Date, db: Db = getDb()): CourtStatus[] {
+  return courtStatusesForDay(date, now, db)(hour);
+}
+
+/** Reads a date's courts, slots and events once; the returned function labels any hour of it. */
+export function courtStatusesForDay(date: string, now: Date, db: Db = getDb()): (hour: number) => CourtStatus[] {
   const today = chicagoDate(now);
-  const closed = bookingClosed(date, hour, now);
   const courtRows = db
     .select({
       id: courts.id,
@@ -51,46 +55,50 @@ export function getCourtStatuses(date: string, hour: number, now: Date, db: Db =
     // Natural order: "Tennis 2" before "Tennis 10".
     .sort((a, b) => a.parkName.localeCompare(b.parkName) || a.name.localeCompare(b.name, "en", { numeric: true }));
 
-  const statusByCourt = new Map(
-    db
-      .select({ courtId: slots.courtId, status: slots.status })
-      .from(slots)
-      .where(and(eq(slots.date, date), eq(slots.hour, hour)))
-      .all()
-      .map((row) => [row.courtId, row.status]),
-  );
+  // hour → court id → status
+  const statusByHour = new Map<number, Map<string, "free" | "booked">>();
+  for (const row of db.select({ courtId: slots.courtId, hour: slots.hour, status: slots.status }).from(slots).where(eq(slots.date, date)).all()) {
+    if (!statusByHour.has(row.hour)) statusByHour.set(row.hour, new Map());
+    statusByHour.get(row.hour)!.set(row.courtId, row.status);
+  }
 
   const eventsByPark = Map.groupBy(
     db.select().from(scheduleEvents).where(eq(scheduleEvents.date, date)).all() as ScheduleEvent[],
     (event) => event.parkId,
   );
+  const sunsetMinute = chicagoMinuteOfDay(sunTimes(date).sunset);
 
-  // A park is "fully booked" for a pool (tennis or pickleball) when every reservable court in it is booked.
-  const fullyBooked = new Map<string, boolean>();
-  for (const court of courtRows) {
-    const status = statusByCourt.get(court.id);
-    if (status === undefined) continue;
-    const key = `${court.parkId}|${poolOf(court.kind)}`;
-    fullyBooked.set(key, (fullyBooked.get(key) ?? true) && status === "booked");
-  }
+  return (hour) => {
+    const closed = bookingClosed(date, hour, now);
+    const statusByCourt = statusByHour.get(hour) ?? new Map<string, "free" | "booked">();
 
-  // Dark when most of the hour falls after sunset.
-  const afterSunset = hour * 60 + 30 > chicagoMinuteOfDay(sunTimes(date).sunset);
+    // A park is "fully booked" for a pool (tennis or pickleball) when every reservable court in it is booked.
+    const fullyBooked = new Map<string, boolean>();
+    for (const court of courtRows) {
+      const status = statusByCourt.get(court.id);
+      if (status === undefined) continue;
+      const key = `${court.parkId}|${poolOf(court.kind)}`;
+      fullyBooked.set(key, (fullyBooked.get(key) ?? true) && status === "booked");
+    }
 
-  return courtRows.map(({ activenetId, ...court }) => {
-    const bookable = activenetId !== null && bookingDates(poolOf(court.kind), today).includes(date);
-    return {
-      ...court,
-      reservable: activenetId !== null,
-      bookingClosed: bookable && closed,
-      dark: afterSunset && court.lighted !== true,
-      label: labelSlot({
-        status: activenetId === null ? null : !bookable ? "not_open" : (statusByCourt.get(court.id) ?? "unknown"),
-        hour,
-        courtKind: court.kind,
-        events: eventsByPark.get(court.parkId) ?? [],
-        parkFullyBooked: fullyBooked.get(`${court.parkId}|${poolOf(court.kind)}`) ?? false,
-      }),
-    };
-  });
+    // Dark when most of the hour falls after sunset.
+    const afterSunset = hour * 60 + 30 > sunsetMinute;
+
+    return courtRows.map(({ activenetId, ...court }) => {
+      const bookable = activenetId !== null && bookingDates(poolOf(court.kind), today).includes(date);
+      return {
+        ...court,
+        reservable: activenetId !== null,
+        bookingClosed: bookable && closed,
+        dark: afterSunset && court.lighted !== true,
+        label: labelSlot({
+          status: activenetId === null ? null : !bookable ? "not_open" : (statusByCourt.get(court.id) ?? "unknown"),
+          hour,
+          courtKind: court.kind,
+          events: eventsByPark.get(court.parkId) ?? [],
+          parkFullyBooked: fullyBooked.get(`${court.parkId}|${poolOf(court.kind)}`) ?? false,
+        }),
+      };
+    });
+  };
 }

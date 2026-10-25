@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
+import { jsonResponse } from "@/lib/json-response";
 import { getExplorerData } from "@/lib/queries/explorer";
 import { currentPlayHour, FIRST_HOUR, LAST_HOUR } from "@/lib/time";
 
@@ -17,5 +18,5 @@ export async function GET(request: NextRequest) {
   const fallback = currentPlayHour(now);
   const date = parsed.data.date ?? fallback.date;
   const hour = parsed.data.hour ?? (parsed.data.date ? FIRST_HOUR : fallback.hour);
-  return Response.json(getExplorerData(date, hour, now));
+  return jsonResponse(request, getExplorerData(date, hour, now));
 }

@@ -2,7 +2,7 @@ import { simulateReadableStream, type UIMessage } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 import { describe, expect, it } from "vitest";
 import { seedSampleDb } from "@/lib/db/test-seed";
-import { streamChat } from "./chat";
+import { historyTooLong, streamChat } from "./chat";
 import { createTools, systemPrompt } from "./tools";
 
 // 2026-10-26 6:30 a.m. in Chicago: "today" is the seeded date and courts open at 7.
@@ -119,6 +119,14 @@ describe("streamChat", () => {
     expect(steps[0].toolResults[0]).toMatchObject({ toolName: "findCourts", output: { date: "2026-10-26", sport: "pickleball" } });
     // The tool result went back to the model on the second call.
     expect(JSON.stringify(model.doStreamCalls[1].prompt)).toContain("Pickleball drop-in play (8 AM–10 AM)");
+  });
+
+  it("refuses histories too large to send, judged on the messages the model would see", () => {
+    const message = (id: number, text: string): UIMessage => ({ id: String(id), role: "user", parts: [{ type: "text", text }] });
+    expect(historyTooLong([message(1, "Where can I play pickleball at 8?")])).toBe(false);
+    expect(historyTooLong([message(1, "x".repeat(400_000))])).toBe(true);
+    // An oversized message that has scrolled out of the last 20 doesn't count.
+    expect(historyTooLong([message(0, "x".repeat(400_000)), ...Array.from({ length: 20 }, (_, i) => message(i + 1, "hi"))])).toBe(false);
   });
 
   it("gives the model the rules and today's dates", () => {

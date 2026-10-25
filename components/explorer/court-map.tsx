@@ -2,6 +2,7 @@
 
 import "@arcgis/core/assets/esri/themes/light/view.css";
 import esriConfig from "@arcgis/core/config";
+import { when } from "@arcgis/core/core/reactiveUtils";
 import ArcGISMap from "@arcgis/core/Map";
 import Basemap from "@arcgis/core/Basemap";
 import Graphic from "@arcgis/core/Graphic";
@@ -15,7 +16,7 @@ import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
 import TextSymbol from "@arcgis/core/symbols/TextSymbol";
 import MapView from "@arcgis/core/views/MapView";
 import { Maximize, Minus, Plus } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LABEL_META } from "@/lib/label-meta";
 import type { CourtStatus } from "@/lib/queries/court-status";
 import { ballColors, ballDataUri } from "./ball-icons";
@@ -124,6 +125,9 @@ export function CourtMap({ parks, courts, selection, onSelect, rightPanelWidth, 
   useEffect(() => {
     onSelectRef.current = onSelect;
   }, [onSelect]);
+  // The view fails asynchronously (e.g. no WebGL2); rethrown during render so the error boundary shows its fallback.
+  const [loadError, setLoadError] = useState<unknown>(null);
+  if (loadError) throw loadError;
 
   useEffect(() => {
     const courtLayer = new GraphicsLayer({ minScale: 20_000 });
@@ -140,6 +144,13 @@ export function CourtMap({ parks, courts, selection, onSelect, rightPanelWidth, 
       ui: { components: [] },
       popupEnabled: false,
     });
+    let destroyed = false;
+    view.when().catch((err: unknown) => !destroyed && setLoadError(err ?? new Error("Map failed to load")));
+    // Phones drop the WebGL context when the page is backgrounded; without this the map stays blank.
+    const contextLost = when(
+      () => view.fatalError,
+      () => view.tryFatalErrorRecovery(),
+    );
 
     // Keep the map's center clear of the floating panels.
     const fitPadding = () => {
@@ -179,6 +190,8 @@ export function CourtMap({ parks, courts, selection, onSelect, rightPanelWidth, 
     layersRef.current = { parks: parkLayer, pins: pinLayer, courts: courtLayer, me: meLayer };
     fitPaddingRef.current = fitPadding;
     return () => {
+      destroyed = true;
+      contextLost.remove();
       click.remove();
       hover.remove();
       window.removeEventListener("resize", fitPadding);

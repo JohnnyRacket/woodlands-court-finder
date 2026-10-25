@@ -20,7 +20,7 @@ export const parkEvents = sqliteTable(
     tags: text("tags", { mode: "json" }).$type<string[]>().notNull(),
     url: text("url").notNull(),
   },
-  (table) => [index("park_events_park_date").on(table.parkId, table.date)],
+  (table) => [index("park_events_date").on(table.date)],
 );
 
 export type ParkEvent = typeof parkEvents.$inferSelect;

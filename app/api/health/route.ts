@@ -1,7 +1,10 @@
+import { connection } from "next/server";
 import { getFreshness } from "@/lib/queries/freshness";
 
 // For container health checks: 200 when the database opens, with data freshness.
 export async function GET() {
+  // SQLite reads are synchronous, so without this the build would prerender a snapshot.
+  await connection();
   try {
     const freshness = getFreshness();
     return Response.json({

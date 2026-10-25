@@ -7,7 +7,7 @@ import { weatherHours } from "@/lib/sources/weather/table";
 import { sunTimes } from "@/lib/sun";
 import { FIRST_HOUR, LAST_HOUR } from "@/lib/time";
 import { getDayConditions } from "./conditions";
-import { getCourtStatuses, type CourtStatus } from "./court-status";
+import { courtStatusesForDay, type CourtStatus } from "./court-status";
 
 export interface CourtHour {
   hour: number;
@@ -42,9 +42,10 @@ export function getCourtDay(courtId: string, date: string, now: Date, db: Db = g
   );
 
   const conditions = getDayConditions(date, db);
+  const statusesAt = courtStatusesForDay(date, now, db);
 
   for (let hour = FIRST_HOUR; hour <= LAST_HOUR; hour++) {
-    const status = getCourtStatuses(date, hour, now, db).find((c) => c.id === courtId);
+    const status = statusesAt(hour).find((c) => c.id === courtId);
     if (!status) return null;
     court = status;
     hours.push({

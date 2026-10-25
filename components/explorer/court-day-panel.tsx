@@ -3,6 +3,7 @@
 import { ArrowLeft, CloudRain, Lightbulb, LightbulbOff, Lock, MoonStar } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { fetchJson } from "@/lib/fetch-json";
 import { formatClock, formatHour, formatMinutes } from "@/lib/format";
 import { LABEL_META } from "@/lib/label-meta";
 import type { CourtDay } from "@/lib/queries/court-day";
@@ -23,21 +24,25 @@ interface CourtDayPanelProps {
 /** One court's 7 a.m.–11 p.m. day, shown beside the park's court list. */
 export function CourtDayPanel({ courtId, date, hour, now, onPickHour, onClose, className }: CourtDayPanelProps) {
   const [day, setDay] = useState<CourtDay | null>(null);
-  const [failure, setFailure] = useState<{ key: string; message: string } | null>(null);
+  const [failedKey, setFailedKey] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
   const key = `${courtId}/${date}`;
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`/api/courts/${courtId}/day?date=${date}`, { signal: controller.signal })
-      .then((response) => (response.ok ? response.json() : Promise.reject(new Error(`HTTP ${response.status}`))))
-      .then((next: CourtDay) => setDay(next))
-      .catch((err: Error) => err.name !== "AbortError" && setFailure({ key: `${courtId}/${date}`, message: err.message }));
+    fetchJson<CourtDay>(`/api/courts/${encodeURIComponent(courtId)}/day?date=${date}`, controller.signal)
+      .then((next) => setDay(next))
+      .catch(() => !controller.signal.aborted && setFailedKey(`${courtId}/${date}`));
     return () => controller.abort();
-  }, [courtId, date]);
+  }, [courtId, date, attempt]);
 
   const current = day?.court.id === courtId && day.date === date ? day : null;
   // Only the court and date on screen; an earlier court's failure shouldn't show here.
-  const error = !current && failure?.key === key ? failure.message : null;
+  const failed = !current && failedKey === key;
+  const retry = () => {
+    setFailedKey(null);
+    setAttempt((n) => n + 1);
+  };
   const playable = current?.hours.filter((h) => h.label.publicCanJoin && !h.dark && !(date === now.date && h.hour < now.hour)).length;
 
   return (
@@ -74,11 +79,18 @@ export function CourtDayPanel({ courtId, date, hour, now, onPickHour, onClose, c
             </p>
           </div>
         ) : (
-          <Skeleton className="h-10 flex-1 rounded-xl bg-muted" />
+          !failed && <Skeleton className="h-10 flex-1 rounded-xl bg-muted" />
         )}
       </header>
 
-      {error && <p className="mx-4 rounded-2xl bg-destructive/10 px-4 py-2.5 text-sm text-destructive">Couldn&apos;t load this court ({error}).</p>}
+      {failed && (
+        <div role="alert" className="mx-4 flex items-center gap-3 rounded-2xl bg-destructive/10 px-4 py-2.5 text-sm text-destructive">
+          <p className="flex-1">Couldn&apos;t load this court&apos;s day.</p>
+          <button type="button" onClick={retry} className="shrink-0 font-medium hover:underline">
+            Try again
+          </button>
+        </div>
+      )}
 
       <ol key={current ? "day" : "loading"} className={cn("panel-scroll flex min-h-0 flex-col gap-0.5 px-2", current && "animate-in fade-in duration-200")}>
         {current
@@ -136,7 +148,7 @@ export function CourtDayPanel({ courtId, date, hour, now, onPickHour, onClose, c
                 </li>
               );
             })
-          : Array.from({ length: 10 }, (_, i) => <Skeleton key={i} className="mx-2 my-1 h-9 rounded-xl bg-muted" />)}
+          : !failed && Array.from({ length: 10 }, (_, i) => <Skeleton key={i} className="mx-2 my-1 h-9 rounded-xl bg-muted" />)}
       </ol>
     </section>
   );

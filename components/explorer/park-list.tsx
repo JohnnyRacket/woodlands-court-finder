@@ -16,10 +16,12 @@ interface ParkListProps {
   /** Sort-by-distance state; distances are set only while sorting by distance. */
   nearest: { on: boolean; locating: boolean; error: string | null; distances: Map<string, number> | null };
   onToggleNearest: () => void;
+  /** Shown when there are no parks to list. */
+  emptyText: string;
   className?: string;
 }
 
-export function ParkList({ parks, selectedParkId, onSelectPark, nearest, onToggleNearest, className }: ParkListProps) {
+export function ParkList({ parks, selectedParkId, onSelectPark, nearest, onToggleNearest, emptyText, className }: ParkListProps) {
   const joinableParks = parks.filter((park) => park.joinable > 0).length;
 
   return (
@@ -100,7 +102,7 @@ export function ParkList({ parks, selectedParkId, onSelectPark, nearest, onToggl
             </button>
           </li>
         ))}
-        {parks.length === 0 && <li className="px-3 py-8 text-center text-sm text-muted-foreground">No courts match these filters.</li>}
+        {parks.length === 0 && <li className="px-3 py-8 text-center text-sm text-muted-foreground">{emptyText}</li>}
       </ul>
     </section>
   );

@@ -3,18 +3,13 @@ import { getDb } from "@/lib/db/client";
 import { getFreshness } from "@/lib/queries/freshness";
 import { sources } from "@/lib/sources";
 import type { SourceModule, SyncProfile } from "@/lib/sources/types";
+import { syncProfile } from "@/lib/sync-profile";
 import { runSource, runSources } from "@/lib/sync";
 
 const globalForScheduler = globalThis as unknown as { schedulerStarted?: boolean };
 
 /** In gentle mode, a boot-time run is skipped when the last success is newer than this. */
 const GENTLE_BOOT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
-
-export function syncProfile(): SyncProfile {
-  const explicit = process.env.SYNC_PROFILE;
-  if (explicit === "live" || explicit === "gentle") return explicit;
-  return process.env.NODE_ENV === "production" ? "live" : "gentle";
-}
 
 /** Sources to run on boot: all of them when live; only missing or day-old data when gentle. */
 export function bootSources(

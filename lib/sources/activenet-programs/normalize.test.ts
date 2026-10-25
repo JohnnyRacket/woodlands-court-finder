@@ -9,6 +9,7 @@ import {
   parseExceptionDates,
   parseWeeksOfMonth,
   programLocation,
+  titleWeekdayMismatch,
   toProgramEvents,
   type MeetingDates,
 } from "./normalize";
@@ -108,6 +109,25 @@ describe("parsers", () => {
   it("reads weeks of month", () => {
     expect(parseWeeksOfMonth("")).toBeNull();
     expect(parseWeeksOfMonth("1st, 2nd, 3rd week of every month")).toEqual([1, 2, 3]);
+  });
+});
+
+describe("titleWeekdayMismatch", () => {
+  it("catches the real 'Drop In - Saturdays' program that meets Mon–Thu", () => {
+    const program = programs.find((p) => p.name.includes("Drop In - Saturdays"))!;
+    expect(titleWeekdayMismatch(program.name, meetingFor(program.id))).toBe("title names Sat but it's scheduled Mon, Tue, Wed, Thu");
+  });
+
+  it("stays quiet when the title agrees or names no day", () => {
+    const beginner = programs.find((p) => p.name.includes("Beginner Pickleball - Tue"))!;
+    expect(titleWeekdayMismatch(beginner.name, meetingFor(beginner.id))).toBeNull();
+    expect(titleWeekdayMismatch("Tuesday Clinic", meetingForWednesday())).toBe("title names Tue but it's scheduled Wed");
+    expect(titleWeekdayMismatch("Evening Clinic", meetingForWednesday())).toBeNull();
+  });
+
+  it("finds exactly one mismatch across the fixtures", () => {
+    const flagged = programs.filter((p) => titleWeekdayMismatch(p.name, meetingFor(p.id)));
+    expect(flagged.map((p) => p.id)).toEqual([74372]);
   });
 });
 

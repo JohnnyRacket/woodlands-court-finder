@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { bootSources, syncProfile } from "./scheduler";
+import { bootSources } from "./scheduler";
+import { syncProfile } from "./sync-profile";
 import type { SourceModule } from "./sources/types";
 
 const source = (name: string): SourceModule => ({ name, schedule: { live: "* * * * *", gentle: "* * * * *" }, run: async () => ({ rows: 0 }) });

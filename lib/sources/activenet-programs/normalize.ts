@@ -115,6 +115,24 @@ export function expandMeetings(meeting: MeetingDates, window: string[]) {
   return [...unique.values()].sort((a, b) => a.date.localeCompare(b.date) || a.startMin - b.startMin);
 }
 
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+/**
+ * A program whose title names a weekday it never meets on ("Drop In - Saturdays" scheduled Mon–Thu).
+ * Only full day names count; "M/W" style abbreviations are too ambiguous to judge.
+ */
+export function titleWeekdayMismatch(name: string, meeting: MeetingDates): string | null {
+  const named = DAY_NAMES.flatMap((day, i) => (new RegExp(`\\b${day}s?\\b`, "i").test(name) ? [i] : []));
+  if (named.length === 0 || meeting.no_meeting_dates) return null;
+  const scheduled = new Set([
+    ...(meeting.activity_patterns ?? []).flatMap((p) => p.pattern_dates.flatMap((d) => parseWeekdays(d.weekdays))),
+    ...(meeting.additional_dates ?? []).map((d) => weekdayOf(d.meeting_date)),
+  ]);
+  if (scheduled.size === 0 || named.every((day) => scheduled.has(day))) return null;
+  const list = (days: number[]) => days.map((day) => DAY_NAMES[day].slice(0, 3)).join(", ");
+  return `title names ${list(named)} but it's scheduled ${list([...scheduled].sort((a, b) => a - b))}`;
+}
+
 export function toProgramEvents(
   program: Program,
   location: NonNullable<ReturnType<typeof programLocation>>,

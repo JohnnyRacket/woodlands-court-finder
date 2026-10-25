@@ -9,6 +9,7 @@ import {
   meetingDatesSchema,
   programLocation,
   SOURCE,
+  titleWeekdayMismatch,
   toProgramEvents,
   type Program,
 } from "./normalize";
@@ -62,6 +63,7 @@ export const activenetProgramsSource: SourceModule = {
     const window = dateRange(today, EVENT_WINDOW_DAYS);
     const events: ScheduleEvent[] = [];
     const unreadable: string[] = [];
+    const mismatched: string[] = [];
     let noCourt = 0;
 
     log(`${found.size} programs listed; fetching schedules`);
@@ -80,6 +82,8 @@ export const activenetProgramsSource: SourceModule = {
           meetingDatesSchema,
         );
         events.push(...toProgramEvents(program, location, meeting, window));
+        const mismatch = titleWeekdayMismatch(program.name, meeting);
+        if (mismatch) mismatched.push(`"${program.name.trim()}" (${program.id}): ${mismatch}`);
       } catch (err) {
         unreadable.push(`${program.name} (${program.id}): ${err instanceof Error ? err.message : String(err)}`);
       }
@@ -88,6 +92,7 @@ export const activenetProgramsSource: SourceModule = {
     const notes = [
       `${found.size} programs found; ${noCourt} skipped with no park court as location (TBD, various, gym, …)`,
       ...unreadable.map((line) => `Skipped unreadable schedule: ${line}`),
+      ...mismatched.map((line) => `Program title doesn't match its schedule: ${line}`),
     ];
     for (const note of notes) log(note);
     if (unreadable.length > 0 && unreadable.length >= found.size - noCourt) {

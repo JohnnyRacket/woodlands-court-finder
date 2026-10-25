@@ -4,7 +4,8 @@ import { parseGis } from "./fetch";
 import gisFixture from "./__fixtures__/gis-sports-courts.json";
 import tennisFixture from "./__fixtures__/activenet-tennis.json";
 import pickleballFixture from "./__fixtures__/activenet-pickleball.json";
-import { buildReference, gisParkKey, parseActiveNetName, type ActiveNetCourt } from "./normalize";
+import { parkKey } from "@/lib/park-key";
+import { buildReference, parseActiveNetName, type ActiveNetCourt } from "./normalize";
 
 const activenetCourts = (json: unknown, group: ActiveNetCourt["group"]): ActiveNetCourt[] =>
   availabilitySchema
@@ -27,8 +28,8 @@ describe("name parsing", () => {
   });
 
   it("matches GIS park names to the same keys", () => {
-    expect(gisParkKey("COPPER SAGE PARK")).toBe("coppersage");
-    expect(gisParkKey("GROGAN'S POINT PARK")).toBe("groganspoint");
+    expect(parkKey("COPPER SAGE PARK")).toBe("coppersage");
+    expect(parkKey("GROGAN'S POINT PARK")).toBe("groganspoint");
   });
 });
 

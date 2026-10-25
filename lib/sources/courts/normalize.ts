@@ -1,3 +1,4 @@
+import { parkKey } from "@/lib/park-key";
 import { slugify } from "@/lib/slug";
 
 // Joins Township GIS court outlines with ActiveNet's reservable courts.
@@ -47,9 +48,6 @@ const GIS_KINDS: Record<string, CourtKind> = {
 
 const compact = (text: string) => text.toLowerCase().replace(/[^a-z0-9]/g, "");
 
-/** "GROGAN'S POINT PARK" → "groganspoint" */
-export const gisParkKey = (parkName: string) => compact(parkName.replace(/\s+park$/i, ""));
-
 /** "Timarron Tennis Court #1" → { parkKey: "timarron", number: 1 } */
 export function parseActiveNetName(name: string): { parkKey: string; number: number } | null {
   const match = name.match(/^(.*?)\s*#?(\d+)$/);
@@ -74,7 +72,7 @@ export function buildReference(gis: GisCourt[], activenet: ActiveNetCourt[]) {
   // Parks come from GIS, since that's where locations live.
   const gisByPark = new Map<string, GisCourt[]>();
   for (const court of gis) {
-    const key = gisParkKey(court.parkName);
+    const key = parkKey(court.parkName);
     gisByPark.set(key, [...(gisByPark.get(key) ?? []), court]);
   }
   const parks = new Map<string, ParkRow>();
@@ -95,7 +93,7 @@ export function buildReference(gis: GisCourt[], activenet: ActiveNetCourt[]) {
       notes.push(`GIS court ${court.id} has unknown type "${court.type}"; skipped`);
       continue;
     }
-    const key = `${poolOf(kind)}|${gisParkKey(court.parkName)}|${court.courtNumber}`;
+    const key = `${poolOf(kind)}|${parkKey(court.parkName)}|${court.courtNumber}`;
     if (unmatchedGis.has(key)) notes.push(`Two GIS courts claim ${titleCase(court.parkName)} ${poolOf(kind)} #${court.courtNumber}; using the first`);
     else unmatchedGis.set(key, court);
   }
@@ -138,7 +136,7 @@ export function buildReference(gis: GisCourt[], activenet: ActiveNetCourt[]) {
 
   const notReservable = [...unmatchedGis.values()].sort((a, b) => a.id.localeCompare(b.id));
   for (const gisCourt of notReservable) {
-    const park = parks.get(gisParkKey(gisCourt.parkName))!;
+    const park = parks.get(parkKey(gisCourt.parkName))!;
     courts.push(toRow(park, GIS_KINDS[gisCourt.type], gisCourt.courtNumber, gisCourt));
   }
   if (notReservable.length) {

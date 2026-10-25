@@ -10,9 +10,16 @@ const LANDING = `${SITE}/reservation/landing/quick?locale=en-US&groupId=20`;
 export const FACILITY_GROUPS = { tennis: 20, pickleball: 25 } as const;
 
 const envelopeSchema = z.object({
-  headers: z.object({ response_code: z.string(), response_message: z.string() }),
+  headers: z.object({
+    response_code: z.string(),
+    response_message: z.string(),
+    page_info: z.object({ total_page: z.number() }).optional(),
+  }),
   body: z.unknown(),
 });
+
+/** The largest page ActiveNet returns, whatever is requested. */
+const PAGE_SIZE = 20;
 
 export class ActiveNetClient {
   private session?: { cookie: string; csrf: string };
@@ -35,8 +42,27 @@ export class ActiveNetClient {
     method: "GET" | "POST",
     path: string,
     schema: T,
-    options: { body?: unknown; headers?: Record<string, string> } = {},
+    options: { body?: unknown; page?: number } = {},
   ): Promise<z.infer<T>> {
+    return (await this.send(method, path, schema, options)).body;
+  }
+
+  /** Fetches every page of a paged list endpoint and returns the bodies in order. */
+  async requestAllPages<T extends z.ZodType>(path: string, schema: T, body: unknown): Promise<z.infer<T>[]> {
+    const bodies: z.infer<T>[] = [];
+    for (let page = 1; ; page++) {
+      const result = await this.send("POST", path, schema, { body, page });
+      bodies.push(result.body);
+      if (page >= (result.totalPages ?? 1)) return bodies;
+    }
+  }
+
+  private async send<T extends z.ZodType>(
+    method: "GET" | "POST",
+    path: string,
+    schema: T,
+    options: { body?: unknown; page?: number },
+  ): Promise<{ body: z.infer<T>; totalPages?: number }> {
     const { cookie, csrf } = await this.getSession();
     const url = `${SITE}/rest${path}${path.includes("?") ? "&" : "?"}locale=en-US`;
     const response = await politeFetch(url, {
@@ -46,7 +72,9 @@ export class ActiveNetClient {
         "Content-Type": "application/json",
         "X-CSRF-Token": csrf,
         Cookie: cookie,
-        ...options.headers,
+        ...(options.page && {
+          page_info: JSON.stringify({ order_by: "", page_number: options.page, total_records_per_page: PAGE_SIZE }),
+        }),
       },
       body: options.body === undefined ? undefined : JSON.stringify(options.body),
     });
@@ -54,7 +82,7 @@ export class ActiveNetClient {
     if (headers.response_code !== "0000") {
       throw new Error(`ActiveNet ${path}: ${headers.response_code} ${headers.response_message}`);
     }
-    return schema.parse(body);
+    return { body: schema.parse(body), totalPages: headers.page_info?.total_page };
   }
 }
 

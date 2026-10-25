@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text, real } from "drizzle-orm/sqlite-core";
+import { index, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 // Shared tables. parks and courts are reference data written only by the `courts`
 // source; any source or query may read them. Source-owned tables live in
@@ -27,6 +27,32 @@ export const courts = sqliteTable("courts", {
   /** false once a court disappears from both upstreams; kept so its history survives */
   active: integer("active", { mode: "boolean" }).notNull().default(true),
 });
+
+// Scheduled uses of courts (drop-in, programs, tournaments). Shared by several sources;
+// each source replaces only rows where source = its own name (see lib/db/events.ts).
+// Times are Chicago-local minutes from midnight, matching slots' date + hour keys.
+export const scheduleEvents = sqliteTable(
+  "schedule_events",
+  {
+    id: text("id").primaryKey(),
+    source: text("source").notNull(),
+    kind: text("kind", { enum: ["drop_in", "program", "tournament"] }).notNull(),
+    title: text("title").notNull(),
+    parkId: text("park_id")
+      .notNull()
+      .references(() => parks.id),
+    /** Which courts at the park it uses; null = any */
+    courtKind: text("court_kind", { enum: ["tennis", "pickleball"] }),
+    date: text("date").notNull(),
+    startMin: integer("start_min").notNull(),
+    endMin: integer("end_min").notNull(),
+    publicCanJoin: integer("public_can_join", { mode: "boolean" }).notNull(),
+    url: text("url"),
+  },
+  (table) => [index("schedule_events_park_date").on(table.parkId, table.date)],
+);
+
+export type ScheduleEvent = typeof scheduleEvents.$inferInsert;
 
 export const syncRuns = sqliteTable("sync_runs", {
   id: integer("id").primaryKey({ autoIncrement: true }),

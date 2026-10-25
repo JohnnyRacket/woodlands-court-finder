@@ -83,7 +83,7 @@ flowchart LR
 | Source | Data | Live schedule | Gentle schedule (dev) |
 |---|---|---|---|
 | `courts` | Township GIS `SPORTS_COURTS` + ActiveNet court list → parks, courts | daily | weekly |
-| `activenet-slots` | Hourly reservation status for each sport's booking window (tennis 3 days, pickleball 2; 5 requests) | every 15 min, 7 a.m.–11 p.m., plus 12:01 a.m. | every 3 h, plus 12:01 a.m. |
+| `activenet-slots` | Hourly reservation status for each sport's booking window (tennis 3 days, pickleball 2; 5 requests) | every 15 min (:10, :25, :40, :55), 5 a.m.–11 p.m., plus 12:01 a.m. | every 3 h, plus 12:01 a.m. |
 | `weather` | NWS hourly forecast | hourly | every 6 h |
 | `weather-details` | NWS gridpoint: gusts, chance of thunder, heat index, WBGT, rain amounts | hourly | every 6 h |
 | `rainfall` | Open-Meteo hourly rain that has fallen (a model estimate; nearby airports don't report hourly rain). Free for non-commercial use | hourly | every 6 h |
@@ -97,7 +97,7 @@ flowchart LR
 
 Nothing that has happened is deleted, so the database builds up a record for future analysis (for example predicting how busy a court will be):
 
-- `slot_changes`: every reservation status change seen between syncs, with when it was seen, so you can tell how far ahead hours get booked and how often they're released. `slots` keeps the last state of every past hour. ActiveNet reports an hour as taken once it can no longer be booked (an hour before it starts), so the sync ignores readings within 5 minutes of that cutoff and keeps the last status seen before it; the map shows those hours with their last known status, marked as too late to book. Changes logged on Oct 25, 2026 still include that cutoff as fake bookings.
+- `slot_changes`: every reservation status change seen between syncs, with when it was seen, so you can tell how far ahead hours get booked and how often they're released. `slots` keeps the last state of every past hour. ActiveNet reports an hour as taken once it can no longer be booked (an hour before it starts), so the sync ignores readings ActiveNet answered at or after that cutoff and keeps the last status seen before it (normally the :55 sync, 5 minutes before); the map shows those hours with their last known status, marked as too late to book. Changes logged on Oct 25, 2026 still include that cutoff as fake bookings.
 - `weather_hours`, `weather_details`: the last forecast made for each hour; `rain_hours`: estimated rain that fell.
 - `weather_alerts`, `township_alerts`: alerts with first/last seen times and `active`, so you can see how long a closure lasted.
 - `schedule_events`, `park_events`: past drop-ins, programs, tournaments and Township events.

@@ -16,11 +16,14 @@ describe("booking window", () => {
     expect(bookingClosed("2026-10-26", 7, at219)).toBe(false);
   });
 
-  it("doesn't trust a reading taken right at the cutoff", () => {
-    // Syncs run at :00, :15, :30, :45; at 2:00 ActiveNet already reports 3 PM taken.
+  it("trusts readings of 3 PM answered before the 2:00 cutoff, and none from 2:00 on", () => {
+    expect(readWhileBookable("2026-10-25", 15, "2026-10-25T18:55:20.000Z")).toBe(true);
+    expect(readWhileBookable("2026-10-25", 15, "2026-10-25T18:59:59.000Z")).toBe(true);
     expect(readWhileBookable("2026-10-25", 15, "2026-10-25T19:00:00.000Z")).toBe(false);
-    expect(readWhileBookable("2026-10-25", 15, "2026-10-25T18:45:00.000Z")).toBe(true);
-    expect(readWhileBookable("2026-10-25", 16, "2026-10-25T19:00:00.000Z")).toBe(true);
+    expect(readWhileBookable("2026-10-25", 15, "2026-10-25T19:00:05.000Z")).toBe(false);
+    expect(readWhileBookable("2026-10-25", 16, "2026-10-25T19:00:05.000Z")).toBe(true);
+    expect(readWhileBookable("2026-10-24", 22, "2026-10-25T05:01:00.000Z")).toBe(false); // read the next day
+    expect(readWhileBookable("2026-10-26", 7, "2026-10-25T23:30:00.000Z")).toBe(true);
   });
 
   it("books tennis courts with pickleball lines as tennis", () => {

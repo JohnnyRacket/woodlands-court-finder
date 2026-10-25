@@ -12,8 +12,10 @@ export const activenetSlotsSource: SourceModule = {
   name: "activenet-slots",
   title: "Court reservations",
   origin: "Township ActiveNet",
-  // every 15 min / every 3 h, plus 12:01 a.m. to pick up the day that opens at midnight
-  schedule: { live: ["*/15 7-22 * * *", "1 0 * * *"], gentle: ["0 8-20/3 * * *", "1 0 * * *"] },
+  // every 15 min / every 3 h, plus 12:01 a.m. to pick up the day that opens at midnight.
+  // Live runs at :10, :25, :40, :55 from 5 a.m.: booking for an hour closes at the top of the hour
+  // before, so the :55 run is the last reading of the hour after next (1:55 for 3 p.m., 5:55 for 7 a.m.).
+  schedule: { live: ["10-55/15 5-22 * * *", "1 0 * * *"], gentle: ["0 8-20/3 * * *", "1 0 * * *"] },
 
   async run({ db, now, dryRun, log }) {
     const known = db
@@ -26,7 +28,6 @@ export const activenetSlotsSource: SourceModule = {
 
     const today = chicagoDate(now);
     const dates = allBookingDates(today);
-    const fetchedAt = now.toISOString();
     const client = new ActiveNetClient();
     const rows: SlotRow[] = [];
     const notes: string[] = [];
@@ -34,7 +35,9 @@ export const activenetSlotsSource: SourceModule = {
     // Only within each group's window: ActiveNet marks hours past it unavailable, which would read as booked.
     for (const [pool, groupId] of Object.entries(FACILITY_GROUPS) as [Pool, number][]) {
       for (const date of bookingDates(pool, today)) {
-        const result = toSlotRows(await fetchAvailability(client, groupId, date), date, courtIdByActiveNetId, fetchedAt);
+        const availability = await fetchAvailability(client, groupId, date);
+        // Stamped when ActiveNet answered, not when the run started: readWhileBookable judges each reading by it.
+        const result = toSlotRows(availability, date, courtIdByActiveNetId, new Date().toISOString());
         rows.push(...result.rows);
         if (result.unknownCourts.length) {
           notes.push(`${date}: ActiveNet returned courts not in the courts table: ${result.unknownCourts.join(", ")}`);

@@ -18,15 +18,12 @@ export function bookingClosed(date: string, hour: number, now: Date): boolean {
   return hour * 60 < chicagoMinuteOfDay(now) + BOOKING_LEAD_MINUTES;
 }
 
-/**
- * ActiveNet answers a few seconds after a sync starts, and by then an hour exactly the lead
- * time away already reads as taken. Readings this close to the cutoff aren't trusted.
- */
-const READING_MARGIN_MINUTES = 5;
-
-/** ActiveNet's reading of this hour, taken at `fetchedAt`, came while it could still be booked. */
+/** ActiveNet answered at `fetchedAt`, before booking for this hour closed (to the second). */
 export function readWhileBookable(date: string, hour: number, fetchedAt: string): boolean {
-  return !bookingClosed(date, hour, new Date(Date.parse(fetchedAt) + READING_MARGIN_MINUTES * 60_000));
+  const at = new Date(fetchedAt);
+  const today = chicagoDate(at);
+  if (date !== today) return date > today;
+  return chicagoMinuteOfDay(at) * 60 + at.getUTCSeconds() < (hour * 60 - BOOKING_LEAD_MINUTES) * 60;
 }
 
 export type Pool = "tennis" | "pickleball";

@@ -1,4 +1,5 @@
 import cron from "node-cron";
+import { previousRun } from "@/lib/cron-text";
 import { getDb } from "@/lib/db/client";
 import { getFreshness } from "@/lib/queries/freshness";
 import { sources } from "@/lib/sources";
@@ -11,18 +12,25 @@ const globalForScheduler = globalThis as unknown as { schedulerStarted?: boolean
 /** In gentle mode, a boot-time run is skipped when the last success is newer than this. */
 const GENTLE_BOOT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
-/** Sources to run on boot: all of them when live; only missing or day-old data when gentle. */
+/**
+ * Sources to run on boot, so restarts and redeploys don't re-fetch fresh data.
+ * live: missing data, or a scheduled run was missed while the app was down.
+ * gentle: missing or day-old data.
+ */
 export function bootSources(
   list: SourceModule[],
   profile: SyncProfile,
   now: Date,
   freshness: { source: string; lastSuccessAt: string | null }[],
 ): SourceModule[] {
-  if (profile === "live") return list;
   const lastSuccess = new Map(freshness.map((f) => [f.source, f.lastSuccessAt]));
   return list.filter((source) => {
     const at = lastSuccess.get(source.name);
-    return !at || now.getTime() - new Date(at).getTime() > GENTLE_BOOT_MAX_AGE_MS;
+    if (!at) return true;
+    const successAt = new Date(at).getTime();
+    if (profile === "gentle") return now.getTime() - successAt > GENTLE_BOOT_MAX_AGE_MS;
+    const due = Math.max(...[source.schedule.live].flat().map((c) => previousRun(c, now)?.getTime() ?? 0));
+    return successAt < due;
   });
 }
 

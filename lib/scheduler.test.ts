@@ -12,8 +12,15 @@ const freshness = [
 ];
 
 describe("bootSources", () => {
-  it("runs everything on boot in live mode", () => {
-    expect(bootSources(list, "live", now, freshness).map((s) => s.name)).toEqual(["fresh", "stale", "never"]);
+  it("in live mode, only re-fetches data that is missing or missed its last scheduled run", () => {
+    const hourly = (name: string): SourceModule => ({ ...source(name), schedule: { live: "0 * * * *", gentle: "0 * * * *" } });
+    const hourlyList = [hourly("ran-since-slot"), hourly("missed-slot"), hourly("never")];
+    const at = new Date("2026-10-25T12:30:00Z");
+    const seen = [
+      { source: "ran-since-slot", lastSuccessAt: "2026-10-25T12:05:00Z" },
+      { source: "missed-slot", lastSuccessAt: "2026-10-25T11:30:00Z" },
+    ];
+    expect(bootSources(hourlyList, "live", at, seen).map((s) => s.name)).toEqual(["missed-slot", "never"]);
   });
 
   it("in gentle mode, only re-fetches data that is missing or over a day old", () => {

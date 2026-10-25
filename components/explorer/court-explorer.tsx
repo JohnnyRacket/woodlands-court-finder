@@ -1,12 +1,11 @@
 "use client";
 
-import { ChevronUp, LoaderCircle, LocateFixed, Sparkles, Trees } from "lucide-react";
+import { LoaderCircle, LocateFixed, Sparkles } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { bookingDates } from "@/lib/booking-window";
 import { assistantEnabled } from "@/lib/flags";
-import { formatDay, formatHour } from "@/lib/format";
 import { distanceMiles, type LatLng } from "@/lib/geo";
 import type { ExplorerData } from "@/lib/queries/explorer";
 import { usePresence } from "@/lib/use-presence";
@@ -20,6 +19,7 @@ import { ParkDetail } from "./park-detail";
 import { ParkList } from "./park-list";
 import { filterCourts, SPORTS, summarizeParks, type Filters } from "./park-summary";
 import { StatusBar } from "./status-bar";
+import { TimeScrubber } from "./time-scrubber";
 import { WeatherPill } from "./weather-pill";
 
 // The ArcGIS SDK needs the browser, so the map never renders on the server.
@@ -31,11 +31,6 @@ const CourtMap = dynamic(() => import("./court-map").then((m) => m.CourtMap), {
 // Side panels ease in from the right (from below on phones) and back out the same way.
 const PANEL_IN = "animate-in fade-in duration-200 ease-out max-md:slide-in-from-bottom-4 md:slide-in-from-right-4";
 const PANEL_OUT = "pointer-events-none animate-out fade-out duration-200 ease-in fill-mode-forwards max-md:slide-out-to-bottom-4 md:slide-out-to-right-4";
-
-function dayLabel(dates: string[], date: string) {
-  const i = dates.indexOf(date);
-  return i === 0 ? "Today" : i === 1 ? "Tomorrow" : formatDay(date).split(", ")[0];
-}
 
 export function CourtExplorer() {
   const [time, setTime] = useState<{ date: string; hour: number } | null>(null);
@@ -55,7 +50,8 @@ export function CourtExplorer() {
     setDayCourtId(next.courtId);
   };
   const [assistantOpen, setAssistantOpen] = useState(false);
-  const [sheetCollapsed, setSheetCollapsed] = useState(false);
+  // Phones open on the map with the time dial; this only affects phone layouts.
+  const [sheetCollapsed, setSheetCollapsed] = useState(true);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -175,26 +171,26 @@ export function CourtExplorer() {
         )}
       </div>
 
-      {sheetCollapsed && !detailOpen && !assistantOpen && (
-        <button
-          type="button"
-          onClick={() => setSheetCollapsed(false)}
-          aria-expanded={false}
-          className="glass-panel absolute inset-x-3 bottom-7 flex animate-in items-center gap-3 p-3 text-left duration-200 fade-in slide-in-from-bottom-4 md:hidden"
-        >
-          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary text-brand-mint shadow-sm">
-            <Trees className="size-4" />
-          </span>
-          <span className="min-w-0 flex-1 leading-tight">
-            <span className="block text-sm font-semibold tracking-tight text-primary">Woodlands Court Finder</span>
-            <span className="block truncate text-xs text-muted-foreground">
-              {data
-                ? `${dayLabel(data.dates, data.date)} at ${formatHour(data.hour)} · ${parks.filter((park) => park.joinable > 0).length} of ${parks.length} parks with a court`
-                : "Loading courts…"}
-            </span>
-          </span>
-          <ChevronUp className="size-4 shrink-0 text-muted-foreground" />
-        </button>
+      {sheetCollapsed && !detailOpen && !assistantOpen && !data && (
+        <div className="glass-panel absolute inset-x-3 bottom-7 flex flex-col gap-3 px-5 pt-4 pb-3 md:hidden">
+          <Skeleton className="h-4 w-32 rounded-full bg-muted" />
+          <Skeleton className="h-3 w-44 rounded-full bg-muted" />
+          <Skeleton className="h-9 rounded-xl bg-muted" />
+        </div>
+      )}
+      {sheetCollapsed && !detailOpen && !assistantOpen && data && (
+        <TimeScrubber
+          className="absolute inset-x-3 bottom-7 animate-in duration-200 fade-in slide-in-from-bottom-4 md:hidden"
+          dates={data.dates}
+          hours={data.hours}
+          date={time?.date ?? data.date}
+          hour={time?.hour ?? data.hour}
+          now={data.now}
+          onChange={(date, hour) => setTime({ date, hour })}
+          summary={`${parks.filter((park) => park.joinable > 0).length} of ${parks.length} parks with a court`}
+          loading={loading}
+          onExpand={() => setSheetCollapsed(false)}
+        />
       )}
 
       {data && data.alerts.length > 0 && (

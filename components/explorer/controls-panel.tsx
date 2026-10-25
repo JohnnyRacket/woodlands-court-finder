@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Trees } from "lucide-react";
+import { Check, ChevronDown, Trees } from "lucide-react";
 import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -26,10 +26,12 @@ interface ControlsPanelProps {
   bookableSports: Sport[];
   onTimeChange: (date: string, hour: number) => void;
   onFiltersChange: (change: Partial<Filters>) => void;
+  /** Collapses the phone bottom sheet so the map is unobstructed. */
+  onCollapse?: () => void;
   className?: string;
 }
 
-export function ControlsPanel({ dates, hours, date, hour, now, filters, bookableSports, onTimeChange, onFiltersChange, className }: ControlsPanelProps) {
+export function ControlsPanel({ dates, hours, date, hour, now, filters, bookableSports, onTimeChange, onFiltersChange, onCollapse, className }: ControlsPanelProps) {
   const past = (h: number) => date === now?.date && h < now.hour;
   const closedSports = SPORTS.filter((sport) => !bookableSports.includes(sport));
   // Parts of the day with hours left; the selected hour's part is shown unless the user picks another.
@@ -51,10 +53,20 @@ export function ControlsPanel({ dates, hours, date, hour, now, filters, bookable
         <div className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary text-brand-mint shadow-sm">
           <Trees className="size-5" />
         </div>
-        <div className="leading-tight">
+        <div className="flex-1 leading-tight">
           <h1 className="text-base font-semibold tracking-tight text-primary">Woodlands Court Finder</h1>
           <p className="text-xs text-muted-foreground">Tennis &amp; pickleball courts</p>
         </div>
+        {onCollapse && (
+          <button
+            type="button"
+            onClick={onCollapse}
+            aria-label="Hide panel to see the map"
+            className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground transition hover:bg-accent hover:text-primary md:hidden"
+          >
+            <ChevronDown className="size-4" />
+          </button>
+        )}
       </header>
 
       <div className="flex flex-col gap-2">

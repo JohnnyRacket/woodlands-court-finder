@@ -1,11 +1,12 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
+import { ChevronUp, Sparkles, Trees } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { bookingDates } from "@/lib/booking-window";
 import { assistantEnabled } from "@/lib/flags";
+import { formatDay, formatHour } from "@/lib/format";
 import { distanceMiles, type LatLng } from "@/lib/geo";
 import type { ExplorerData } from "@/lib/queries/explorer";
 import { usePresence } from "@/lib/use-presence";
@@ -31,6 +32,11 @@ const CourtMap = dynamic(() => import("./court-map").then((m) => m.CourtMap), {
 const PANEL_IN = "animate-in fade-in duration-200 ease-out max-md:slide-in-from-bottom-4 md:slide-in-from-right-4";
 const PANEL_OUT = "pointer-events-none animate-out fade-out duration-200 ease-in fill-mode-forwards max-md:slide-out-to-bottom-4 md:slide-out-to-right-4";
 
+function dayLabel(dates: string[], date: string) {
+  const i = dates.indexOf(date);
+  return i === 0 ? "Today" : i === 1 ? "Tomorrow" : formatDay(date).split(", ")[0];
+}
+
 export function CourtExplorer() {
   const [time, setTime] = useState<{ date: string; hour: number } | null>(null);
   const [data, setData] = useState<ExplorerData | null>(null);
@@ -49,6 +55,7 @@ export function CourtExplorer() {
     setDayCourtId(next.courtId);
   };
   const [assistantOpen, setAssistantOpen] = useState(false);
+  const [sheetCollapsed, setSheetCollapsed] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -134,7 +141,7 @@ export function CourtExplorer() {
         className={cn(
           "absolute inset-x-3 bottom-7 flex max-h-[58dvh] flex-col gap-3 overflow-y-auto rounded-3xl transition-[opacity,visibility] duration-200 [scrollbar-width:none] md:pointer-events-none md:inset-y-4 md:right-auto md:bottom-8 md:left-4 md:max-h-none md:w-[23rem] md:overflow-visible md:rounded-none",
           // On phones the park or assistant sheet takes this spot, so the controls get out of the way.
-          (detailOpen || assistantOpen) && "max-md:invisible max-md:opacity-0",
+          (detailOpen || assistantOpen || sheetCollapsed) && "max-md:invisible max-md:opacity-0",
         )}
       >
         <ControlsPanel
@@ -148,6 +155,7 @@ export function CourtExplorer() {
           bookableSports={bookableSports}
           onTimeChange={(date, hour) => setTime({ date, hour })}
           onFiltersChange={(change) => setFilters((current) => ({ ...current, ...change }))}
+          onCollapse={() => setSheetCollapsed(true)}
         />
         {data ? (
           <ParkList
@@ -167,6 +175,28 @@ export function CourtExplorer() {
         )}
       </div>
 
+      {sheetCollapsed && !detailOpen && !assistantOpen && (
+        <button
+          type="button"
+          onClick={() => setSheetCollapsed(false)}
+          aria-expanded={false}
+          className="glass-panel absolute inset-x-3 bottom-7 flex animate-in items-center gap-3 p-3 text-left duration-200 fade-in slide-in-from-bottom-4 md:hidden"
+        >
+          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary text-brand-mint shadow-sm">
+            <Trees className="size-4" />
+          </span>
+          <span className="min-w-0 flex-1 leading-tight">
+            <span className="block text-sm font-semibold tracking-tight text-primary">Woodlands Court Finder</span>
+            <span className="block truncate text-xs text-muted-foreground">
+              {data
+                ? `${dayLabel(data.dates, data.date)} at ${formatHour(data.hour)} · ${parks.filter((park) => park.joinable > 0).length} of ${parks.length} parks with a court`
+                : "Loading courts…"}
+            </span>
+          </span>
+          <ChevronUp className="size-4 shrink-0 text-muted-foreground" />
+        </button>
+      )}
+
       {data && data.alerts.length > 0 && (
         <div className="pointer-events-none absolute inset-x-3 top-16 flex justify-center md:top-4 md:right-[24rem] md:left-[25.5rem]">
           <AlertsBanner className="pointer-events-auto w-fit max-w-full animate-in fade-in duration-300" alerts={data.alerts} />
@@ -184,7 +214,13 @@ export function CourtExplorer() {
               <Sparkles className="size-4 text-brand-mint" /> Ask
             </button>
           )}
-          {data && <WeatherPill className="animate-in fade-in duration-300" weather={data.weather} sunset={data.sunset} />}
+          {data && (
+            <>
+              {/* Phones have no status bar, so the pill is their way to the data status page. */}
+              <WeatherPill className="animate-in fade-in duration-300 md:hidden" weather={data.weather} sunset={data.sunset} href="/status" />
+              <WeatherPill className="animate-in fade-in duration-300 max-md:hidden" weather={data.weather} sunset={data.sunset} />
+            </>
+          )}
         </div>
         {data && !detail.value && !assistantOpen && <ConditionChips className="animate-in fade-in duration-300 max-md:hidden" conditions={data.conditions} />}
       </div>

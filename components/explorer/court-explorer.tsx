@@ -1,14 +1,16 @@
 "use client";
 
+import { Sparkles } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ExplorerData } from "@/lib/queries/explorer";
 import { cn } from "@/lib/utils";
+import { AssistantPanel } from "./assistant-panel";
 import { ControlsPanel } from "./controls-panel";
+import type { Selection } from "./court-map";
 import { ParkDetail } from "./park-detail";
 import { ParkList } from "./park-list";
-import type { Selection } from "./court-map";
 import { filterCourts, summarizeParks, type Filters } from "./park-summary";
 import { StatusBar } from "./status-bar";
 import { WeatherPill } from "./weather-pill";
@@ -27,6 +29,7 @@ export function CourtExplorer() {
   const [selection, setSelection] = useState<Selection>({ parkId: null, courtId: null });
   const selectedParkId = selection.parkId;
   const selectPark = (parkId: string | null) => setSelection({ parkId, courtId: null });
+  const [assistantOpen, setAssistantOpen] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -79,15 +82,27 @@ export function CourtExplorer() {
         )}
       </div>
 
-      {data && (
-        <WeatherPill
-          className="absolute top-4 right-4 max-md:top-3 max-md:right-3"
-          weather={data.weather}
-          sunset={data.sunset}
+      <div className="absolute top-4 right-4 flex items-center gap-2 max-md:top-3 max-md:right-3">
+        {!assistantOpen && (
+          <button
+            type="button"
+            onClick={() => setAssistantOpen(true)}
+            className="inline-flex h-10 items-center gap-2 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground shadow-[0_8px_24px_-8px_rgb(41_92_45_/_0.6)] transition hover:bg-primary/90"
+          >
+            <Sparkles className="size-4 text-brand-mint" /> Ask
+          </button>
+        )}
+        {data && <WeatherPill weather={data.weather} sunset={data.sunset} />}
+      </div>
+
+      {assistantOpen && (
+        <AssistantPanel
+          className="absolute inset-x-3 bottom-3 z-10 h-[62dvh] md:inset-x-auto md:top-20 md:right-4 md:bottom-28 md:h-auto md:w-[23rem]"
+          onClose={() => setAssistantOpen(false)}
         />
       )}
 
-      {selectedPark && data && (
+      {selectedPark && data && !assistantOpen && (
         <ParkDetail
           className="absolute inset-x-3 bottom-3 max-h-[58dvh] md:inset-x-auto md:top-20 md:right-4 md:bottom-28 md:max-h-none md:w-[23rem]"
           park={selectedPark}

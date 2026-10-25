@@ -1,65 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { openDb } from "@/lib/db/client";
-import { courts, parks, scheduleEvents } from "@/lib/db/tables";
-import { slots } from "@/lib/sources/activenet-slots/table";
+import { seedSampleDb } from "@/lib/db/test-seed";
 import { getCourtStatuses } from "./court-status";
-
-function seed() {
-  const db = openDb(":memory:");
-  db.insert(parks).values({ id: "falconwing", name: "Falconwing Park", lat: 30.2, lng: -95.5 }).run();
-  const court = (id: string, kind: "tennis" | "pickleball", activenetId: number | null, lighted: boolean | null) => ({
-    id,
-    parkId: "falconwing",
-    name: id,
-    kind,
-    lighted,
-    geometry: null,
-    gisId: null,
-    activenetId,
-  });
-  db.insert(courts)
-    .values([
-      court("pb-1", "pickleball", 1, null),
-      court("pb-2", "pickleball", 2, null),
-      court("tn-1", "tennis", 3, true),
-      court("tn-2", "tennis", 4, false),
-      court("pb-walkup", "pickleball", null, true),
-    ])
-    .run();
-  const slot = (courtId: string, hour: number, status: "free" | "booked") => ({ courtId, date: "2026-10-26", hour, status, fetchedAt: "x" });
-  db.insert(slots)
-    .values([
-      slot("pb-1", 8, "booked"),
-      slot("pb-2", 8, "booked"),
-      slot("tn-1", 8, "booked"),
-      slot("tn-2", 8, "free"),
-      slot("pb-1", 12, "booked"),
-      slot("pb-2", 12, "free"),
-      slot("pb-1", 19, "booked"),
-      slot("pb-2", 19, "booked"),
-    ])
-    .run();
-  db.insert(scheduleEvents)
-    .values({
-      id: "drop-in",
-      source: "township-page",
-      kind: "drop_in",
-      title: "Pickleball drop-in play",
-      parkId: "falconwing",
-      courtKind: "pickleball",
-      date: "2026-10-26",
-      startMin: 480,
-      endMin: 600,
-      publicCanJoin: true,
-    })
-    .run();
-  return db;
-}
 
 const byId = (rows: ReturnType<typeof getCourtStatuses>) => Object.fromEntries(rows.map((r) => [r.id, r]));
 
 describe("getCourtStatuses", () => {
-  const db = seed();
+  const db = seedSampleDb();
 
   it("stitches slots, events and courts into one label per court", () => {
     const at8 = byId(getCourtStatuses("2026-10-26", 8, db));

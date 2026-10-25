@@ -137,7 +137,7 @@ export function CourtExplorer() {
       )}
 
       <StatusBar
-        className="absolute right-20 bottom-8 left-[25.5rem] max-md:hidden"
+        className="absolute bottom-8 left-[25.5rem] w-fit max-w-[calc(100%-31rem)] max-md:hidden"
         updatedAt={data?.reservationsUpdatedAt ?? null}
       />
 

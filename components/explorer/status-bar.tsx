@@ -30,7 +30,7 @@ export function StatusBar({ updatedAt, className }: { updatedAt: string | null; 
         <Clock className="size-3.5 shrink-0" />
         {updatedAt && now ? `Updated ${formatAgo(updatedAt, now)}` : "Not synced yet"}
       </p>
-      <Link href="/status" className="ml-auto inline-flex items-center gap-1 font-medium text-primary hover:underline">
+      <Link href="/status" className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
         <Activity className="size-3.5" /> Data status
       </Link>
     </div>

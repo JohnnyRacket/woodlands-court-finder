@@ -19,19 +19,21 @@ function ballSvg(sport: Sport, muted: boolean): string {
     sport === "tennis"
       ? // two curved seams
         `<path d="M6 10.5c6 3 6 23 0 27M42 10.5c-6 3-6 23 0 27" fill="none" stroke="${c.detail}" stroke-width="2.6" stroke-linecap="round"/>`
-      : // pickleball holes: scattered irregularly, clear of the number in the middle
+      : // pickleball holes: one size, scattered evenly over the whole ball (≥ 10 units apart)
         [
-          [13, 13, 3],
-          [24.5, 8.5, 2.5],
-          [35.5, 13.5, 2.7],
-          [10, 25, 2.4],
-          [38.5, 24.5, 3.1],
-          [31.5, 30.5, 2],
-          [16, 33.5, 2.8],
-          [37, 34.5, 2.3],
-          [27.5, 38.5, 3],
+          [19.8, 11.2],
+          [31.1, 9.5],
+          [10.5, 15.4],
+          [38.7, 17.1],
+          [28.5, 19.7],
+          [18.2, 22.4],
+          [7.6, 25.7],
+          [26.6, 30.3],
+          [37.8, 31.4],
+          [14, 33.5],
+          [23.4, 40.1],
         ]
-          .map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c.detail}"/>`)
+          .map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.6" fill="${c.detail}"/>`)
           .join("");
   return `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><circle cx="24" cy="24" r="21.5" fill="${c.fill}" stroke="#ffffff" stroke-width="3"/><circle cx="24" cy="24" r="19.5" fill="none" stroke="${c.stroke}" stroke-width="1"/>${detail}</svg>`;
 }
@@ -45,6 +47,9 @@ export function ballDataUri(sport: Sport, muted: boolean): string {
   return cache.get(key)!;
 }
 
+/** A thin outline in the ball's color, so numbers stay readable over the holes. */
+const halo = (color: string) => [-1, 0, 1].flatMap((x) => [-1, 0, 1].map((y) => `${x}px ${y}px 0 ${color}`)).join(", ");
+
 /** A ball with a number on it, for the panels. */
 export function BallBadge({ sport, count, muted, size = 32 }: { sport: Sport; count: number; muted: boolean; size?: number }) {
   return (
@@ -55,7 +60,7 @@ export function BallBadge({ sport, count, muted, size = 32 }: { sport: Sport; co
     >
       {/* eslint-disable-next-line @next/next/no-img-element -- tiny inline SVG data URI */}
       <img src={ballDataUri(sport, muted)} alt="" className="absolute inset-0 size-full" />
-      <span className="relative text-[13px] leading-none font-bold" style={{ color: ballColors(sport, muted).text }}>
+      <span className="relative text-[13px] leading-none font-bold" style={{ color: ballColors(sport, muted).text, textShadow: halo(ballColors(sport, muted).fill) }}>
         {count}
       </span>
     </span>

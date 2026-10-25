@@ -96,6 +96,9 @@ function parkMarkers(park: ParkSummary, selected: boolean, yoffset: number, size
         symbol: new TextSymbol({
           text: String(summary.joinable),
           color: ballColors(sport, muted).text,
+          // A halo in the ball's color keeps the number readable over the pickleball holes.
+          haloColor: ballColors(sport, muted).fill,
+          haloSize: 1.5,
           xoffset,
           yoffset,
           verticalAlignment: "middle",

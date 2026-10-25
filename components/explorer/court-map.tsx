@@ -261,10 +261,13 @@ export function CourtMap({ parks, courts, selection, onSelect, rightPanelWidth, 
     fitPaddingRef.current?.();
   }, [rightPanelWidth]);
 
-  // Fly to the selected court (when it has an outline) or park.
+  // Fly to the selected court (when it has an outline) or park, once per selection: a link that
+  // opens on a park flies there when the data arrives, and data refreshes don't move the map.
+  const flownToRef = useRef<string | null>(null);
   useEffect(() => {
     const view = viewRef.current;
-    if (!view) return;
+    const key = `${selection.parkId}|${selection.courtId}`;
+    if (!view || flownToRef.current === key) return;
     const court = courts.find((c) => c.id === selection.courtId && c.geometry);
     const park = parks.find((p) => p.id === selection.parkId);
     const target = court
@@ -272,10 +275,11 @@ export function CourtMap({ parks, courts, selection, onSelect, rightPanelWidth, 
       : park
         ? { center: [park.lng, park.lat], zoom: Math.max(view.zoom, PARK_ZOOM) }
         : null;
+    // The selected park isn't loaded (or filtered in) yet: try again when it is.
+    if (!target && selection.parkId) return;
+    flownToRef.current = key;
     if (target) view.when(() => view.goTo(target, { duration: 700 })).catch(() => {});
-    // Only when the selection changes, not on every data refresh.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selection.parkId, selection.courtId]);
+  }, [selection.parkId, selection.courtId, parks, courts]);
 
   const zoomBy = (delta: number) => {
     const view = viewRef.current;

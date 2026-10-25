@@ -8,6 +8,7 @@
 - **Labels that mean something:** *No reservation*, *Open play* (drop-in, anyone can join), *Program*, *Tournament*, *Likely event*, *Reserved*, *First come*. Drop-in play shows as "booked" in ActiveNet; this app knows the difference.
 - **Pick any hour residents can book:** tennis today through 2 days ahead, pickleball today and tomorrow (later pickleball days show "Booking not open yet"), filter by sport, playable-only, or lit courts; after-sunset hours are flagged on unlit courts.
 - **Court day view:** open any court's full 7 a.m.–11 p.m. day beside the park panel, with weather; click an hour to move the whole map there.
+- **Shareable links:** the time, park, court and filters live in the URL (`/?date=2026-10-26&hour=19&park=falconwing&sport=pickleball`), so a view can be shared, bookmarked or reloaded, and Back closes what you opened.
 - **Alerts and conditions:** Township court closures and NWS warnings across the top of the map; per-hour warnings for wet courts (recent rain), thunderstorms, heat stress (WBGT) and gusts; Township events at a park (crowds, parking) in its panel. Conditions are warnings beside a court's label and never change it (`lib/conditions.ts`).
 - **Data status** (`/status`): freshness of every source, and the data-quality findings from reconciling Township systems ([report](docs/reconciliation-report.md)).
 - **Ask Woodlands Court Finder:** Claude answers questions like "Any lit tennis courts without a reservation tomorrow at 8 PM?" using tool calls over the app's own queries.

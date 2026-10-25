@@ -11,7 +11,6 @@ import { fetchJson } from "@/lib/fetch-json";
 import { assistantEnabled } from "@/lib/flags";
 import { distanceMiles, type LatLng } from "@/lib/geo";
 import type { ExplorerData } from "@/lib/queries/explorer";
-import { currentPlayHour } from "@/lib/time";
 import { usePresence } from "@/lib/use-presence";
 import { cn } from "@/lib/utils";
 import { AlertsBanner } from "./alerts-banner";
@@ -24,6 +23,8 @@ import { ParkList } from "./park-list";
 import { filterCourts, SPORTS, summarizeParks, type Filters } from "./park-summary";
 import { StatusBar } from "./status-bar";
 import { TimeScrubber } from "./time-scrubber";
+import { isPastTime } from "./url-state";
+import { useExplorerView } from "./use-explorer-view";
 import { WeatherPill } from "./weather-pill";
 
 // The ArcGIS SDK needs the browser, so the map never renders on the server.
@@ -51,23 +52,24 @@ const PANEL_IN = "animate-in fade-in duration-200 ease-out max-md:slide-in-from-
 const PANEL_OUT = "pointer-events-none animate-out fade-out duration-200 ease-in fill-mode-forwards max-md:slide-out-to-bottom-4 md:slide-out-to-right-4";
 
 export function CourtExplorer() {
-  const [time, setTime] = useState<{ date: string; hour: number } | null>(null);
+  // Time, selection and filters live in the URL (url-state.ts).
+  const [view, updateView] = useExplorerView();
+  const { time, filters } = view;
+  const setTime = (next: { date: string; hour: number }) => updateView({ time: next });
+  const setFilters = (change: Partial<Filters>) => updateView({ filters: { ...filters, ...change } });
   const [data, setData] = useState<ExplorerData | null>(null);
   const [failed, setFailed] = useState(false);
   const [refreshes, setRefreshes] = useState(0);
-  const [filters, setFilters] = useState<Filters>({ sports: ["tennis", "pickleball"], joinableOnly: false, litOnly: false });
-  const [selection, setSelection] = useState<Selection>({ parkId: null, courtId: null });
+  const selection = useMemo<Selection>(() => ({ parkId: view.parkId, courtId: view.courtId }), [view.parkId, view.courtId]);
   const selectedParkId = selection.parkId;
-  const [dayCourtId, setDayCourtId] = useState<string | null>(null);
-  const selectPark = (parkId: string | null) => {
-    setSelection({ parkId, courtId: null });
-    setDayCourtId(null);
-  };
-  // Selecting a court (on the map or in the panel) also opens its day.
+  // Selecting a court (on the map or in the panel) also opens its day; closing the day keeps the court selected.
+  const [closedDayCourtId, setClosedDayCourtId] = useState<string | null>(null);
+  const dayCourtId = selection.courtId !== closedDayCourtId ? selection.courtId : null;
   const select = (next: Selection) => {
-    setSelection(next);
-    setDayCourtId(next.courtId);
+    setClosedDayCourtId(null);
+    updateView(next, "push");
   };
+  const selectPark = (parkId: string | null) => select({ parkId, courtId: null });
   const [assistantOpen, setAssistantOpen] = useState(false);
   // Phones open on the map with the time dial; this only affects phone layouts.
   const [sheetCollapsed, setSheetCollapsed] = useState(true);
@@ -89,10 +91,9 @@ export function CourtExplorer() {
 
   const refresh = useCallback(() => {
     // An hour that has passed while the page sat open goes back to following now.
-    const current = currentPlayHour(new Date());
-    setTime((t) => (t && (t.date < current.date || (t.date === current.date && t.hour < current.hour)) ? null : t));
+    if (time && isPastTime(time, new Date())) updateView({ time: null });
     setRefreshes((n) => n + 1);
-  }, []);
+  }, [time, updateView]);
 
   useEffect(() => {
     const refreshIfVisible = () => document.visibilityState === "visible" && refresh();
@@ -104,9 +105,10 @@ export function CourtExplorer() {
     };
   }, [refresh]);
 
+  // By value: a filter change rewrites the URL, which shouldn't refetch the same hour.
+  const query = time ? `?date=${time.date}&hour=${time.hour}` : "";
   useEffect(() => {
     const controller = new AbortController();
-    const query = time ? `?date=${time.date}&hour=${time.hour}` : "";
     fetchJson<ExplorerData>(`/api/courts${query}`, controller.signal)
       .then((next) => {
         setData(next);
@@ -114,7 +116,7 @@ export function CourtExplorer() {
       })
       .catch(() => !controller.signal.aborted && setFailed(true));
     return () => controller.abort();
-  }, [time, refreshes]);
+  }, [query, refreshes]);
 
   // Sports residents can book on the shown date (pickleball opens a day later than tennis).
   // The user's choice is kept, so pickleball comes back on dates it's bookable.
@@ -205,7 +207,7 @@ export function CourtExplorer() {
           filters={shownFilters}
           bookableSports={bookableSports}
           onTimeChange={(date, hour) => setTime({ date, hour })}
-          onFiltersChange={(change) => setFilters((current) => ({ ...current, ...change }))}
+          onFiltersChange={setFilters}
           onCollapse={() => toggleSheet(true)}
         />
         {data ? (
@@ -323,7 +325,7 @@ export function CourtExplorer() {
           selectedCourtId={detail.value.courtId}
           onSelectCourt={(courtId) => select({ parkId: detail.value!.park.id, courtId })}
           dayCourtId={detail.value.dayCourtId}
-          onCloseDay={() => setDayCourtId(null)}
+          onCloseDay={() => setClosedDayCourtId(selection.courtId)}
           now={data.now}
           onPickHour={(hour) => setTime({ date: data.date, hour })}
           onClose={() => selectPark(null)}

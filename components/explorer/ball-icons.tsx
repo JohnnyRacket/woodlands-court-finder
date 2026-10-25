@@ -19,21 +19,19 @@ function ballSvg(sport: Sport, muted: boolean): string {
     sport === "tennis"
       ? // two curved seams
         `<path d="M6 10.5c6 3 6 23 0 27M42 10.5c-6 3-6 23 0 27" fill="none" stroke="${c.detail}" stroke-width="2.6" stroke-linecap="round"/>`
-      : // pickleball holes: one size, scattered evenly over the whole ball (≥ 10 units apart)
+      : // pickleball holes: one size, scattered evenly over the whole ball (≥ 10.5 units apart)
         [
-          [19.8, 11.2],
-          [31.1, 9.5],
-          [10.5, 15.4],
-          [38.7, 17.1],
-          [28.5, 19.7],
-          [18.2, 22.4],
-          [7.6, 25.7],
-          [26.6, 30.3],
-          [37.8, 31.4],
-          [14, 33.5],
-          [23.4, 40.1],
+          [33.3, 11.8],
+          [11.8, 14.8],
+          [23.3, 15.7],
+          [36.8, 21.9],
+          [10.8, 26.1],
+          [23.2, 28.7],
+          [36.5, 32.7],
+          [16.4, 37.3],
+          [27, 38.7],
         ]
-          .map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.6" fill="${c.detail}"/>`)
+          .map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3.2" fill="${c.detail}"/>`)
           .join("");
   return `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><circle cx="24" cy="24" r="21.5" fill="${c.fill}" stroke="#ffffff" stroke-width="3"/><circle cx="24" cy="24" r="19.5" fill="none" stroke="${c.stroke}" stroke-width="1"/>${detail}</svg>`;
 }

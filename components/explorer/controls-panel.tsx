@@ -140,11 +140,11 @@ export function ControlsPanel({ dates, hours, date, hour, now, filters, onTimeCh
           ))}
         </ToggleGroup>
         <label className="flex items-center justify-between gap-3 text-sm">
-          <span>Only courts I can play on</span>
+          <span title="Hides reserved courts, programs and events; keeps open courts and open play">Only show unreserved courts</span>
           <Switch checked={filters.joinableOnly} onCheckedChange={(joinableOnly) => onFiltersChange({ ...filters, joinableOnly })} />
         </label>
         <label className="flex items-center justify-between gap-3 text-sm">
-          <span>Lit courts only</span>
+          <span>Only show courts with lights</span>
           <Switch checked={filters.litOnly} onCheckedChange={(litOnly) => onFiltersChange({ ...filters, litOnly })} />
         </label>
       </div>

@@ -31,7 +31,9 @@ export function useExplorerData(time: { date: string; hour: number } | null, onR
         setCatalog(catalogRef.current);
         setCatalogFailed(false);
       })
-      .catch(() => !controller.signal.aborted && setCatalogFailed(true));
+      // Only the first load can fail visibly: a failed reload keeps the courts already loaded and
+      // is retried by the next hourly response that still names a court the catalog lacks.
+      .catch(() => !controller.signal.aborted && !catalogRef.current && setCatalogFailed(true));
     return () => controller.abort();
   }, [catalogLoads]);
 

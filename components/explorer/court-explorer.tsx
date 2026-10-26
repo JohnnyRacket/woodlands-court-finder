@@ -63,7 +63,9 @@ export function CourtExplorer() {
     if (time && isPastTime(time, new Date())) updateView({ time: null });
   });
 
-  const selection = useMemo<Selection>(() => ({ parkId: view.parkId, courtId: view.courtId }), [view.parkId, view.courtId]);
+  // A court from the URL counts only at its own park (a hand-edited link could pair any two).
+  const courtId = view.courtId && catalog?.get(view.courtId)?.parkId === view.parkId ? view.courtId : null;
+  const selection = useMemo<Selection>(() => ({ parkId: view.parkId, courtId }), [view.parkId, courtId]);
   // Selecting a court (on the map or in the panel) also opens its day; closing the day keeps the court selected.
   const [closedDayCourtId, setClosedDayCourtId] = useState<string | null>(null);
   const dayCourtId = selection.courtId !== closedDayCourtId ? selection.courtId : null;

@@ -50,6 +50,8 @@ const PANEL_MARGIN_PX = 32;
 
 // Side panels ease in from the right (from below on phones) and back out the same way.
 const PANEL_IN = "animate-in fade-in duration-200 ease-out max-md:slide-in-from-bottom-4 md:slide-in-from-right-4";
+// A phone on its side: the bottom sheets become a left column, top to bottom, so the map keeps the width.
+const SIDE_SHEET = "short:top-3 short:right-auto short:bottom-auto short:w-[22rem] short:max-h-[calc(100dvh-2.5rem)]";
 const PANEL_OUT = "pointer-events-none animate-out fade-out duration-200 ease-in fill-mode-forwards max-md:slide-out-to-bottom-4 md:slide-out-to-right-4";
 
 export function CourtExplorer() {
@@ -131,7 +133,9 @@ export function CourtExplorer() {
       {/* Left column: controls + park list (a bottom sheet on phones) */}
       <div
         className={cn(
-          "absolute inset-x-3 bottom-7 flex max-h-[58dvh] flex-col gap-3 overflow-y-auto rounded-3xl transition-[opacity,visibility] duration-200 [scrollbar-width:none] md:pointer-events-none md:inset-y-4 md:right-auto md:bottom-8 md:left-4 md:max-h-none md:w-[23rem] md:overflow-visible md:rounded-none",
+          "absolute inset-x-3 bottom-7 flex max-h-[58dvh] flex-col gap-3 overflow-y-auto rounded-3xl transition-[opacity,visibility] duration-200 [scrollbar-width:none]",
+          SIDE_SHEET,
+          "md:pointer-events-none md:inset-y-4 md:right-auto md:bottom-8 md:left-4 md:max-h-none md:w-[23rem] md:overflow-visible md:rounded-none",
           // The morph animates collapsing and expanding, so the sheet's own fade sits that out.
           "[:root[data-sheet-morph]_&]:transition-none",
           // On phones the park or assistant sheet takes this spot, so the controls get out of the way.
@@ -172,7 +176,7 @@ export function CourtExplorer() {
       </div>
 
       {sheet.collapsed && !detailOpen && !assistantOpen && !data && (
-        <div className="glass-panel absolute inset-x-3 bottom-7 flex flex-col gap-3 px-5 pt-4 pb-3 md:hidden">
+        <div className="glass-panel absolute inset-x-3 bottom-7 flex flex-col gap-3 px-5 pt-4 pb-3 short:right-auto short:w-[22rem] md:hidden">
           <Skeleton className="h-4 w-32 rounded-full bg-muted" />
           <Skeleton className="h-3 w-44 rounded-full bg-muted" />
           <Skeleton className="h-9 rounded-xl bg-muted" />
@@ -181,7 +185,7 @@ export function CourtExplorer() {
       {sheet.collapsed && !detailOpen && !assistantOpen && data && (
         <TimeScrubber
           className={cn(
-            "absolute inset-x-3 bottom-7 md:hidden [:root[data-sheet-morph]_&]:[view-transition-name:phone-sheet]",
+            "absolute inset-x-3 bottom-7 short:right-auto short:w-[22rem] md:hidden [:root[data-sheet-morph]_&]:[view-transition-name:phone-sheet]",
             !sheet.morphed && "animate-in duration-200 fade-in slide-in-from-bottom-4",
           )}
           dates={data.dates}
@@ -197,7 +201,7 @@ export function CourtExplorer() {
       )}
 
       {data && data.alerts.length > 0 && (
-        <div className="pointer-events-none absolute inset-x-3 top-16 flex justify-center md:top-4 md:right-[24rem] md:left-[25.5rem]">
+        <div className="pointer-events-none absolute inset-x-3 top-16 flex justify-center short:left-[23.5rem] short:justify-end md:top-4 md:right-[24rem] md:left-[25.5rem]">
           <AlertsBanner className="pointer-events-auto w-fit max-w-full animate-in fade-in duration-300" alerts={data.alerts} />
         </div>
       )}
@@ -209,14 +213,15 @@ export function CourtExplorer() {
         disabled={nearest.locating}
         aria-label={nearest.on ? "Stop showing my location" : "Show my location and sort parks by distance"}
         className={cn(
-          "glass-panel absolute top-3 left-3 grid size-9.5 place-items-center rounded-full transition active:scale-95 disabled:opacity-60 md:hidden",
+          // On a phone on its side the left column covers the top-left corner, so the button moves to the bottom right.
+          "glass-panel absolute top-3 left-3 grid size-9.5 place-items-center rounded-full transition active:scale-95 disabled:opacity-60 short:top-auto short:right-3 short:bottom-7 short:left-auto md:hidden",
           nearest.on ? "bg-primary text-brand-mint" : "text-primary",
         )}
       >
         {nearest.locating ? <LoaderCircle className="size-4 animate-spin" /> : <LocateFixed className="size-4" />}
       </button>
       {nearest.error && (
-        <p className="glass-panel absolute top-15 left-3 max-w-48 animate-in rounded-2xl px-3 py-2 text-xs text-muted-foreground fade-in md:hidden">{nearest.error}</p>
+        <p className="glass-panel absolute top-15 left-3 max-w-48 animate-in rounded-2xl px-3 py-2 text-xs text-muted-foreground fade-in short:top-auto short:right-3 short:bottom-19 short:left-auto md:hidden">{nearest.error}</p>
       )}
 
       <div className="absolute top-4 right-4 flex flex-col items-end gap-2 max-md:top-3 max-md:right-3">
@@ -245,7 +250,7 @@ export function CourtExplorer() {
         <AssistantPanel
           ref={assistantRef}
           className={cn(
-            "absolute inset-x-3 bottom-7 z-10 h-[62dvh] md:inset-x-auto md:top-20 md:right-4 md:bottom-28 md:h-auto md:w-[23rem]",
+            "absolute inset-x-3 bottom-7 z-10 h-[62dvh] short:top-3 short:right-auto short:h-auto short:w-[22rem] md:inset-x-auto md:top-20 md:right-4 md:bottom-28 md:h-auto md:w-[23rem]",
             assistant.state === "open" ? PANEL_IN : PANEL_OUT,
           )}
           onClose={() => setAssistantOpen(false)}
@@ -257,6 +262,7 @@ export function CourtExplorer() {
           ref={detailRef}
           className={cn(
             "absolute inset-x-3 bottom-7 max-h-[58dvh] md:inset-x-auto md:top-20 md:right-4 md:bottom-28 md:max-h-none",
+            SIDE_SHEET,
             detail.state === "open" ? PANEL_IN : PANEL_OUT,
           )}
           park={detail.value.park}
@@ -276,7 +282,7 @@ export function CourtExplorer() {
         />
       )}
 
-      <div className="@container pointer-events-none absolute right-[4.5rem] bottom-8 left-[25rem] flex justify-center max-md:hidden">
+      <div className="pointer-events-none absolute right-[4.5rem] bottom-8 left-[25rem] flex justify-center max-md:hidden">
         <StatusBar className="pointer-events-auto w-fit" updatedAt={data?.reservationsUpdatedAt ?? null} />
       </div>
 

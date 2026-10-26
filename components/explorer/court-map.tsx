@@ -28,6 +28,10 @@ const PARK_ZOOM = 17;
 const COURT_ZOOM = 18.5;
 /** Below this scale (zoomed in), park markers float above the park as pins. */
 const PIN_SCALE = 9_000;
+/** When the side-panel layout is showing; matches the md variant in globals.css. */
+const DESKTOP_QUERY = "(min-width: 48rem) and (min-height: 32rem)";
+/** A phone on its side, with the sheets in a left column; matches the short variant in globals.css. */
+const SHORT_QUERY = "(orientation: landscape) and (height < 32rem)";
 
 // With an ArcGIS Location Platform key, use Esri's light-gray vector basemap;
 // without one, muted OpenStreetMap tiles (no key needed).
@@ -154,9 +158,11 @@ export function CourtMap({ parks, courts, selection, onSelect, rightPanelWidth, 
 
     // Keep the map's center clear of the floating panels.
     const fitPadding = () => {
-      view.padding = window.matchMedia("(min-width: 768px)").matches
+      view.padding = window.matchMedia(DESKTOP_QUERY).matches
         ? { top: 0, right: rightPanelRef.current, left: 400, bottom: 60 }
-        : { top: 0, right: 0, left: 0, bottom: window.innerHeight * 0.45 };
+        : window.matchMedia(SHORT_QUERY).matches
+          ? { top: 0, right: 0, left: 376, bottom: 0 }
+          : { top: 0, right: 0, left: 0, bottom: window.innerHeight * 0.45 };
     };
     fitPadding();
     window.addEventListener("resize", fitPadding);

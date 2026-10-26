@@ -4,6 +4,14 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* The side-panel layout needs height as well as width: a phone on its side is wide but short, so it keeps the phone layout.
+   Keep in step with DESKTOP_QUERY in court-map.tsx. */
+@custom-variant md (@media (width >= 48rem) and (height >= 32rem));
+@custom-variant max-md (@media not ((width >= 48rem) and (height >= 32rem)));
+/* A phone on its side (always within max-md): the sheets move to a left column so the map keeps the width.
+   Keep in step with SHORT_QUERY in court-map.tsx. */
+@custom-variant short (@media (orientation: landscape) and (height < 32rem));
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

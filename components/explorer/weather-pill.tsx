@@ -28,7 +28,7 @@ export function WeatherPill({ weather, sunset, href, className }: Pick<ExplorerD
             <Droplets className="size-3.5" />
             {weather.precipPct}%
           </span>
-          <span className="flex items-center gap-1 text-muted-foreground max-sm:hidden">
+          <span className="flex items-center gap-1 text-muted-foreground max-sm:hidden short:max-[48rem]:hidden">
             <Wind className="size-3.5" />
             {weather.gustMph !== null && weather.gustMph >= weather.windMph + 5 ? `${weather.windMph} mph, gusts ${weather.gustMph}` : `${weather.windMph} mph`}
           </span>

@@ -19,22 +19,15 @@ export function StatusBar({ updatedAt, className }: { updatedAt: string | null; 
 
   return (
     // At most two rows (legend, then sync info) so it stays clear of the park detail pane above it.
-    // Sizes are container queries against the slot between the left column and the map controls.
-    <div className={cn("glass-panel flex max-w-full flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl px-4 py-2.5 text-xs @max-[28rem]:px-3.5", className)}>
-      <ul className="flex min-w-0 items-center gap-x-3 overflow-x-auto whitespace-nowrap [scrollbar-width:none] @max-[28rem]:gap-x-2.5 @max-[23rem]:pr-6 @max-[23rem]:mask-r-from-80%">
+    // Below laptop widths the legend crowds the panels, so there it's a small pill with just the sync info.
+    <div className={cn("glass-panel flex max-w-full flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl px-4 py-2.5 text-xs max-[90rem]:rounded-full", className)}>
+      <ul className="flex min-w-0 items-center gap-x-3 overflow-x-auto whitespace-nowrap [scrollbar-width:none] max-[90rem]:hidden">
         {LEGEND.map((group) => {
           const meta = GROUP_META[group];
           return (
             <li key={group} className="flex shrink-0 items-center gap-1.5" title={meta.hint}>
               <StatusDot className="size-2.5" color={meta.color} hollow={meta.hollow} />
-              {meta.short ? (
-                <>
-                  <span className="@max-[28rem]:hidden">{meta.text}</span>
-                  <span className="@min-[28rem]:hidden">{meta.short}</span>
-                </>
-              ) : (
-                meta.text
-              )}
+              {meta.text}
             </li>
           );
         })}

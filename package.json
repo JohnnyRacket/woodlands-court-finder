@@ -14,7 +14,7 @@
     "test:watch": "vitest",
     "sync": "tsx scripts/sync.ts",
     "db:generate": "drizzle-kit generate",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.88",

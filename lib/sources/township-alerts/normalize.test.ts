@@ -10,7 +10,9 @@ const parks = [
   { id: "bear-branch", name: "Bear Branch Park" },
 ];
 
-const banner = (...boxes: string[]) => `<div id="PublicEmergencyAnnouncementList">${boxes.join("")}</div>`;
+const page = (body: string) =>
+  `<html><head><meta name="generator" content="OpenCities - https://granicus.com/product/opencities" /></head><body class="body page-name-home">${body}</body></html>`;
+const banner = (...boxes: string[]) => page(`<div id="PublicEmergencyAnnouncementList">${boxes.join("")}</div>`);
 const box = (title: string, body: string, severity = 30, id = title) =>
   `<div class="side-box message-box emergency-message-box oc-emergency-severity-${severity}">
      <h3 class="side-box-title">${title}</h3>
@@ -30,6 +32,12 @@ describe("parseAlerts with the real home page", () => {
         aboutCourts: false, // a sprayground, not the courts
       },
     ]);
+  });
+
+  it("returns nothing when no announcement is up, which leaves the banner out of the page", () => {
+    const withoutBanner = html.replace(/<div role="region" aria-label="Site announcements"[\s\S]*?<div class="oc-emergency-dismissed results-0"><\/div><\/div><\/div><\/div>/, "");
+    expect(withoutBanner).not.toContain("PublicEmergencyAnnouncementList");
+    expect(parseAlerts(withoutBanner, parks)).toEqual([]);
   });
 });
 
@@ -52,8 +60,9 @@ describe("parseAlerts", () => {
     ]);
   });
 
-  it("fails loudly when the banner container is gone", () => {
-    expect(() => parseAlerts("<html><body>redesigned</body></html>", parks)).toThrow(/site-announcement container/);
+  it("fails loudly on a page that isn't the parks home page", () => {
+    expect(() => parseAlerts("<html><body>redesigned</body></html>", parks)).toThrow(/Not the OpenCities parks home page/);
+    expect(() => parseAlerts("<HTML><HEAD><TITLE>Access Denied</TITLE></HEAD><BODY></BODY></HTML>", parks)).toThrow(/Not the OpenCities/);
   });
 
   it("fails loudly on an announcement it can't read", () => {

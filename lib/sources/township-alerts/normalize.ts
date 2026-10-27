@@ -25,11 +25,16 @@ export interface TownshipAlert {
 
 const ABOUT_COURTS = /\b(tennis|pickleball|courts?)\b|\ball (township )?parks\b|\bparks (are|will be) closed\b/i;
 
-/** The site-announcement banner. No announcements is normal; a missing banner container means the page changed. */
+/**
+ * The site-announcement banner. No announcements is normal: OpenCities then leaves the banner container out
+ * entirely, so the page itself is checked instead, to tell that apart from a block page or a redesign.
+ */
 export function parseAlerts(html: string, parks: Park[]): TownshipAlert[] {
   const $ = cheerio.load(html);
+  const isHomePage = $('meta[name="generator"][content^="OpenCities"]').length > 0 && $("body.page-name-home").length > 0;
+  if (!isHomePage) throw new Error("Not the OpenCities parks home page (no generator meta or page-name-home body class)");
   const list = $("#PublicEmergencyAnnouncementList");
-  if (!list.length) throw new Error("No site-announcement container (#PublicEmergencyAnnouncementList) on the parks home page");
+  if (!list.length) return [];
 
   return list
     .find(".emergency-message-box")
